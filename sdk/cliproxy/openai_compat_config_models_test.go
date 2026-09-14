@@ -12,10 +12,11 @@ func TestBuildOpenAICompatibilityConfigModels_InputModalities(t *testing.T) {
 		Name: "mimo",
 		Models: []config.OpenAICompatibilityModel{
 			{
-				Name:            "upstream-vision",
-				Alias:           "mimo-v2.5-pro",
-				DisplayName:     "Mimo Vision",
-				InputModalities: []string{"TEXT", "image", "image"},
+				Name:                      "upstream-vision",
+				Alias:                     "mimo-v2.5-pro",
+				DisplayName:               "Mimo Vision",
+				CapabilityMaxOutputTokens: 8192,
+				InputModalities:           []string{"TEXT", "image", "image"},
 			},
 			{
 				Name:  "upstream-image",
@@ -51,6 +52,9 @@ func TestBuildOpenAICompatibilityConfigModels_InputModalities(t *testing.T) {
 	}
 	if got := joinModalities(vision.SupportedInputModalities); got != "text,image" {
 		t.Fatalf("SupportedInputModalities = %q, want text,image", got)
+	}
+	if vision.CapabilityMaxOutputTokens != 8192 {
+		t.Fatalf("CapabilityMaxOutputTokens = %d, want 8192", vision.CapabilityMaxOutputTokens)
 	}
 	if imageModel == nil {
 		t.Fatal("expected image model")
