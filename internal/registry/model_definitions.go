@@ -144,61 +144,71 @@ func normalizeAntigravityCapabilityModelID(modelID string) string {
 
 func codexBuiltinImage15ModelInfo() *ModelInfo {
 	return &ModelInfo{
-		ID:          codexBuiltinImage15ModelID,
-		Object:      "model",
-		Created:     1704067200, // 2024-01-01
-		OwnedBy:     "openai",
-		Type:        "openai",
-		DisplayName: "GPT Image 1.5",
-		Version:     codexBuiltinImage15ModelID,
+		ID:                        codexBuiltinImage15ModelID,
+		Object:                    "model",
+		Created:                   1704067200, // 2024-01-01
+		OwnedBy:                   "openai",
+		Type:                      "openai",
+		DisplayName:               "GPT Image 1.5",
+		Version:                   codexBuiltinImage15ModelID,
+		SupportedInputModalities:  []string{"text", "image"},
+		SupportedOutputModalities: []string{"image"},
 	}
 }
 
 func codexBuiltinImageModelInfo() *ModelInfo {
 	return &ModelInfo{
-		ID:          codexBuiltinImageModelID,
-		Object:      "model",
-		Created:     1704067200, // 2024-01-01
-		OwnedBy:     "openai",
-		Type:        "openai",
-		DisplayName: "GPT Image 2",
-		Version:     codexBuiltinImageModelID,
+		ID:                        codexBuiltinImageModelID,
+		Object:                    "model",
+		Created:                   1704067200, // 2024-01-01
+		OwnedBy:                   "openai",
+		Type:                      "openai",
+		DisplayName:               "GPT Image 2",
+		Version:                   codexBuiltinImageModelID,
+		SupportedInputModalities:  []string{"text", "image"},
+		SupportedOutputModalities: []string{"image"},
 	}
 }
 
 func codexBuiltinImage25FlareModelInfo() *ModelInfo {
 	return &ModelInfo{
-		ID:          codexBuiltinImage25FlareModelID,
-		Object:      "model",
-		Created:     1704067200, // 2024-01-01
-		OwnedBy:     "openai",
-		Type:        "openai",
-		DisplayName: "GPT Image 2.5 Flare",
-		Version:     codexBuiltinImage25FlareModelID,
+		ID:                        codexBuiltinImage25FlareModelID,
+		Object:                    "model",
+		Created:                   1704067200, // 2024-01-01
+		OwnedBy:                   "openai",
+		Type:                      "openai",
+		DisplayName:               "GPT Image 2.5 Flare",
+		Version:                   codexBuiltinImage25FlareModelID,
+		SupportedInputModalities:  []string{"text", "image"},
+		SupportedOutputModalities: []string{"image"},
 	}
 }
 
 func codexBuiltinImage25SunburstModelInfo() *ModelInfo {
 	return &ModelInfo{
-		ID:          codexBuiltinImage25SunburstModelID,
-		Object:      "model",
-		Created:     1704067200, // 2024-01-01
-		OwnedBy:     "openai",
-		Type:        "openai",
-		DisplayName: "GPT Image 2.5 Sunburst",
-		Version:     codexBuiltinImage25SunburstModelID,
+		ID:                        codexBuiltinImage25SunburstModelID,
+		Object:                    "model",
+		Created:                   1704067200, // 2024-01-01
+		OwnedBy:                   "openai",
+		Type:                      "openai",
+		DisplayName:               "GPT Image 2.5 Sunburst",
+		Version:                   codexBuiltinImage25SunburstModelID,
+		SupportedInputModalities:  []string{"text", "image"},
+		SupportedOutputModalities: []string{"image"},
 	}
 }
 
 func codexBuiltinImage25ModelInfo() *ModelInfo {
 	return &ModelInfo{
-		ID:          codexBuiltinImage25ModelID,
-		Object:      "model",
-		Created:     1704067200, // 2024-01-01
-		OwnedBy:     "openai",
-		Type:        "openai",
-		DisplayName: "GPT Image 2.5",
-		Version:     codexBuiltinImage25ModelID,
+		ID:                        codexBuiltinImage25ModelID,
+		Object:                    "model",
+		Created:                   1704067200, // 2024-01-01
+		OwnedBy:                   "openai",
+		Type:                      "openai",
+		DisplayName:               "GPT Image 2.5",
+		Version:                   codexBuiltinImage25ModelID,
+		SupportedInputModalities:  []string{"text", "image"},
+		SupportedOutputModalities: []string{"image"},
 	}
 }
 

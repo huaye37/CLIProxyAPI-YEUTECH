@@ -140,6 +140,11 @@ func (s *Service) registerModelsForAuthWithCache(ctx context.Context, a *coreaut
 			models = registry.GetCodexProModels()
 		}
 		models = applyExcludedModels(models, excluded)
+	case "deepseek-web":
+		models = applyExcludedModels([]*ModelInfo{
+			{ID: "deepseek-web-chat", Object: "model", OwnedBy: "deepseek", Type: "deepseek-web", DisplayName: "DeepSeek Web - standard mode", SupportedInputModalities: []string{"text"}},
+			{ID: "deepseek-web-reasoner", Object: "model", OwnedBy: "deepseek", Type: "deepseek-web", DisplayName: "DeepSeek Web - thinking mode", SupportedInputModalities: []string{"text"}},
+		}, excluded)
 	case "kimi":
 		models = registry.GetKimiModels()
 		models = applyExcludedModels(models, excluded)
@@ -736,6 +741,7 @@ func buildOpenAICompatibilityConfigModels(compat *config.OpenAICompatibility) []
 		info.Thinking = modelconfig.NormalizeThinkingSupport(thinkingSupport)
 		info.SupportedInputModalities = normalizeCompatConfigModalities(model.InputModalities)
 		info.SupportedOutputModalities = normalizeCompatConfigModalities(model.OutputModalities)
+		info.CapabilityMaxOutputTokens = model.CapabilityMaxOutputTokens
 		models = append(models, info)
 	}
 	return models

@@ -2706,6 +2706,7 @@
       "description": "Ultra-fast coding model.",
       "context_length": 128000,
       "max_completion_tokens": 128000,
+      "capability_max_output_tokens": 10000,
       "supported_parameters": [
         "tools"
       ],
@@ -2927,6 +2928,7 @@
       "description": "Ultra-fast coding model.",
       "context_length": 128000,
       "max_completion_tokens": 128000,
+      "capability_max_output_tokens": 10000,
       "supported_parameters": [
         "tools"
       ],

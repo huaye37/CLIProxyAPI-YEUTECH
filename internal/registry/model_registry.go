@@ -56,6 +56,9 @@ type ModelInfo struct {
 	MaxContextLength int `json:"-"`
 	// MaxCompletionTokens is the maximum completion tokens
 	MaxCompletionTokens int `json:"max_completion_tokens,omitempty"`
+	// CapabilityMaxOutputTokens is a conservative output budget advertised to
+	// capability consumers. It does not alter request routing or provider limits.
+	CapabilityMaxOutputTokens int `json:"capability_max_output_tokens,omitempty"`
 	// SupportedParameters lists supported parameters
 	SupportedParameters []string `json:"supported_parameters,omitempty"`
 	// SupportedInputModalities lists supported input modalities (e.g., TEXT, IMAGE, VIDEO, AUDIO)
