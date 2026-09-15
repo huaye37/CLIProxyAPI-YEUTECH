@@ -2499,6 +2499,9 @@
       ],
       "supportedOutputModalities": [
         "text"
+      ],
+      "supported_workloads": [
+        "review"
       ]
     }
   ],
@@ -2691,6 +2694,9 @@
       ],
       "supportedOutputModalities": [
         "text"
+      ],
+      "supported_workloads": [
+        "review"
       ]
     }
   ],
@@ -2913,6 +2919,9 @@
       ],
       "supportedOutputModalities": [
         "text"
+      ],
+      "supported_workloads": [
+        "review"
       ]
     }
   ],
@@ -3135,6 +3144,9 @@
       ],
       "supportedOutputModalities": [
         "text"
+      ],
+      "supported_workloads": [
+        "review"
       ]
     }
   ],

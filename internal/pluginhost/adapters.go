@@ -136,6 +136,7 @@ func pluginModelInfoToRegistryModelInfo(model pluginapi.ModelInfo) *registry.Mod
 		SupportedParameters:        cloneStringSlice(model.SupportedParameters),
 		SupportedInputModalities:   cloneStringSlice(model.SupportedInputModalities),
 		SupportedOutputModalities:  cloneStringSlice(model.SupportedOutputModalities),
+		SupportedWorkloads:         cloneStringSlice(model.SupportedWorkloads),
 		Thinking:                   pluginThinkingSupportToRegistryThinkingSupport(model.Thinking),
 		UserDefined:                model.UserDefined,
 	}
@@ -176,6 +177,7 @@ func registryModelInfoToPluginModelInfo(model *registry.ModelInfo) pluginapi.Mod
 		SupportedParameters:        cloneStringSlice(model.SupportedParameters),
 		SupportedInputModalities:   cloneStringSlice(model.SupportedInputModalities),
 		SupportedOutputModalities:  cloneStringSlice(model.SupportedOutputModalities),
+		SupportedWorkloads:         cloneStringSlice(model.SupportedWorkloads),
 		Thinking:                   registryThinkingSupportToPluginThinkingSupport(model.Thinking),
 		UserDefined:                model.UserDefined,
 	}
@@ -215,6 +217,7 @@ func cloneRegistryModels(in []*registry.ModelInfo) []*registry.ModelInfo {
 		copyModel.SupportedParameters = cloneStringSlice(model.SupportedParameters)
 		copyModel.SupportedInputModalities = cloneStringSlice(model.SupportedInputModalities)
 		copyModel.SupportedOutputModalities = cloneStringSlice(model.SupportedOutputModalities)
+		copyModel.SupportedWorkloads = cloneStringSlice(model.SupportedWorkloads)
 		if model.Thinking != nil {
 			thinking := *model.Thinking
 			thinking.Levels = cloneStringSlice(model.Thinking.Levels)

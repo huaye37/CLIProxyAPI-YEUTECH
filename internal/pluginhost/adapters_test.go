@@ -43,6 +43,7 @@ func TestPluginModelInfoToRegistryModelInfoClonesThinkingAndSlices(t *testing.T)
 		SupportedParameters:        []string{"temperature"},
 		SupportedInputModalities:   []string{"text"},
 		SupportedOutputModalities:  []string{"image"},
+		SupportedWorkloads:         []string{"image_generation"},
 		Thinking: &pluginapi.ThinkingSupport{
 			Min:            1,
 			Max:            2,
@@ -71,9 +72,11 @@ func TestPluginModelInfoToRegistryModelInfoClonesThinkingAndSlices(t *testing.T)
 	model.SupportedParameters[0] = "mutated"
 	model.SupportedInputModalities[0] = "mutated"
 	model.SupportedOutputModalities[0] = "mutated"
+	model.SupportedWorkloads[0] = "mutated"
 	model.Thinking.Levels[0] = "mutated"
 	if got.SupportedGenerationMethods[0] != "generate" || got.SupportedParameters[0] != "temperature" ||
 		got.SupportedInputModalities[0] != "text" || got.SupportedOutputModalities[0] != "image" ||
+		got.SupportedWorkloads[0] != "image_generation" ||
 		got.Thinking.Levels[0] != "low" {
 		t.Fatalf("converted model kept aliases to plugin slices: %#v", got)
 	}

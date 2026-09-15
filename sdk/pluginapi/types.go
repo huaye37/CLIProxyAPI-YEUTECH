@@ -172,6 +172,9 @@ type ModelInfo struct {
 	SupportedInputModalities []string
 	// SupportedOutputModalities lists produced output modality names.
 	SupportedOutputModalities []string
+	// SupportedWorkloads lists public model workload families. It must not contain
+	// plugin IDs, tool names, or host execution inventory.
+	SupportedWorkloads []string
 	// Thinking describes optional reasoning controls for the model.
 	Thinking *ThinkingSupport
 	// UserDefined reports whether the model was provided by user configuration.

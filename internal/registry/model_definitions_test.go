@@ -9,6 +9,20 @@ func TestGetStaticModelDefinitionsByChannelSupportsGeminiInteractions(t *testing
 	}
 }
 
+func TestImmutableModelWorkloadsSurviveRemoteCatalogRefresh(t *testing.T) {
+	got := ImmutableModelWorkloads("codex-auto-review")
+	if len(got) != 1 || got[0] != ModelWorkloadReview {
+		t.Fatalf("ImmutableModelWorkloads(codex-auto-review) = %v, want review", got)
+	}
+	got[0] = "mutated"
+	if again := ImmutableModelWorkloads("codex-auto-review"); len(again) != 1 || again[0] != ModelWorkloadReview {
+		t.Fatalf("ImmutableModelWorkloads returned mutable storage: %v", again)
+	}
+	if got := ImmutableModelWorkloads("codex-auto-review-preview"); len(got) != 0 {
+		t.Fatalf("ImmutableModelWorkloads must not infer by name, got %v", got)
+	}
+}
+
 func TestModelOverrideHeadersFromEmbeddedModels(t *testing.T) {
 	const wantUA = "codex-tui/0.154.0 (Mac OS 26.5.2; arm64) iTerm.app/3.6.11 (codex-tui; 0.154.0)"
 	got := ModelOverrideHeaders("gpt-5.6-luna")
@@ -148,6 +162,9 @@ func TestWithCodexBuiltinsIncludesImage25Models(t *testing.T) {
 		}
 		if model.Version != id {
 			t.Errorf("model %s Version = %q, want %q", id, model.Version, id)
+		}
+		if len(model.SupportedWorkloads) != 1 || model.SupportedWorkloads[0] != ModelWorkloadImageGeneration {
+			t.Errorf("model %s SupportedWorkloads = %v, want image_generation", id, model.SupportedWorkloads)
 		}
 		if model.Created != 1704067200 {
 			t.Errorf("model %s Created = %d, want 1704067200", id, model.Created)

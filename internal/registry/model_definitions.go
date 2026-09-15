@@ -20,6 +20,17 @@ const (
 	xaiBuiltinVideo15PreviewID         = "grok-imagine-video-1.5-preview"
 )
 
+var immutableWorkloadOverrides = map[string][]string{
+	"codex-auto-review": {ModelWorkloadReview},
+}
+
+// ImmutableModelWorkloads returns exact workload declarations that must
+// survive the periodically refreshed upstream metadata catalog.
+func ImmutableModelWorkloads(modelID string) []string {
+	workloads := immutableWorkloadOverrides[strings.TrimSpace(modelID)]
+	return append([]string(nil), workloads...)
+}
+
 // staticModelsJSON mirrors the top-level structure of models.json.
 type staticModelsJSON struct {
 	Claude      []*ModelInfo `json:"claude"`
@@ -153,6 +164,7 @@ func codexBuiltinImage15ModelInfo() *ModelInfo {
 		Version:                   codexBuiltinImage15ModelID,
 		SupportedInputModalities:  []string{"text", "image"},
 		SupportedOutputModalities: []string{"image"},
+		SupportedWorkloads:        []string{ModelWorkloadImageGeneration},
 	}
 }
 
@@ -167,6 +179,7 @@ func codexBuiltinImageModelInfo() *ModelInfo {
 		Version:                   codexBuiltinImageModelID,
 		SupportedInputModalities:  []string{"text", "image"},
 		SupportedOutputModalities: []string{"image"},
+		SupportedWorkloads:        []string{ModelWorkloadImageGeneration},
 	}
 }
 
@@ -181,6 +194,7 @@ func codexBuiltinImage25FlareModelInfo() *ModelInfo {
 		Version:                   codexBuiltinImage25FlareModelID,
 		SupportedInputModalities:  []string{"text", "image"},
 		SupportedOutputModalities: []string{"image"},
+		SupportedWorkloads:        []string{ModelWorkloadImageGeneration},
 	}
 }
 
@@ -195,6 +209,7 @@ func codexBuiltinImage25SunburstModelInfo() *ModelInfo {
 		Version:                   codexBuiltinImage25SunburstModelID,
 		SupportedInputModalities:  []string{"text", "image"},
 		SupportedOutputModalities: []string{"image"},
+		SupportedWorkloads:        []string{ModelWorkloadImageGeneration},
 	}
 }
 
@@ -209,6 +224,7 @@ func codexBuiltinImage25ModelInfo() *ModelInfo {
 		Version:                   codexBuiltinImage25ModelID,
 		SupportedInputModalities:  []string{"text", "image"},
 		SupportedOutputModalities: []string{"image"},
+		SupportedWorkloads:        []string{ModelWorkloadImageGeneration},
 	}
 }
 

@@ -301,6 +301,7 @@ func registryModelToPluginModel(model *internalregistry.ModelInfo) ModelInfo {
 		SupportedParameters:        cloneStringSlice(model.SupportedParameters),
 		SupportedInputModalities:   cloneStringSlice(model.SupportedInputModalities),
 		SupportedOutputModalities:  cloneStringSlice(model.SupportedOutputModalities),
+		SupportedWorkloads:         cloneStringSlice(model.SupportedWorkloads),
 		Thinking:                   thinkingSupportToPlugin(model.Thinking),
 		UserDefined:                model.UserDefined,
 	}

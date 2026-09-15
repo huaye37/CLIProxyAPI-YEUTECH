@@ -21,6 +21,10 @@ const OpenAIImageModelType = "openai-image"
 const (
 	DefaultClaudeMaxInputTokens  = 200000
 	DefaultClaudeMaxOutputTokens = 64000
+	ModelWorkloadConversation    = "conversation"
+	ModelWorkloadAgent           = "agent"
+	ModelWorkloadReview          = "review"
+	ModelWorkloadImageGeneration = "image_generation"
 )
 
 // ModelInfo represents information about an available model
@@ -72,6 +76,9 @@ type ModelInfo struct {
 	SupportedInputModalities []string `json:"supportedInputModalities,omitempty"`
 	// SupportedOutputModalities lists supported output modalities (e.g., TEXT, IMAGE)
 	SupportedOutputModalities []string `json:"supportedOutputModalities,omitempty"`
+	// SupportedWorkloads lists public model workload families. It never contains
+	// plugin IDs, tool names, or host execution inventory and does not affect routing.
+	SupportedWorkloads []string `json:"supported_workloads,omitempty"`
 	// SupportsWebSearch indicates this Antigravity model is listed by
 	// fetchAvailableModels.webSearchModelIds and can execute native googleSearch.
 	SupportsWebSearch bool `json:"supports_web_search,omitempty"`
@@ -644,6 +651,9 @@ func cloneModelInfo(model *ModelInfo) *ModelInfo {
 	if len(model.SupportedOutputModalities) > 0 {
 		copyModel.SupportedOutputModalities = append([]string(nil), model.SupportedOutputModalities...)
 	}
+	if len(model.SupportedWorkloads) > 0 {
+		copyModel.SupportedWorkloads = append([]string(nil), model.SupportedWorkloads...)
+	}
 	if model.Thinking != nil {
 		copyThinking := *model.Thinking
 		if len(model.Thinking.Levels) > 0 {
@@ -1196,6 +1206,27 @@ func (r *ModelRegistry) GetAvailableModelInfos() []*ModelInfo {
 	for _, registration := range r.models {
 		available, _ := modelRegistrationAvailability(registration, now)
 		if !available || registration == nil || registration.Info == nil {
+			continue
+		}
+		result = append(result, cloneModelInfo(registration.Info))
+	}
+	sort.Slice(result, func(i, j int) bool {
+		return strings.TrimSpace(result[i].ID) < strings.TrimSpace(result[j].ID)
+	})
+	return result
+}
+
+// GetRegisteredModelInfos returns cloned metadata for every model that still
+// has a runtime registration, including models whose routes are currently
+// suspended. Discovery surfaces use this to keep unavailable models visible;
+// execution surfaces must continue to use GetAvailableModelInfos.
+func (r *ModelRegistry) GetRegisteredModelInfos() []*ModelInfo {
+	r.mutex.RLock()
+	defer r.mutex.RUnlock()
+
+	result := make([]*ModelInfo, 0, len(r.models))
+	for _, registration := range r.models {
+		if registration == nil || registration.Count <= 0 || registration.Info == nil {
 			continue
 		}
 		result = append(result, cloneModelInfo(registration.Info))
