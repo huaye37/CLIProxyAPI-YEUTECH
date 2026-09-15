@@ -33,15 +33,16 @@ REMOTE_STAGE="$NAS_ROOT/releases/$RELEASE"
 
 [ -r "$PASSWORD_FILE" ] || die "NAS credential file is not readable"
 CREDENTIAL_RECORD=$(textutil -convert txt -stdout "$PASSWORD_FILE" | tr -d '\r' | sed -n -E 's/^nas[：:](.+)$/\1/p' | head -n 1)
+CREDENTIAL_RECORD=$(printf '%s' "$CREDENTIAL_RECORD" | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//')
 [ -n "$CREDENTIAL_RECORD" ] || die "NAS credential record is missing"
 case "$CREDENTIAL_RECORD" in
   */*)
     NAS_SSH_USER=${CREDENTIAL_RECORD%%/*}
     PASSWORD=${CREDENTIAL_RECORD#*/}
     ;;
-  *\ *)
-    NAS_SSH_USER=${CREDENTIAL_RECORD%% *}
-    PASSWORD=${CREDENTIAL_RECORD#* }
+  *[[:space:]]*)
+    NAS_SSH_USER=$(printf '%s\n' "$CREDENTIAL_RECORD" | awk '{print $1}')
+    PASSWORD=$(printf '%s\n' "$CREDENTIAL_RECORD" | awk '{print $2}')
     ;;
   *) die "NAS credential record must use user/password or user password format" ;;
 esac
