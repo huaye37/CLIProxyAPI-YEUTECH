@@ -1,14 +1,14 @@
 # NAS one-click release
 
-`nas-release.sh` publishes the checked-out, already-reviewed commit to the NAS
-`novel-ai-proxy` service. It is deliberately a release command, not an
-upstream-sync command: upstream changes must first be merged and reviewed in
+`nas-release.sh` fast-forwards the local `yeutech-capability-v15` checkout to
+its reviewed GitHub state, then publishes it to the NAS `novel-ai-proxy`
+service. Upstream changes must first be merged and reviewed in
 `huaye37/CLIProxyAPI-YEUTECH`.
 
 ## Preconditions
 
 - The local checkout is clean.
-- `HEAD` is contained in `origin/yeutech-capability-v15`.
+- The checked-out branch is `yeutech-capability-v15`.
 - The NAS SSH alias `yeutech-nas` is usable.
 - The Mac has `git`, `tar`, legacy `scp`, `ssh`, and `textutil`.
 
@@ -32,4 +32,6 @@ The release backup is retained at
 On GitHub, create a branch from `yeutech-capability-v15`, merge the desired
 `router-for-me/CLIProxyAPI` update, resolve conflicts, and run the applicable
 tests. Merge that pull request into `yeutech-capability-v15`. Then run the
-one-click release command above. Do not point NAS at upstream `latest`.
+one-click release command above. It fetches and fast-forwards the local branch
+automatically before building and switching NAS; it does not point NAS at
+upstream `latest`.

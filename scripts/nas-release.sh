@@ -22,8 +22,9 @@ cd "$REPO_DIR"
 # The workstation may retain a stale GitHub proxy setting after the proxy app
 # has stopped. Bypass that host-specific setting without changing global Git.
 git -c 'http.https://github.com.proxy=' -c 'https.https://github.com.proxy=' fetch origin --prune
+[ "$(git branch --show-current)" = "$BRANCH" ] || die "checkout $BRANCH before release"
+git merge --ff-only "origin/$BRANCH"
 COMMIT=$(git rev-parse HEAD)
-git merge-base --is-ancestor "$COMMIT" "origin/$BRANCH" || die "HEAD is not published to origin/$BRANCH"
 
 STAMP=$(date '+%Y%m%d-%H%M%S')
 SHORT_COMMIT=$(git rev-parse --short=12 HEAD)
