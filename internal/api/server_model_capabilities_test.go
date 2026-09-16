@@ -71,7 +71,7 @@ func TestModelCapabilitiesHandlerDeclaresReviewWorkloadWithoutConversation(t *te
 	assertCapabilityWorkloads(t, target, "review")
 }
 
-func TestModelCapabilitiesHandlerKeepsIncompleteGPTImageModelsUnselectable(t *testing.T) {
+func TestModelCapabilitiesHandlerMarksRoutableGPTImageModelsSelectable(t *testing.T) {
 	modelRegistry := registry.GetGlobalRegistry()
 	clientID := "test-model-capabilities-gpt-images"
 	models := registry.WithCodexBuiltins(nil)
@@ -82,8 +82,11 @@ func TestModelCapabilitiesHandlerKeepsIncompleteGPTImageModelsUnselectable(t *te
 
 	for _, model := range models {
 		target := requestModelCapabilityFromServer(t, server, model.ID)
-		if target["capability_status"] != "incomplete" || target["selectable"] != false {
-			t.Fatalf("GPT image model %q = %#v, want incomplete/unselectable", model.ID, target)
+		if target["capability_status"] != "ready" || target["selectable"] != true {
+			t.Fatalf("GPT image model %q = %#v, want ready/selectable", model.ID, target)
+		}
+		if target["context_length"] != 32768 || target["max_output_tokens"] != 8192 {
+			t.Fatalf("GPT image model %q = %#v, want declared capability limits", model.ID, target)
 		}
 		assertCapabilityWorkloads(t, target, "image_generation")
 	}
