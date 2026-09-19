@@ -25,6 +25,54 @@ type webSubscriptionStartResponse struct {
 	ExpiresIn int    `json:"expires_in,omitempty"`
 }
 
+// GetWebSubscriptionStatus reads the current browser login state from the isolated driver.
+func (h *Handler) GetWebSubscriptionStatus(c *gin.Context) {
+	channel := strings.TrimSpace(c.Param("channel"))
+	baseURL, ok := webSubscriptionDriverURL(channel)
+	if !ok {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "unsupported web subscription channel"})
+		return
+	}
+	if baseURL == "" {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"channel": channel, "status": "driver_unavailable", "authenticated": false})
+		return
+	}
+	target, errParse := url.Parse(baseURL)
+	if errParse != nil || (target.Scheme != "http" && target.Scheme != "https") || target.Host == "" {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "web subscription driver URL is invalid"})
+		return
+	}
+	target.Path = strings.TrimRight(target.Path, "/") + "/v1/login/status"
+	target.RawQuery = ""
+	target.Fragment = ""
+	req, errRequest := http.NewRequestWithContext(c.Request.Context(), http.MethodGet, target.String(), nil)
+	if errRequest != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create web subscription request"})
+		return
+	}
+	if token := strings.TrimSpace(os.Getenv("WEB_SUBSCRIPTION_DRIVER_TOKEN")); token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
+	}
+	resp, errDo := webSubscriptionHTTPClient.Do(req)
+	if errDo != nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"channel": channel, "status": "driver_unavailable", "authenticated": false})
+		return
+	}
+	defer func() { _ = resp.Body.Close() }()
+	body, errRead := io.ReadAll(io.LimitReader(resp.Body, webSubscriptionResponseLimit+1))
+	if errRead != nil || len(body) > webSubscriptionResponseLimit || resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		c.JSON(http.StatusBadGateway, gin.H{"channel": channel, "status": "driver_error", "authenticated": false})
+		return
+	}
+	var result map[string]any
+	if errDecode := json.Unmarshal(body, &result); errDecode != nil {
+		c.JSON(http.StatusBadGateway, gin.H{"error": "web subscription driver returned invalid JSON"})
+		return
+	}
+	result["channel"] = channel
+	c.JSON(http.StatusOK, result)
+}
+
 // StartWebSubscriptionSession asks an isolated web driver to create a login session.
 func (h *Handler) StartWebSubscriptionSession(c *gin.Context) {
 	channel := strings.TrimSpace(c.Param("channel"))

@@ -67,6 +67,7 @@ func (s *Server) registerManagementRoutes() {
 
 		mgmt.POST("/api-call", s.mgmt.APICall)
 		mgmt.POST("/web-subscriptions/:channel/start", s.mgmt.StartWebSubscriptionSession)
+		mgmt.GET("/web-subscriptions/:channel/status", s.mgmt.GetWebSubscriptionStatus)
 
 		mgmt.GET("/quota-exceeded/switch-project", s.mgmt.GetSwitchProject)
 		mgmt.PUT("/quota-exceeded/switch-project", s.mgmt.PutSwitchProject)

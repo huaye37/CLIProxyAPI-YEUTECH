@@ -71,3 +71,23 @@ func TestStartWebSubscriptionSessionRequiresHTTPSLoginURL(t *testing.T) {
 		t.Fatalf("unexpected status %d: %s", recorder.Code, recorder.Body.String())
 	}
 }
+
+func TestGetWebSubscriptionStatus(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	driver := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/v1/login/status" || r.Method != http.MethodGet {
+			t.Fatalf("unexpected driver request: %s %s", r.Method, r.URL.Path)
+		}
+		_, _ = w.Write([]byte(`{"status":"authenticated","authenticated":true}`))
+	}))
+	defer driver.Close()
+	t.Setenv("WEB_SUBSCRIPTION_CHATGPT_URL", driver.URL)
+	router := gin.New()
+	handler := NewHandlerWithoutConfigFilePath(nil, nil)
+	router.GET("/web-subscriptions/:channel/status", handler.GetWebSubscriptionStatus)
+	recorder := httptest.NewRecorder()
+	router.ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/web-subscriptions/chatgpt-web/status", nil))
+	if recorder.Code != http.StatusOK || !strings.Contains(recorder.Body.String(), `"authenticated":true`) {
+		t.Fatalf("unexpected response %d: %s", recorder.Code, recorder.Body.String())
+	}
+}
