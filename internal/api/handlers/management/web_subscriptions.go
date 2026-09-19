@@ -16,7 +16,7 @@ import (
 
 const webSubscriptionResponseLimit = 64 << 10
 
-var webSubscriptionHTTPClient = &http.Client{Timeout: 15 * time.Second}
+var webSubscriptionHTTPClient = &http.Client{Timeout: 60 * time.Second}
 
 type webSubscriptionStartResponse struct {
 	URL       string `json:"url"`
