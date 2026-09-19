@@ -270,7 +270,8 @@ func TestResponsesOrphanCodexDelegationCompatibility(t *testing.T) {
 		t.Fatalf("input.0.content.0.text = %q, want %q", text, wantText)
 	}
 
-	// Without X-Openai-Subagent header, payload should remain function_call_output
+	// Destination tasks do not receive the source task's subagent header, but the
+	// exact orphan delegation still needs to be downgraded before provider routing.
 	requestNoHeader := httptest.NewRequest(http.MethodPost, "/v1/responses", bytes.NewBufferString(payload))
 	recorderNoHeader := httptest.NewRecorder()
 	router.ServeHTTP(recorderNoHeader, requestNoHeader)
@@ -283,7 +284,7 @@ func TestResponsesOrphanCodexDelegationCompatibility(t *testing.T) {
 	}
 	capturedNoHeader := payloads[1]
 	parsedNoHeader := gjson.ParseBytes(capturedNoHeader)
-	if itemType := parsedNoHeader.Get("input.0.type").String(); itemType != "function_call_output" {
-		t.Fatalf("input.0.type = %q, want function_call_output without header; captured=%s", itemType, capturedNoHeader)
+	if itemType := parsedNoHeader.Get("input.0.type").String(); itemType != "message" {
+		t.Fatalf("input.0.type = %q, want message without header; captured=%s", itemType, capturedNoHeader)
 	}
 }

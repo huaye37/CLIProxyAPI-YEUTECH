@@ -35,7 +35,7 @@ func TestRewriteCodexOrphanDelegationInput(t *testing.T) {
 		}
 	})
 
-	t.Run("missing subagent header leaves payload unchanged", func(t *testing.T) {
+	t.Run("missing subagent header still rewrites destination task delegation", func(t *testing.T) {
 		payload := []byte(`{
 			"model": "deepseek-v4-pro",
 			"input": [
@@ -48,12 +48,12 @@ func TestRewriteCodexOrphanDelegationInput(t *testing.T) {
 			]
 		}`)
 		got := RewriteCodexOrphanDelegationInput(context.Background(), http.Header{}, payload, true)
-		if string(got) != string(payload) {
-			t.Fatalf("expected payload unchanged without header, got: %s", string(got))
+		if itemType := gjson.GetBytes(got, "input.0.type").String(); itemType != "message" {
+			t.Fatalf("input.0.type = %q, want message without source-task header: %s", itemType, string(got))
 		}
 	})
 
-	t.Run("different subagent header leaves payload unchanged", func(t *testing.T) {
+	t.Run("different subagent header still rewrites exact orphan delegation", func(t *testing.T) {
 		payload := []byte(`{
 			"model": "deepseek-v4-pro",
 			"input": [
@@ -67,8 +67,8 @@ func TestRewriteCodexOrphanDelegationInput(t *testing.T) {
 		}`)
 		headers := http.Header{"X-Openai-Subagent": []string{"other_subagent"}}
 		got := RewriteCodexOrphanDelegationInput(context.Background(), headers, payload, true)
-		if string(got) != string(payload) {
-			t.Fatalf("expected payload unchanged with wrong header, got: %s", string(got))
+		if itemType := gjson.GetBytes(got, "input.0.type").String(); itemType != "message" {
+			t.Fatalf("input.0.type = %q, want message regardless of unrelated header: %s", itemType, string(got))
 		}
 	})
 
@@ -110,7 +110,7 @@ func TestRewriteCodexOrphanDelegationInput(t *testing.T) {
 		}
 	})
 
-	t.Run("case-insensitive header key and value works", func(t *testing.T) {
+	t.Run("header does not affect exact orphan delegation detection", func(t *testing.T) {
 		payload := []byte(`{
 			"model": "deepseek-v4-pro",
 			"input": [
@@ -128,7 +128,7 @@ func TestRewriteCodexOrphanDelegationInput(t *testing.T) {
 
 		item0 := parsed.Get("input.0")
 		if item0.Get("type").String() != "message" || item0.Get("role").String() != "user" {
-			t.Fatalf("case-insensitive header should rewrite, got: %s", item0.Raw)
+			t.Fatalf("exact orphan delegation should rewrite, got: %s", item0.Raw)
 		}
 	})
 
@@ -474,7 +474,7 @@ func TestTranslateRequestWithCodexMultiAgentV2OrphanDelegation(t *testing.T) {
 	}`)
 	collabHeaders := http.Header{"X-Openai-Subagent": []string{"collab_spawn"}}
 
-	t.Run("enabled but missing X-Openai-Subagent header does not rewrite", func(t *testing.T) {
+	t.Run("enabled rewrites destination task delegation without source header", func(t *testing.T) {
 		cfg := &config.Config{
 			Codex: config.CodexConfig{
 				OrphanDelegationCompatibility: true,
@@ -484,12 +484,12 @@ func TestTranslateRequestWithCodexMultiAgentV2OrphanDelegation(t *testing.T) {
 		parsed := gjson.ParseBytes(got)
 
 		item0 := parsed.Get("input.0")
-		if item0.Get("type").String() != "function_call_output" {
-			t.Fatalf("input.0 = %s, want function_call_output when X-Openai-Subagent header is missing", item0.Raw)
+		if item0.Get("type").String() != "message" || item0.Get("role").String() != "user" {
+			t.Fatalf("input.0 = %s, want message/user when source-task header is missing", item0.Raw)
 		}
 	})
 
-	t.Run("enabled with wrong X-Openai-Subagent header value does not rewrite", func(t *testing.T) {
+	t.Run("enabled ignores unrelated X-Openai-Subagent header value", func(t *testing.T) {
 		cfg := &config.Config{
 			Codex: config.CodexConfig{
 				OrphanDelegationCompatibility: true,
@@ -500,8 +500,8 @@ func TestTranslateRequestWithCodexMultiAgentV2OrphanDelegation(t *testing.T) {
 		parsed := gjson.ParseBytes(got)
 
 		item0 := parsed.Get("input.0")
-		if item0.Get("type").String() != "function_call_output" {
-			t.Fatalf("input.0 = %s, want function_call_output when X-Openai-Subagent header is wrong", item0.Raw)
+		if item0.Get("type").String() != "message" || item0.Get("role").String() != "user" {
+			t.Fatalf("input.0 = %s, want message/user for exact orphan delegation", item0.Raw)
 		}
 	})
 
