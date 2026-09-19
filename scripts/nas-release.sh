@@ -89,6 +89,16 @@ docker build \
   --build-arg "BUILD_DATE=$(date -u '+%Y-%m-%dT%H:%M:%SZ')" \
   -t "$image" "$remote_stage/source"
 
+bluegreen=/volume1/docker/yeutech-api-manager/updater/bluegreen.py
+if [ -f "$bluegreen" ] && [ -f "$nas_root/gateway/active.json" ]; then
+  if PYTHONPATH="$(dirname "$bluegreen")" /usr/bin/python3 "$bluegreen" deploy "$image"; then
+    echo "RELEASE_OK release=$release image=$image mode=blue-green backup=$backup_dir"
+    exit 0
+  fi
+  echo "Blue-green release failed; active traffic remains on the prior slot" >&2
+  exit 1
+fi
+
 compose_tmp="$backup_dir/compose.yaml.next"
 sed "s|^[[:space:]]*image:.*|    image: $image|" "$compose" > "$compose_tmp"
 cp "$compose_tmp" "$compose"
