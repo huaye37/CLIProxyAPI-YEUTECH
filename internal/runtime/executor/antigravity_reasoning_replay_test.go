@@ -86,7 +86,7 @@ func TestPrepareAntigravityGeminiReasoningReplayPayloadRejectsToolOutputsAcrossU
 	}
 }
 
-func TestPrepareAntigravityGeminiReasoningReplayPayloadKeepsCacheForAlreadyInvalidToolHistory(t *testing.T) {
+func TestPrepareAntigravityGeminiReasoningReplayPayloadRepairsUniqueNamedStaleToolHistory(t *testing.T) {
 	internalcache.ClearAntigravityReasoningReplayCache()
 	t.Cleanup(internalcache.ClearAntigravityReasoningReplayCache)
 	const model, sessionKey = "gemini-3.6-flash-high", "session:invalid-injected-tool-history"
@@ -95,9 +95,12 @@ func TestPrepareAntigravityGeminiReasoningReplayPayloadKeepsCacheForAlreadyInval
 		t.Fatal("cache write failed")
 	}
 	payload := []byte(`{"sessionId":"invalid-injected-tool-history","request":{"contents":[{"role":"model","parts":[{"functionCall":{"id":"call-1","name":"run","args":{}}}]},{"role":"model","parts":[{"functionResponse":{"id":"call-2","name":"run","response":{"result":"two"}}}]}]}}`)
-	_, _, errPrepare := prepareAntigravityGeminiReasoningReplayPayload(context.Background(), model, cliproxyexecutor.Request{}, cliproxyexecutor.Options{}, payload)
-	if errPrepare == nil {
-		t.Fatal("invalid replay-injected history was not rejected")
+	updated, _, errPrepare := prepareAntigravityGeminiReasoningReplayPayload(context.Background(), model, cliproxyexecutor.Request{}, cliproxyexecutor.Options{}, payload)
+	if errPrepare != nil {
+		t.Fatalf("unique named stale history was not repaired: %v", errPrepare)
+	}
+	if errPairing := internalsignature.ValidateGeminiFunctionCallPairing(updated); errPairing != nil {
+		t.Fatalf("repaired history is invalid: %v; payload=%s", errPairing, updated)
 	}
 	if _, found := internalcache.GetAntigravityReasoningReplayItems(model, sessionKey); !found {
 		t.Fatal("already-invalid client history cleared replay state")
@@ -1649,7 +1652,7 @@ func TestPrepareAntigravityGeminiReasoningReplayRejectsUnmatchedNonPlaceholderRe
 	}`)
 	internalcache.CacheAntigravityReasoningReplayItems(model, sessionKey, [][]byte{item})
 
-	// Payload has a non-placeholder name mismatch ("Write" != "Read")
+	// Payload has a non-placeholder name mismatch ("Write" != "Read").
 	mismatchedPayload := []byte(`{
 		"sessionId": "sess-mismatch",
 		"request": {
@@ -1663,7 +1666,7 @@ func TestPrepareAntigravityGeminiReasoningReplayRejectsUnmatchedNonPlaceholderRe
 					"parts": [
 						{
 							"functionResponse": {
-								"id": "call_mismatch_1",
+				"id": "call_mismatch_1",
 								"name": "Write",
 								"response": {"output": "ok"}
 							}

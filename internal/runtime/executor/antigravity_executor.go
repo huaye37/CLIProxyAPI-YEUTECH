@@ -534,6 +534,7 @@ type antigravityContentEdit struct {
 // Applying SJSON once per field made large histories scale with history size
 // multiplied by the number of tool turns.
 func normalizeAntigravityGeminiFunctionResponseRoles(rawJSON []byte) []byte {
+	rawJSON = repairAntigravityGeminiFunctionResponseIDs(rawJSON)
 	rawJSON = repairAntigravityGeminiFunctionResponseNames(rawJSON)
 	contents := util.GetGJSONBytesNoCopy(rawJSON, "request.contents")
 	if !contents.IsArray() {
@@ -650,6 +651,202 @@ func normalizeAntigravityGeminiFunctionResponseRoles(rawJSON []byte) []byte {
 			end:         end,
 			replacement: contentJSON,
 		})
+		return true
+	})
+	return applyAntigravityIndexedEdits(rawJSON, edits, validOffsets)
+}
+
+// repairAntigravityGeminiFunctionResponseIDs restores a missing response ID
+// from the immediately preceding model function-call turn. Gemini requires
+// every functionResponse.id to refer to its functionCall.id; older translated
+// histories can retain the name and result while losing just that ID.
+//
+// A stale ID is replaced by an adjacent matching name when available. If a
+// history compaction split a tool result from its call, Gemini nevertheless
+// requires it to pair with the sole adjacent unpaired call; that unique call is
+// a safe fallback. Parallel calls remain ambiguous unless a name selects one.
+func repairAntigravityGeminiFunctionResponseIDs(rawJSON []byte) []byte {
+	contents := util.GetGJSONBytesNoCopy(rawJSON, "request.contents")
+	if !contents.IsArray() {
+		return rawJSON
+	}
+	type functionRef struct {
+		id   string
+		name string
+	}
+	type responseRef struct {
+		index int
+		part  gjson.Result
+	}
+
+	edits := make([]antigravityContentEdit, 0)
+	validOffsets := true
+	var pending []functionRef
+	contents.ForEach(func(contentIdx, content gjson.Result) bool {
+		parts := content.Get("parts")
+		if !parts.IsArray() || parts.Get("#").Int() == 0 {
+			pending = nil
+			return true
+		}
+
+		calls := make([]functionRef, 0)
+		responses := make([]responseRef, 0)
+		hasOtherPart := false
+		parts.ForEach(func(partIdx, part gjson.Result) bool {
+			switch {
+			case part.Get("functionCall").Exists():
+				calls = append(calls, functionRef{
+					id:   strings.TrimSpace(part.Get("functionCall.id").String()),
+					name: strings.TrimSpace(part.Get("functionCall.name").String()),
+				})
+			case part.Get("functionResponse").Exists():
+				responses = append(responses, responseRef{index: int(partIdx.Int()), part: part})
+			default:
+				hasOtherPart = true
+			}
+			return true
+		})
+		if len(calls) > 0 && len(responses) == 0 {
+			pending = calls
+			return true
+		}
+		if len(responses) == 0 {
+			if hasOtherPart {
+				pending = nil
+			}
+			return true
+		}
+		if len(calls) > 0 || len(pending) == 0 {
+			pending = nil
+			return true
+		}
+
+		used := make([]bool, len(pending))
+		// Preserve the pairing already present in the payload before assigning
+		// missing IDs. Otherwise a following response with the same tool name
+		// could be paired to a call that an earlier, valid response already used.
+		for _, responsePart := range responses {
+			responseID := strings.TrimSpace(responsePart.part.Get("functionResponse.id").String())
+			if responseID == "" {
+				continue
+			}
+			for i, call := range pending {
+				if call.id == responseID {
+					used[i] = true
+					break
+				}
+			}
+		}
+		contentJSON := []byte(content.Raw)
+		changed := false
+		for _, responsePart := range responses {
+			response := responsePart.part.Get("functionResponse")
+			staleID := strings.TrimSpace(response.Get("id").String())
+			responseName := strings.TrimSpace(response.Get("name").String())
+			match := -1
+			if staleID != "" {
+				for _, call := range pending {
+					if call.id == staleID {
+						match = -2 // The existing ID is already correct.
+						break
+					}
+				}
+				if match == -2 {
+					continue
+				}
+				// Prefer a name match. Do not guess across parallel same-name calls.
+				for i, call := range pending {
+					if used[i] || call.id == "" || responseName == "" || call.name != responseName {
+						continue
+					}
+					if match != -1 {
+						match = -1
+						break
+					}
+					match = i
+				}
+				if match == -1 {
+					// A compaction can leave an older result immediately after a
+					// different current call. With exactly one unused call, Gemini's
+					// required adjacency makes the intended repair unambiguous.
+					for i, call := range pending {
+						if used[i] || call.id == "" {
+							continue
+						}
+						if match != -1 {
+							match = -1
+							break
+						}
+						match = i
+					}
+				}
+				if match == -1 {
+					continue
+				}
+			}
+			if staleID == "" {
+				for i, call := range pending {
+					if !used[i] && call.id != "" && responseName != "" && call.name == responseName {
+						match = i
+						break
+					}
+				}
+			}
+			if staleID == "" && match == -1 && responseName == "" {
+				for i, call := range pending {
+					if !used[i] && call.id != "" {
+						match = i
+						break
+					}
+				}
+			}
+			if staleID == "" && match == -1 {
+				// Some Responses clients retain a function output's display name
+				// but omit call_id. The translator may normalize the call name on
+				// the preceding Gemini turn, so a strict name match is impossible.
+				// With exactly one unused adjacent call, its ID is unambiguous.
+				for i, call := range pending {
+					if used[i] || call.id == "" {
+						continue
+					}
+					if match != -1 {
+						match = -1
+						break
+					}
+					match = i
+				}
+			}
+			if match == -1 {
+				continue
+			}
+			updated, errSet := sjson.SetBytes(contentJSON, fmt.Sprintf("parts.%d.functionResponse.id", responsePart.index), pending[match].id)
+			if errSet != nil {
+				continue
+			}
+			// An ID-less response can also retain the Responses-facing display
+			// name rather than Gemini's preceding functionCall name. Once the
+			// adjacent call is unambiguous, repair both members of that pair;
+			// existing ID-bearing name mismatches remain untouched for validation.
+			if responseName != pending[match].name && pending[match].name != "" {
+				updated, errSet = sjson.SetBytes(updated, fmt.Sprintf("parts.%d.functionResponse.name", responsePart.index), pending[match].name)
+				if errSet != nil {
+					continue
+				}
+			}
+			contentJSON = updated
+			used[match] = true
+			changed = true
+		}
+		pending = nil
+		if !changed {
+			return true
+		}
+		start := content.Index
+		end := start + len(content.Raw)
+		if start < 0 || end < start || end > len(rawJSON) || !bytes.Equal(rawJSON[start:end], []byte(content.Raw)) {
+			validOffsets = false
+		}
+		edits = append(edits, antigravityContentEdit{index: contentIdx.Int(), start: start, end: end, replacement: contentJSON})
 		return true
 	})
 	return applyAntigravityIndexedEdits(rawJSON, edits, validOffsets)

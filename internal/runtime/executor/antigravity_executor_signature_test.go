@@ -972,6 +972,61 @@ func TestNormalizeAntigravityGeminiFunctionResponseRolesOrdersParallelResponses(
 	}
 }
 
+func TestNormalizeAntigravityGeminiFunctionResponseRolesRestoresMissingResponseIDs(t *testing.T) {
+	payload := []byte(`{"request":{"contents":[{"role":"model","parts":[{"text":"using tools"},{"functionCall":{"id":"call-1","name":"read","args":{"file":"one"}}},{"functionCall":{"id":"call-2","name":"read","args":{"file":"two"}}}]},{"role":"user","parts":[{"functionResponse":{"name":"read","response":{"result":"one"}}},{"functionResponse":{"id":"call-2","name":"read","response":{"result":"two"}}}]}]}}`)
+	output := normalizeAntigravityGeminiFunctionResponseRoles(payload)
+	responses := gjson.GetBytes(output, "request.contents.1.parts").Array()
+	if len(responses) != 2 {
+		t.Fatalf("response parts = %d, want 2; output=%s", len(responses), output)
+	}
+	if got := responses[0].Get("functionResponse.id").String(); got != "call-1" {
+		t.Fatalf("missing response ID = %q, want call-1; output=%s", got, output)
+	}
+	if got := responses[1].Get("functionResponse.id").String(); got != "call-2" {
+		t.Fatalf("existing response ID = %q, want call-2; output=%s", got, output)
+	}
+	if errValidate := internalsignature.ValidateGeminiFunctionCallPairing(output); errValidate != nil {
+		t.Fatalf("repaired response IDs are invalid: %v; output=%s", errValidate, output)
+	}
+}
+
+func TestNormalizeAntigravityGeminiFunctionResponseRolesRestoresUniqueResponseIDDespiteNameRewrite(t *testing.T) {
+	payload := []byte(`{"request":{"contents":[{"role":"model","parts":[{"functionCall":{"id":"call-1","name":"mcp__codex_app__send_message_to_thread","args":{}}}]},{"role":"user","parts":[{"functionResponse":{"name":"send_message_to_thread","response":{"result":"ok"}}}]}]}}`)
+	output := normalizeAntigravityGeminiFunctionResponseRoles(payload)
+	if got := gjson.GetBytes(output, "request.contents.1.parts.0.functionResponse.id").String(); got != "call-1" {
+		t.Fatalf("unique rewritten-name response ID = %q, want call-1; output=%s", got, output)
+	}
+	if errValidate := internalsignature.ValidateGeminiFunctionCallPairing(output); errValidate != nil {
+		t.Fatalf("repaired rewritten-name response is invalid: %v; output=%s", errValidate, output)
+	}
+}
+
+func TestNormalizeAntigravityGeminiFunctionResponseRolesRepairsStaleUniqueNamedResponseID(t *testing.T) {
+	payload := []byte(`{"request":{"contents":[{"role":"model","parts":[{"functionCall":{"id":"call-current","name":"exec","args":{}}}]},{"role":"user","parts":[{"functionResponse":{"id":"call-stale","name":"exec","response":{"result":"ok"}}}]}]}}`)
+	output := normalizeAntigravityGeminiFunctionResponseRoles(payload)
+	if got := gjson.GetBytes(output, "request.contents.1.parts.0.functionResponse.id").String(); got != "call-current" {
+		t.Fatalf("stale response ID = %q, want call-current; output=%s", got, output)
+	}
+	if errValidate := internalsignature.ValidateGeminiFunctionCallPairing(output); errValidate != nil {
+		t.Fatalf("repaired stale response is invalid: %v; output=%s", errValidate, output)
+	}
+}
+
+func TestNormalizeAntigravityGeminiFunctionResponseRolesRepairsStaleUniqueResponseIDAfterCompaction(t *testing.T) {
+	payload := []byte(`{"request":{"contents":[{"role":"model","parts":[{"functionCall":{"id":"call-current","name":"js","args":{}}}]},{"role":"user","parts":[{"functionResponse":{"id":"call-old","name":"exec","response":{"result":"ok"}}}]}]}}`)
+	output := normalizeAntigravityGeminiFunctionResponseRoles(payload)
+	response := gjson.GetBytes(output, "request.contents.1.parts.0.functionResponse")
+	if got := response.Get("id").String(); got != "call-current" {
+		t.Fatalf("stale response ID = %q, want call-current; output=%s", got, output)
+	}
+	if got := response.Get("name").String(); got != "js" {
+		t.Fatalf("stale response name = %q, want js; output=%s", got, output)
+	}
+	if errValidate := internalsignature.ValidateGeminiFunctionCallPairing(output); errValidate != nil {
+		t.Fatalf("compacted stale response is invalid: %v; output=%s", errValidate, output)
+	}
+}
+
 func TestNormalizeAntigravityGeminiFunctionResponseRolesDoesNotCrossEmptyContentBoundary(t *testing.T) {
 	for _, boundary := range []string{
 		`{"role":"user","parts":[]}`,
