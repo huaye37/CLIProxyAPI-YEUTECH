@@ -732,6 +732,9 @@ func buildOpenAICompatibilityConfigModels(compat *config.OpenAICompatibility) []
 	for i := range compat.Models {
 		model := compat.Models[i]
 		modelType := "openai-compatibility"
+		if compat.WebDriver != "" && compat.WireAPI == "responses" {
+			modelType = "subscription-web"
+		}
 		if model.Image {
 			modelType = registry.OpenAIImageModelType
 		}
@@ -740,7 +743,7 @@ func buildOpenAICompatibilityConfigModels(compat *config.OpenAICompatibility) []
 			continue
 		}
 		thinkingSupport := model.Thinking
-		if thinkingSupport == nil && !model.Image {
+		if thinkingSupport == nil && !model.Image && compat.WebDriver == "" {
 			thinkingSupport = &registry.ThinkingSupport{Levels: []string{"low", "medium", "high"}}
 		}
 		if model.Thinking != nil {

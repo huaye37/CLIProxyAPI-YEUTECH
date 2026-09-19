@@ -92,6 +92,14 @@ func (s *Server) modelCapabilitiesHandler(c *gin.Context) {
 		if !routeAvailable {
 			model["unavailable_reason"] = unavailableReason
 		}
+		if info.Type == "subscription-web" {
+			model["delivery"] = "web"
+			model["web_driver"] = info.OwnedBy
+			model["supports_tools"] = true
+			model["supports_parallel_tools"] = false
+			model["supports_streaming"] = true
+			model["streaming_mode"] = "buffered"
+		}
 		if info.Created > 0 {
 			model["created"] = info.Created
 		}

@@ -677,6 +677,12 @@ func (m GeminiModel) GetThinking() *registry.ThinkingSupport { return m.Thinking
 // OpenAICompatibility represents the configuration for OpenAI API compatibility
 // with external providers, allowing model aliases to be routed through OpenAI API format.
 type OpenAICompatibility struct {
+	// WireAPI selects the upstream protocol; empty retains Chat Completions.
+	WireAPI string `yaml:"wire-api,omitempty" json:"wire-api,omitempty"`
+
+	// WebDriver identifies an explicitly configured browser subscription bridge.
+	WebDriver string `yaml:"web-driver,omitempty" json:"web-driver,omitempty"`
+
 	// Name is the identifier for this OpenAI compatibility configuration.
 	Name string `yaml:"name" json:"name"`
 
