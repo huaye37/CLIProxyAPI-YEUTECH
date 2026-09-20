@@ -1027,6 +1027,25 @@ func TestNormalizeAntigravityGeminiFunctionResponseRolesRepairsStaleUniqueRespon
 	}
 }
 
+func TestNormalizeAntigravityGeminiFunctionResponseRolesRepairsStaleParallelResponseIDByPosition(t *testing.T) {
+	payload := []byte(`{"request":{"contents":[{"role":"model","parts":[{"functionCall":{"id":"call-184","name":"exec","args":{}}},{"functionCall":{"id":"call-185","name":"exec","args":{}}},{"functionCall":{"id":"call-186","name":"exec","args":{}}},{"functionCall":{"id":"call-187","name":"exec","args":{}}},{"functionCall":{"id":"call-188","name":"exec","args":{}}}]},{"role":"model","parts":[{"functionResponse":{"id":"call-184","name":"exec","response":{"result":"one"}}},{"functionResponse":{"id":"call-185","name":"exec","response":{"result":"two"}}},{"functionResponse":{"id":"call-old-178","name":"exec","response":{"result":"three"}}},{"functionResponse":{"id":"call-187","name":"exec","response":{"result":"four"}}},{"functionResponse":{"id":"call-188","name":"exec","response":{"result":"five"}}}]}]}}`)
+	output := normalizeAntigravityGeminiFunctionResponseRoles(payload)
+	if got := gjson.GetBytes(output, "request.contents.1.parts.2.functionResponse.id").String(); got != "call-186" {
+		t.Fatalf("stale parallel response ID = %q, want call-186; output=%s", got, output)
+	}
+	if errValidate := internalsignature.ValidateGeminiFunctionCallPairing(output); errValidate != nil {
+		t.Fatalf("positionally repaired parallel responses are invalid: %v; output=%s", errValidate, output)
+	}
+}
+
+func TestNormalizeAntigravityGeminiFunctionResponseRolesDoesNotGuessUnequalParallelBatches(t *testing.T) {
+	payload := []byte(`{"request":{"contents":[{"role":"model","parts":[{"functionCall":{"id":"call-1","name":"exec","args":{}}},{"functionCall":{"id":"call-2","name":"exec","args":{}}}]},{"role":"model","parts":[{"functionResponse":{"id":"call-old","name":"exec","response":{"result":"ambiguous"}}}]}]}}`)
+	output := normalizeAntigravityGeminiFunctionResponseRoles(payload)
+	if got := gjson.GetBytes(output, "request.contents.1.parts.0.functionResponse.id").String(); got != "call-old" {
+		t.Fatalf("unequal parallel batch guessed response ID %q; output=%s", got, output)
+	}
+}
+
 func TestNormalizeAntigravityGeminiFunctionResponseRolesDoesNotCrossEmptyContentBoundary(t *testing.T) {
 	for _, boundary := range []string{
 		`{"role":"user","parts":[]}`,

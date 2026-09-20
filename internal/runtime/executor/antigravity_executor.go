@@ -739,7 +739,7 @@ func repairAntigravityGeminiFunctionResponseIDs(rawJSON []byte) []byte {
 		}
 		contentJSON := []byte(content.Raw)
 		changed := false
-		for _, responsePart := range responses {
+		for responseIndex, responsePart := range responses {
 			response := responsePart.part.Get("functionResponse")
 			staleID := strings.TrimSpace(response.Get("id").String())
 			responseName := strings.TrimSpace(response.Get("name").String())
@@ -779,6 +779,13 @@ func repairAntigravityGeminiFunctionResponseIDs(rawJSON []byte) []byte {
 						}
 						match = i
 					}
+				}
+				if match == -1 && len(responses) == len(pending) && responseIndex < len(pending) && !used[responseIndex] && pending[responseIndex].id != "" {
+					// Responses preserves the order of a parallel call batch and its
+					// output batch. When compaction leaves one or more stale IDs among
+					// same-name calls, exact/name matching cannot distinguish them, but
+					// equal adjacent batch sizes make the positional pair deterministic.
+					match = responseIndex
 				}
 				if match == -1 {
 					continue
