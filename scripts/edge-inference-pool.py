@@ -14,6 +14,11 @@ import urllib.request
 ROOT = Path('/opt/yeutech-api-manager/inference-pool')
 CADDY = Path('/opt/yeutech-portal/Caddyfile')
 PORTS = range(18331, 18335)
+BACKEND_PORT = 18319
+NAME_PREFIX = 'yeutech-inference-tunnel'
+PROJECT = 'yeutech-inference-pool'
+ROUTES_OLD = '@inference path /v1/models /v1/model-capabilities /v1/responses /v1/responses/compact /v1/alpha/search'
+ROUTES_NEW = ROUTES_OLD + ' /v1/chat/completions /v1/messages /v1/messages/count_tokens'
 OLD = '\t\treverse_proxy host.docker.internal:18319 {\n\t\t\tflush_interval -1\n\t\t}'
 NEW = '''\t\treverse_proxy host.docker.internal:18331 host.docker.internal:18332 host.docker.internal:18333 host.docker.internal:18334 {
 \t\t\t# Each backend owns a separate SSH TCP connection to the same NAS gateway.
@@ -49,13 +54,30 @@ def patch_config(source, old, new):
     return before + marker + site.replace(old, new, 1)
 
 def main():
+    global ROOT, PORTS, BACKEND_PORT, NAME_PREFIX, PROJECT, OLD, NEW
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--apply', action='store_true')
     parser.add_argument('--rollback', action='store_true')
+    parser.add_argument('--gateway-v3', action='store_true', help='Migrate to lifecycle-aware gateway with fresh tunnels')
     args = parser.parse_args()
+    if args.gateway_v3:
+        ROOT = Path('/opt/yeutech-api-manager/inference-pool-v3')
+        PORTS = range(18341, 18345)
+        BACKEND_PORT = 18312
+        NAME_PREFIX = 'yeutech-inference-v3-tunnel'
+        PROJECT = 'yeutech-inference-pool-v3'
+        OLD = NEW
+        for previous, current in zip(range(18331, 18335), PORTS):
+            NEW = NEW.replace(str(previous), str(current))
+        NEW = NEW.replace('\t\t\tflush_interval -1', '\t\t\t# SSE flushes immediately by default; preserve client cancellation.')
     current = CADDY.read_text()
     desired = patch_config(current, NEW, OLD) if args.rollback else (
         current if NEW in current else patch_config(current, OLD, NEW))
+    if args.gateway_v3:
+        previous, target = (ROUTES_NEW, ROUTES_OLD) if args.rollback else (ROUTES_OLD, ROUTES_NEW)
+        if target not in [line.strip() for line in desired.splitlines()]:
+            assert desired.count(previous) == 1, 'Inference routes drift'
+            desired = desired.replace(previous, target, 1)
     if not args.apply:
         print(json.dumps({'action': 'rollback' if args.rollback else 'deploy',
                           'ports': list(PORTS), 'changed': desired != current,
@@ -75,10 +97,10 @@ def main():
                                'ServerAliveInterval=30', 'ServerAliveCountMax=3', 'ConnectTimeout=10',
                                'ControlMaster=no', 'ControlPath=none']:
                     command += ['-o', option]
-                command += ['-L', f'172.18.0.1:{port}:127.0.0.1:18319', '-p', '5522',
+                command += ['-L', f'172.18.0.1:{port}:127.0.0.1:{BACKEND_PORT}', '-p', '5522',
                             'fangjialiang@home.yeutech.cn']
                 services[f'inference-{number}'] = {
-                    'image': image, 'container_name': f'yeutech-inference-tunnel-{number}',
+                    'image': image, 'container_name': f'{NAME_PREFIX}-{number}',
                     'network_mode': 'host', 'restart': 'unless-stopped', 'read_only': True,
                     'dns': ['1.1.1.1', '8.8.8.8'], 'cap_drop': ['ALL'],
                     'security_opt': ['no-new-privileges:true'],
@@ -90,7 +112,7 @@ def main():
             else:
                 compose.write_text(serialized)
             compose_cli = ['docker-compose'] if shutil.which('docker-compose') else ['docker', 'compose']
-            subprocess.run(compose_cli + ['-p', 'yeutech-inference-pool', '-f', str(compose),
+            subprocess.run(compose_cli + ['-p', PROJECT, '-f', str(compose),
                             'up', '-d', '--no-recreate'], check=True)
             for attempt in range(6):
                 try:
