@@ -156,7 +156,7 @@ def gateway_status() -> dict:
     with urllib.request.urlopen('http://127.0.0.1:18322/status', timeout=3) as response:
         status = json.load(response)
     status['activePorts'] = [status['activePort']]
-    for name, port in [('novel-ai-proxy-gateway-v2', 18313), ('novel-ai-proxy-gateway-v3', 18311)]:
+    for name, port in [('novel-ai-proxy-gateway-v2', 18313), ('novel-ai-proxy-gateway-v3', 18311), ('novel-ai-proxy-gateway-v4', 18309)]:
         if not exists(name):
             continue
         # Fail closed if a registered gateway cannot report its in-flight work.

@@ -15,10 +15,11 @@ class GatewayAccounting(unittest.TestCase):
     def test_counts_all_gateways(self):
         values=[{'ok':True,'activePort':18317,'activeRequests':{'18317':2}},
                 {'ok':True,'activePort':18315,'activeRequests':{'18315':3}},
-                {'ok':True,'activePort':18317,'activeRequests':{'18317':4}}]
+                {'ok':True,'activePort':18317,'activeRequests':{'18317':4}},
+                {'ok':True,'activePort':18315,'activeRequests':{'18315':1}}]
         with patch.object(module,'exists',return_value=True), patch.object(module.urllib.request,'urlopen',side_effect=[io.BytesIO(json.dumps(v).encode()) for v in values]):
             status=module.gateway_status()
-        self.assertEqual(status['activeRequests'],{'18317':6,'18315':3})
+        self.assertEqual(status['activeRequests'],{'18317':6,'18315':4})
         self.assertEqual(set(status['activePorts']),{18317,18315})
 
     def test_active_empty_slot_not_reused(self):

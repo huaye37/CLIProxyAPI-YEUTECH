@@ -59,8 +59,9 @@ def main():
     parser.add_argument('--apply', action='store_true')
     parser.add_argument('--rollback', action='store_true')
     parser.add_argument('--gateway-v3', action='store_true', help='Migrate to lifecycle-aware gateway with fresh tunnels')
+    parser.add_argument('--gateway-v4', action='store_true', help='Retain lifecycle handling while selecting the repaired proxy generation')
     args = parser.parse_args()
-    if args.gateway_v3:
+    if args.gateway_v3 or args.gateway_v4:
         ROOT = Path('/opt/yeutech-api-manager/inference-pool-v3')
         PORTS = range(18341, 18345)
         BACKEND_PORT = 18312
@@ -70,10 +71,19 @@ def main():
         for previous, current in zip(range(18331, 18335), PORTS):
             NEW = NEW.replace(str(previous), str(current))
         NEW = NEW.replace('\t\t\tflush_interval -1', '\t\t\t# SSE flushes immediately by default; preserve client cancellation.')
+    if args.gateway_v4:
+        ROOT = Path('/opt/yeutech-api-manager/inference-pool-v4')
+        PORTS = range(18351, 18355)
+        BACKEND_PORT = 18310
+        NAME_PREFIX = 'yeutech-inference-v4-tunnel'
+        PROJECT = 'yeutech-inference-pool-v4'
+        OLD = NEW
+        for previous, current in zip(range(18341, 18345), PORTS):
+            NEW = NEW.replace(str(previous), str(current))
     current = CADDY.read_text()
     desired = patch_config(current, NEW, OLD) if args.rollback else (
         current if NEW in current else patch_config(current, OLD, NEW))
-    if args.gateway_v3:
+    if args.gateway_v3 and not args.gateway_v4:
         previous, target = (ROUTES_NEW, ROUTES_OLD) if args.rollback else (ROUTES_OLD, ROUTES_NEW)
         if target not in [line.strip() for line in desired.splitlines()]:
             assert desired.count(previous) == 1, 'Inference routes drift'
