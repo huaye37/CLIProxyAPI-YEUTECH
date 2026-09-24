@@ -70,3 +70,12 @@ separately. The production manager/controller release is
 the inference container identities and start times were unchanged. The
 production `/check` response verified `v7.3.17` at commit `3d054dc6`, while
 deployment remains blocked by divergent inference-entry configurations.
+
+The first online browser reload still executed the previous `app.js` because
+the public static route allowed a 24-hour browser cache and the HTML kept the
+old asset query. `20260925-merge-status-cache-v5` changed the manager's JS/CSS
+responses to `Cache-Control: no-cache` and bumped both query versions. In the
+authenticated Chrome page, clicking `检查更新` then showed `已合并 v7.3.17`,
+commit `3a4b683099b4`, a fresh check time, and a disabled deploy button with
+the configuration-divergence reason. The manager-only v5 release left every
+inference container identity and start time unchanged.
