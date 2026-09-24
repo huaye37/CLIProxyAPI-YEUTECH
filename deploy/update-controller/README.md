@@ -10,10 +10,15 @@ lines in the actual production manager asset without replacing unrelated UI work
 - Checking an upstream release does **not** merge it. GitHub comparison reports
   whether the maintained branch contains the official tag. Installation fetches
   the official tag again and checks ancestry against the exact cloned commit.
-- Automatic upstream conflict resolution, candidate integration, and model
-  behavior acceptance are not implemented by this controller. A maintainer must
-  merge and validate the branch before installation becomes available. An
-  upstream version label must never imply that the branch already contains it.
+- Source integration runs separately from installation. The Codex heartbeat
+  named `CLIProxyAPI 上游同步` checks stable releases daily, merges in an isolated
+  checkout, runs the full Go suite and build, then updates the maintained branch
+  only after success. Conflicts or failed checks remain reviewable and are not
+  deployed. The heartbeat does not switch any running proxy instance.
+- The GitHub OAuth credential lacks `workflow` scope, so `.github/workflows`
+  remains unchanged by the source sync. Repository-hosted scheduled workflow
+  changes require a separate GitHub authorization; they are not silently
+  substituted for the Codex heartbeat.
 - Deployment refuses inconsistent active-lane configurations and slots that are
   active or have requests on any registered gateway. Counts from old gateways
   may over-report activity; they must not be cleared just to free a slot.
