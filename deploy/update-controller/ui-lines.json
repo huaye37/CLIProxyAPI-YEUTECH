@@ -9,7 +9,7 @@
   },
   {
     "prefix": " if(blocked",
-    "line": " if(blocked&&!busy&&update.updateBlockedReason){progress.hidden=false;$('update-phase').textContent='暂不可安装';$('update-message').textContent=update.updateBlockedReason;}"
+    "line": " if(yeutechBuild&&!busy){progress.hidden=false;progress.className='update-progress';$('update-phase').textContent=sourceBlocked?'等待自动合并上游':runtimeBlocked?'上游已合并 · 等待发布条件':yeutechUpToDate?'维护分支已部署':blocked?'暂不可安装':'上游已合并 · 可以部署';$('update-message').textContent=sourceBlocked?`${update.updateBlockedReason||'上游尚未合并到维护分支'}。源码由每日自动任务处理，不需要在此手动合并。`:runtimeBlocked?`源码已合并，无需前置合并按钮。${update.updateBlockedReason||'发布条件尚未满足。'}`:blocked?update.updateBlockedReason||'请重新检查更新状态。':yeutechUpToDate?'当前运行的已是维护分支最新提交。':'源码已合并，无需前置合并按钮；如需升级运行中的代理，可点击下方构建并部署。';}"
   },
   {
     "prefix": "$('install-update').onclick=",
