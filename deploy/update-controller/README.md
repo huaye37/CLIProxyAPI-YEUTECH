@@ -57,3 +57,16 @@ Recovery files are on the NAS under
 `/volume1/docker/yeutech-api-manager/backups/20260925-update-control-v2`.
 Do not restore the old broken service launcher or restart inference containers
 as part of a UI/controller rollback.
+
+## Source-merge status (2026-09-25)
+
+The update page now shows a separate source-merge result after `检查更新`:
+verified merged, verified not merged, or unverified. A merged result requires
+the controller's GitHub ancestry check for the latest official release, a
+check timestamp, and the exact maintained-branch commit; it does not imply
+that the running proxy has been deployed. Installation readiness is shown
+separately. The production manager/controller release is
+`20260925-merge-status-v4`; it did not invoke proxy update or rollback, and
+the inference container identities and start times were unchanged. The
+production `/check` response verified `v7.3.17` at commit `3d054dc6`, while
+deployment remains blocked by divergent inference-entry configurations.

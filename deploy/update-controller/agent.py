@@ -156,6 +156,7 @@ def public_status() -> dict:
         "installReady": install_ready,
         "upstreamBehindCommits": saved.get('upstreamBehindCommits'),
         "upstreamIntegratedVersion": saved.get("upstreamIntegratedVersion"),
+        "branchCommit": branch_commit,
         "currentVersion": image_version(image),
         "currentImage": image,
         "latestVersion": saved.get("latestVersion"),
