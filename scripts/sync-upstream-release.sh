@@ -4,8 +4,8 @@ set -euo pipefail
 branch=yeutech-capability-v15
 upstream=https://github.com/router-for-me/CLIProxyAPI.git
 current_branch=$(git branch --show-current)
-if [[ "$current_branch" != "$branch" ]]; then
-  echo "Expected $branch, got $current_branch" >&2
+if [[ "$current_branch" != "$branch" && "$current_branch" != yeutech-upstream-* ]]; then
+  echo "Expected $branch or an isolated yeutech-upstream-* branch, got $current_branch" >&2
   exit 2
 fi
 if [[ -n "$(git status --porcelain)" ]]; then
@@ -19,7 +19,7 @@ if [[ ! "$version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   exit 2
 fi
 echo "Upstream release: $version"
-git fetch --no-tags "$upstream" "refs/tags/$version:refs/tags/$version"
+git -c http.https://github.com.proxy= fetch --no-tags "$upstream" "refs/tags/$version:refs/tags/$version"
 if git merge-base --is-ancestor "$version" HEAD; then
   echo "Already contains $version"
   if [[ -n "${GITHUB_OUTPUT:-}" ]]; then echo 'changed=false' >> "$GITHUB_OUTPUT"; fi
@@ -37,6 +37,5 @@ if ! git merge --no-edit --no-ff "$version"; then
   exit 1
 fi
 python3 -m unittest discover -s scripts -p test_merge_model_catalog.py
-git diff "$version" HEAD -- internal/translator > /dev/null
 echo "Merged $version into candidate $(git rev-parse --short HEAD); build and tests must pass before push"
 if [[ -n "${GITHUB_OUTPUT:-}" ]]; then echo 'changed=true' >> "$GITHUB_OUTPUT"; fi
