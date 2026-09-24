@@ -1,0 +1,18 @@
+[
+  {
+    "prefix": "const phaseNames=",
+    "line": "const phaseNames={starting:'正在准备',downloading:'正在下载',waiting:'检查发布条件',installing:'正在安装',rolling_back:'正在回退',complete:'✓ 操作完成',failed:'操作失败',idle:'准备就绪'};"
+  },
+  {
+    "prefix": " const newer=hasRelease",
+    "line": " const newer=hasRelease&&update.latestVersion!==update.currentVersion,yeutechBuild=update?.yeutechBuildRequired===true,yeutechUpToDate=update?.yeutechUpToDate===true,blocked=update?.updateReady===false||(update?.officialUpdateAllowed===false&&!yeutechBuild);$('install-update').disabled=!newer||busy||blocked||yeutechUpToDate;$('install-update').textContent=blocked?'等待上游合并校验':yeutechUpToDate?'已部署维护分支最新提交':yeutechBuild?'构建并部署 YEUTECH 兼容版':newer?`更新至 ${update.latestVersion}`:'当前已是最新版本';$('rollback-update').disabled=!update?.canRollback||busy;$('rollback-update').textContent=update?.canRollback?`回退至 ${update.previousVersion}`:'没有可回退版本';"
+  },
+  {
+    "prefix": " if(blocked",
+    "line": " if(blocked&&!busy&&update.updateBlockedReason){progress.hidden=false;$('update-phase').textContent='暂不可安装';$('update-message').textContent=update.updateBlockedReason;}"
+  },
+  {
+    "prefix": "$('install-update').onclick=",
+    "line": "$('install-update').onclick=async()=>{const version=state.update?.latestVersion;if(!version||state.update?.updateReady===false)return;const yeutechBuild=state.update?.yeutechBuildRequired===true,action=yeutechBuild?'构建并部署 GitHub 已合并的 YEUTECH 兼容版':`更新代理至 ${version}`;if(!await confirmAction(`${action}？`,'系统先校验、构建和备份，再把新请求切到新实例；旧请求留在原实例继续完成。没有空闲发布槽或配置不一致时将停止更新，不强停会话。页面可以关闭。'))return;try{state.update=await request('/update/install',{version});renderUpdate(state.update);notice('更新任务已提交，可以稍后回来查看进度。');}catch(e){notice(e.message,true);}};"
+  }
+]
