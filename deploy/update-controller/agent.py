@@ -146,10 +146,14 @@ def public_status() -> dict:
     ready = saved.get('upstreamIncluded') is True if yeutech_build_required else True
     if yeutech_build_required and not ready:
         blocked_reason = saved.get('integrationMessage') or '请检查更新以核对维护分支是否已合并官方版本'
+    install_ready = saved.get('installReady') is True if yeutech_build_required else True
+    if yeutech_build_required and ready and not install_ready:
+        blocked_reason = saved.get('installationMessage') or '请重新检查发布槽和入口配置'
     return {
         "controllerVersion": "20260925-safe-update-v1",
         "updateMode": "reviewed-branch-only",
         "updateReady": ready,
+        "installReady": install_ready,
         "upstreamBehindCommits": saved.get('upstreamBehindCommits'),
         "upstreamIntegratedVersion": saved.get("upstreamIntegratedVersion"),
         "currentVersion": image_version(image),
@@ -197,8 +201,18 @@ def check_release() -> dict:
                                    if included else f'官方 {version} 尚未合入 YEUTECH 分支（落后 {behind} 个提交）；不会重装旧分支冒充升级')
         except Exception:
             pass
+    install_ready = False
+    installation_message = ''
+    if included:
+        try:
+            bluegreen.deployment_plan()
+            install_ready = True
+        except Exception as error:
+            installation_message = str(error)
     return write_state(
         upstreamIncluded=included,
+        installReady=install_ready,
+        installationMessage=installation_message,
         upstreamBehindCommits=behind,
         integrationMessage=integration_message,
         latestVersion=version,
@@ -410,6 +424,8 @@ class Handler(BaseHTTPRequestHandler):
                     raise RuntimeError("只能更新至刚刚检查到的稳定版本")
                 if is_yeutech_image(current_image()) and saved.get('upstreamIncluded') is not True:
                     raise RuntimeError(saved.get('integrationMessage') or '请先检查上游合并状态，未开始更新')
+                if is_yeutech_image(current_image()) and saved.get('installReady') is not True:
+                    raise RuntimeError(saved.get('installationMessage') or '请先检查发布槽和入口配置，未开始更新')
                 start_job("update", version)
                 return self.send_json(202, public_status())
             if self.path == "/rollback":

@@ -5,7 +5,7 @@
   },
   {
     "prefix": " const newer=hasRelease",
-    "line": " const newer=hasRelease&&update.latestVersion!==update.currentVersion,yeutechBuild=update?.yeutechBuildRequired===true,yeutechUpToDate=update?.yeutechUpToDate===true,blocked=update?.updateReady===false||(update?.officialUpdateAllowed===false&&!yeutechBuild);$('install-update').disabled=!newer||busy||blocked||yeutechUpToDate;$('install-update').textContent=blocked?'等待上游合并校验':yeutechUpToDate?'已部署维护分支最新提交':yeutechBuild?'构建并部署 YEUTECH 兼容版':newer?`更新至 ${update.latestVersion}`:'当前已是最新版本';$('rollback-update').disabled=!update?.canRollback||busy;$('rollback-update').textContent=update?.canRollback?`回退至 ${update.previousVersion}`:'没有可回退版本';"
+    "line": " const newer=hasRelease&&update.latestVersion!==update.currentVersion,yeutechBuild=update?.yeutechBuildRequired===true,yeutechUpToDate=update?.yeutechUpToDate===true,sourceBlocked=update?.updateReady===false,runtimeBlocked=yeutechBuild&&update?.installReady===false,blocked=sourceBlocked||runtimeBlocked||(update?.officialUpdateAllowed===false&&!yeutechBuild);$('install-update').disabled=!newer||busy||blocked||yeutechUpToDate;$('install-update').textContent=sourceBlocked?'等待上游合并校验':runtimeBlocked?'等待发布条件':blocked?'暂不可安装':yeutechUpToDate?'已部署维护分支最新提交':yeutechBuild?'构建并部署 YEUTECH 兼容版':newer?`更新至 ${update.latestVersion}`:'当前已是最新版本';$('rollback-update').disabled=!update?.canRollback||busy;$('rollback-update').textContent=update?.canRollback?`回退至 ${update.previousVersion}`:'没有可回退版本';"
   },
   {
     "prefix": " if(blocked",

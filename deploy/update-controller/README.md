@@ -44,7 +44,7 @@ was mocked; no install request was submitted, and no page JavaScript errors
 were observed. Playwright used installed Chrome because its bundled browser was
 absent. The Browser plugin was unavailable.
 
-Production controller and manager release: `20260925-update-control-v1`.
+Production controller and manager release: `20260925-update-control-v2`.
 The initial manager asset probe omitted the required Host header, returned 403,
 and rolled back the manager only. The corrected probe used `api.yeutech.cn`; the
 served asset matched the built asset byte-for-byte. All inference container IDs,
@@ -54,6 +54,6 @@ the user explicitly retained control of the upgrade action. No Go sources change
 Go compilation was unavailable because this machine has no `go` executable.
 
 Recovery files are on the NAS under
-`/volume1/docker/yeutech-api-manager/backups/20260925-update-control-v1`.
+`/volume1/docker/yeutech-api-manager/backups/20260925-update-control-v2`.
 Do not restore the old broken service launcher or restart inference containers
 as part of a UI/controller rollback.

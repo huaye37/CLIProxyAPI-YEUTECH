@@ -95,6 +95,17 @@ class ControllerTests(unittest.TestCase):
         self.assertFalse(status['updateReady'])
         self.assertIn('检查更新', status['updateBlockedReason'])
 
+    def test_integrated_source_remains_blocked_without_safe_slot(self):
+        saved = {'upstreamIncluded': True, 'installReady': False,
+                 'installationMessage': '不同推理入口的配置尚未统一'}
+        with patch.object(agent, 'read_state', return_value=saved), \
+             patch.object(agent, 'current_image', return_value='cli-proxy-api:yeutech-1234567'), \
+             patch.object(agent, 'container_health', return_value='healthy'):
+            status = agent.public_status()
+        self.assertTrue(status['updateReady'])
+        self.assertFalse(status['installReady'])
+        self.assertIn('配置尚未统一', status['updateBlockedReason'])
+
 
 if __name__ == '__main__':
     unittest.main()
