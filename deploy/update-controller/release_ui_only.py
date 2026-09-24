@@ -14,7 +14,7 @@ DOCKER = '/var/packages/ContainerManager/target/usr/bin/docker'
 ROOT = Path('/volume1/docker/yeutech-api-manager')
 SOURCE = Path(sys.argv[1]).resolve()
 assert str(SOURCE).startswith('/tmp/yeutech-update-ui-')
-RELEASE = '20260925-update-ui-v3'
+RELEASE = '20260925-update-blocker-copy-v6'
 BACKUP = ROOT / 'backups' / RELEASE
 assert not BACKUP.exists(), 'Release already exists; inspect before retry'
 

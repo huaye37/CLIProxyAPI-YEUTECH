@@ -1,15 +1,15 @@
 [
   {
     "prefix": "const phaseNames=",
-    "line": "const phaseNames={starting:'正在准备',downloading:'正在下载',waiting:'检查发布条件',installing:'正在安装',rolling_back:'正在回退',complete:'✓ 操作完成',failed:'操作失败',idle:'准备就绪'};"
+    "line": "const phaseNames={starting:'正在准备',downloading:'正在下载',waiting:'正在确认空闲发布槽',installing:'正在安装',rolling_back:'正在回退',complete:'✓ 操作完成',failed:'操作失败',idle:'准备就绪'};"
   },
   {
     "prefix": " const newer=hasRelease",
-    "line": " const newer=hasRelease&&update.latestVersion!==update.currentVersion,yeutechBuild=update?.yeutechBuildRequired===true,yeutechUpToDate=update?.yeutechUpToDate===true,sourceBlocked=update?.updateReady===false,runtimeBlocked=yeutechBuild&&update?.installReady===false,blocked=sourceBlocked||runtimeBlocked||(update?.officialUpdateAllowed===false&&!yeutechBuild);$('install-update').disabled=!newer||busy||blocked||yeutechUpToDate;$('install-update').textContent=sourceBlocked?'等待上游合并校验':runtimeBlocked?'等待发布条件':blocked?'暂不可安装':yeutechUpToDate?'已部署维护分支最新提交':yeutechBuild?'构建并部署 YEUTECH 兼容版':newer?`更新至 ${update.latestVersion}`:'当前已是最新版本';$('rollback-update').disabled=!update?.canRollback||busy;$('rollback-update').textContent=update?.canRollback?`回退至 ${update.previousVersion}`:'没有可回退版本';"
+    "line": " const newer=hasRelease&&update.latestVersion!==update.currentVersion,yeutechBuild=update?.yeutechBuildRequired===true,yeutechUpToDate=update?.yeutechUpToDate===true,sourceBlocked=update?.updateReady===false,runtimeBlocked=yeutechBuild&&update?.installReady===false,blocked=sourceBlocked||runtimeBlocked||(update?.officialUpdateAllowed===false&&!yeutechBuild),blockReason=String(update?.updateBlockedReason||''),configBlocked=runtimeBlocked&&blockReason.includes('配置'),slotBlocked=runtimeBlocked&&blockReason.includes('空闲发布槽'),blockLabel=configBlocked?'入口配置不同，暂不能部署':slotBlocked?'没有空闲发布槽，暂不能部署':'暂不能安全部署';$('install-update').disabled=!newer||busy||blocked||yeutechUpToDate;$('install-update').textContent=sourceBlocked?'官方版本尚未合并':runtimeBlocked?blockLabel:blocked?'暂不可安装':yeutechUpToDate?'已部署维护分支最新提交':yeutechBuild?'构建并部署 YEUTECH 兼容版':newer?`更新至 ${update.latestVersion}`:'当前已是最新版本';$('rollback-update').disabled=!update?.canRollback||busy;$('rollback-update').textContent=update?.canRollback?`回退至 ${update.previousVersion}`:'没有可回退版本';"
   },
   {
-    "prefix": " if(blocked",
-    "line": " if(yeutechBuild&&!busy){progress.hidden=false;progress.className='update-progress';$('update-phase').textContent=sourceBlocked?'等待自动合并上游':runtimeBlocked?'上游已合并 · 等待发布条件':yeutechUpToDate?'维护分支已部署':blocked?'暂不可安装':'上游已合并 · 可以部署';$('update-message').textContent=sourceBlocked?`${update.updateBlockedReason||'上游尚未合并到维护分支'}。源码由每日自动任务处理，不需要在此手动合并。`:runtimeBlocked?`源码已合并，无需前置合并按钮。${update.updateBlockedReason||'发布条件尚未满足。'}`:blocked?update.updateBlockedReason||'请重新检查更新状态。':yeutechUpToDate?'当前运行的已是维护分支最新提交。':'源码已合并，无需前置合并按钮；如需升级运行中的代理，可点击下方构建并部署。';}"
+    "prefix": " if(yeutechBuild&&!busy)",
+    "line": " if(yeutechBuild&&!busy){progress.hidden=false;progress.className='update-progress';$('update-phase').textContent=sourceBlocked?'官方版本尚未合并':runtimeBlocked?blockLabel:yeutechUpToDate?'维护分支已部署':blocked?'暂不可安装':'已合并，可以部署';$('update-message').textContent=sourceBlocked?`${blockReason||'官方版本尚未合并到维护分支'}。自动同步任务会继续处理。`:configBlocked?'当前推理入口使用不同配置。现有发布程序只支持一套配置，继续部署会覆盖已有模型路由；代理仍正常运行，本次未执行升级。':slotBlocked?'目前没有可安全复用的发布槽；现有请求继续运行，本次未执行升级。':runtimeBlocked?`${blockReason||'暂不能安全切换推理入口'}；代理仍正常运行，本次未执行升级。`:blocked?blockReason||'请重新检查更新状态。':yeutechUpToDate?'当前运行的已是维护分支最新提交。':'源码已合并。点击下方按钮后才会构建并部署代理。';}"
   },
   {
     "prefix": "$('install-update').onclick=",

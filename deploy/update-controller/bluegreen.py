@@ -11,6 +11,7 @@ import subprocess
 import time
 import urllib.request
 from pathlib import Path
+from typing import Optional
 
 ROOT = Path('/volume1/docker/novel-ai-proxy')
 AUTH = ROOT / 'auth'
@@ -62,19 +63,86 @@ def gateway_inventory(require_applied: bool = True) -> list[dict]:
 def deployment_plan() -> tuple:
     inventory = gateway_inventory()
     source_state = production_state()
-    def normalized(slot):
-        return re.sub(r'(?m)^port:\s*\d+\s*$', 'port: SLOT',
-                      (slot_config(slot) / 'config.yaml').read_text())
-    source_config = normalized(source_state['slot'])
-    for gateway in inventory:
-        if normalized(gateway['state']['slot']) != source_config:
-            raise RuntimeError('不同推理入口的配置尚未统一，已阻止覆盖现有模型路由；需先核对配置差异')
     allowed = set.intersection(*(g['allowed'] for g in inventory))
     for slot, port in SLOTS.items():
-        if (port in allowed and all(g['status']['activePort'] != port and
-                int(g['status']['activeRequests'].get(str(port), 0)) == 0 for g in inventory)):
+        if port in allowed and slot_reusable(slot, inventory):
             return source_state, slot, inventory
     raise RuntimeError('没有空闲发布槽；现有请求和旧实例均保留，请稍后重试')
+
+
+def normalized_config(slot: str) -> str:
+    return re.sub(r'(?m)^port:\s*\d+\s*$', 'port: SLOT',
+                  (slot_config(slot) / 'config.yaml').read_text())
+
+
+def config_sections(slot: str) -> dict[str, str]:
+    sections = {}
+    current = '(header)'
+    for line in normalized_config(slot).splitlines(keepends=True):
+        match = re.match(r'^([A-Za-z][A-Za-z0-9-]*):', line)
+        if match:
+            current = match.group(1)
+        sections[current] = sections.get(current, '') + line
+    return sections
+
+
+def additive_web_config_source(inventory: list[dict]) -> Optional[str]:
+    """Use the Web-enabled config only for the known additive lane drift."""
+    slots = {g['state']['slot'] for g in inventory}
+    if len(slots) != 2:
+        return None
+    candidate = production_state()['slot']
+    if candidate not in slots:
+        return None
+    other = next(iter(slots - {candidate}))
+    target, base = config_sections(candidate), config_sections(other)
+    if any(base.get(key) != target.get(key) for key in base.keys() | target.keys()
+           if key not in {'codex', 'openai-compatibility'}):
+        return None
+    if base.get('codex') or not re.fullmatch(
+            r'codex:\s*\n\s+orphan-delegation-compatibility:\s*(?:true|false)\s*\n?', target.get('codex', '')):
+        return None
+    before, after = base.get('openai-compatibility', ''), target.get('openai-compatibility', '')
+    if not before or not after.startswith(before):
+        return None
+    extra = after[len(before):]
+    names = re.findall(r'(?m)^\s*-\s*name:\s*([^\s#]+)', extra)
+    if names != ['chatgpt-web', 'chatgpt-web-gpt-6-pro',
+                 'chatgpt-web-gpt-5-6-thinking', 'chatgpt-web-gpt-5-6-pro']:
+        return None
+    return candidate
+
+
+def backend_connections(port: int) -> int:
+    output = subprocess.run(['/usr/bin/netstat', '-tn'], text=True, capture_output=True, check=True).stdout
+    return sum('ESTABLISHED' in line and re.search(r'[:.]' + str(port) + r'\s', line) is not None
+               for line in output.splitlines())
+
+
+def slot_reusable(slot: str, inventory: list[dict]) -> bool:
+    port = SLOTS[slot]
+    if any(g['status']['activePort'] == port for g in inventory):
+        return False
+    if any(int(g['status']['activeRequests'].get(str(port), 0)) > 0 and
+           g['status'].get('version') == 'lifecycle-v3' for g in inventory):
+        return False
+    # Pre-v3 gateways can retain completed request counts. Their stale counters
+    # are ignored only when the backend has no established TCP connections.
+    return backend_connections(port) == 0
+
+
+def wait_reusable_slot(slot: str, timeout: int = 900) -> None:
+    deadline, quiet_since = time.monotonic() + timeout, None
+    while time.monotonic() < deadline:
+        inventory = gateway_inventory()
+        if slot_reusable(slot, inventory):
+            quiet_since = quiet_since or time.monotonic()
+            if time.monotonic() - quiet_since >= 5:
+                return
+        else:
+            quiet_since = None
+        time.sleep(1)
+    raise RuntimeError(f'{slot} 发布槽仍有在途请求，已保留旧实例；稍后可重试')
 
 
 def replace_pointer(path: Path, value: dict) -> None:
@@ -307,42 +375,72 @@ def migrate() -> dict:
     return read_state()
 
 
-def deploy(image: str) -> dict:
-    state, new_slot, inventory = deployment_plan()
-    old_slot = state['slot']
-    old_container = container_name(old_slot)
-    if state['image'] == image and all(g['state']['image'] == image for g in inventory):
-        return state
-    prepare_config(slot_config(old_slot), new_slot)
-    start_slot(new_slot, image, old_container)
-    probe(SLOTS[new_slot], slot_config(new_slot))
-    pointers = {g['path']: g['state'] for g in inventory}
-    next_state = dict(slot=new_slot, port=SLOTS[new_slot], image=image, updatedAt=int(time.time()))
-    try:
-        # Existing sockets remain attached to their original backend. Only new
-        # requests follow each atomically replaced pointer.
-        for path in pointers:
-            replace_pointer(path, next_state)
-        deadline = time.monotonic() + 15
+def deploy(image: str, *, unify_only: bool = False) -> dict:
+    _, first_slot, inventory = deployment_plan()
+    unified_source = additive_web_config_source(inventory)
+    if unify_only and not unified_source:
+        raise RuntimeError('入口配置不符合已核对的增量差异，未执行统一')
+    if unify_only and (image != production_state()['image'] or
+                       image != next(g['state']['image'] for g in inventory
+                                     if g['state']['slot'] == unified_source)):
+        raise RuntimeError('统一配置只能复用已在线的完整配置镜像')
+    groups = {}
+    if unified_source:
+        groups['additive-web-config'] = {g['path']: g for g in inventory}
+    else:
+        for gateway in inventory:
+            groups.setdefault(normalized_config(gateway['state']['slot']), {})[gateway['path']] = gateway
+    for index, group in enumerate(groups.values()):
+        if not unify_only and all(g['state']['image'] == image for g in group.values()) and (
+                not unified_source or len({g['state']['slot'] for g in group.values()}) == 1):
+            continue
+        current = gateway_inventory()
+        members = [g for g in current if g['path'] in group]
+        allowed = set.intersection(*(g['allowed'] for g in members))
+        candidates = [first_slot] if index == 0 else list(SLOTS)
+        if index == 0:
+            candidates += [slot for slot in SLOTS if slot != first_slot]
+        deadline = time.monotonic() + 900
         while True:
-            observed = gateway_inventory(require_applied=False)
-            if all(g['status']['activePort'] == SLOTS[new_slot] for g in observed):
+            current = gateway_inventory()
+            next_slot = next((slot for slot in candidates if SLOTS[slot] in allowed and
+                              slot_reusable(slot, current)), None)
+            if next_slot:
                 break
             if time.monotonic() >= deadline:
-                raise RuntimeError('部分网关未确认新版本，恢复原入口；保留全部在途实例')
-            time.sleep(0.2)
-    except Exception:
-        for path, previous in pointers.items():
-            replace_pointer(path, previous)
-        # The candidate may already own streams. Never stop it on rollback.
-        raise
-    # Draining is not installation. Retain old backends, including long-lived
-    # WebSocket sessions, instead of waiting or imposing a shutdown deadline.
-    return next_state
+                raise RuntimeError('下一组入口没有空闲发布槽；已切换的入口继续运行，未切换的入口保持原样')
+            time.sleep(1)
+        wait_reusable_slot(next_slot)
+        source = unified_source or members[0]['state']['slot']
+        prepare_config(slot_config(source), next_slot)
+        start_slot(next_slot, image, container_name(source))
+        probe(SLOTS[next_slot], slot_config(next_slot))
+        pointers = {g['path']: g['state'] for g in members}
+        next_state = dict(slot=next_slot, port=SLOTS[next_slot], image=image, updatedAt=int(time.time()))
+        try:
+            # Switch only gateways sharing this configuration. Other gateway
+            # groups and their active streams retain their own config and slot.
+            for path in pointers:
+                replace_pointer(path, next_state)
+            deadline = time.monotonic() + 15
+            while True:
+                observed = gateway_inventory(require_applied=False)
+                if all(g['status']['activePort'] == SLOTS[next_slot]
+                       for g in observed if g['path'] in pointers):
+                    break
+                if time.monotonic() >= deadline:
+                    raise RuntimeError('部分网关未确认新版本，恢复本组入口；保留全部在途实例')
+                time.sleep(0.2)
+        except Exception:
+            for path, previous in pointers.items():
+                replace_pointer(path, previous)
+            # The candidate may already own streams. Never stop it on rollback.
+            raise
+    return production_state()
 
 
 if __name__ == '__main__':
     import sys
     action = sys.argv[1] if len(sys.argv) > 1 else 'status'
-    result = migrate() if action == 'migrate' else deploy(sys.argv[2]) if action == 'deploy' and len(sys.argv) == 3 else read_state()
+    result = migrate() if action == 'migrate' else deploy(sys.argv[2]) if action == 'deploy' and len(sys.argv) == 3 else deploy(production_state()['image'], unify_only=True) if action == 'unify' else read_state()
     print(json.dumps({'slot': result['slot'], 'port': result['port'], 'image': result['image']}))

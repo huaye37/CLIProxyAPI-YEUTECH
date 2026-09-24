@@ -23,12 +23,14 @@ class ControllerTests(unittest.TestCase):
             state = dict(slot=slot, port=bg.SLOTS[slot], image='old')
             self.inventory.append(dict(path=self.root / name, state=state,
                 allowed=set(bg.SLOTS.values()), status=dict(activePort=bg.SLOTS[slot], activeRequests={})))
+            (self.root / name).write_text(json.dumps(state))
         self.source = self.inventory[1]['state']
 
     def plan(self):
         with patch.object(bg, 'gateway_inventory', return_value=self.inventory), \
              patch.object(bg, 'production_state', return_value=self.source), \
-             patch.object(bg, 'ROOT', self.root):
+             patch.object(bg, 'ROOT', self.root), \
+             patch.object(bg, 'backend_connections', return_value=0):
             return bg.deployment_plan()
 
     def test_plan_uses_only_idle_slot_and_primary_config(self):
@@ -38,13 +40,87 @@ class ControllerTests(unittest.TestCase):
 
     def test_any_gateway_inflight_blocks_reuse(self):
         self.inventory[1]['status']['activeRequests']['18318'] = 1
+        self.inventory[1]['status']['version'] = 'lifecycle-v3'
         with self.assertRaisesRegex(RuntimeError, '没有空闲'):
             self.plan()
 
-    def test_config_divergence_blocks_overwrite(self):
+    def test_config_divergence_keeps_a_safe_staging_slot(self):
         (self.root / 'config-blue/config.yaml').write_text('port: 18317\nroute: different\n')
-        with self.assertRaisesRegex(RuntimeError, '配置尚未统一'):
-            self.plan()
+        _, slot, _ = self.plan()
+        self.assertEqual(slot, 'green')
+
+    def test_known_additive_web_config_can_be_unified(self):
+        (self.root / 'config-blue/config.yaml').write_text(
+            'port: 18317\nroute: retained\nopenai-compatibility:\n  - name: existing\n')
+        (self.root / 'config-amber/config.yaml').write_text(
+            'port: 18315\nroute: retained\nopenai-compatibility:\n  - name: existing\n'
+            '  - name: chatgpt-web\n  - name: chatgpt-web-gpt-6-pro\n'
+            '  - name: chatgpt-web-gpt-5-6-thinking\n  - name: chatgpt-web-gpt-5-6-pro\n'
+            'codex:\n  orphan-delegation-compatibility: false\n')
+        with patch.object(bg, 'ROOT', self.root), \
+             patch.object(bg, 'production_state', return_value=self.source):
+            self.assertEqual(bg.additive_web_config_source(self.inventory), 'amber')
+            (self.root / 'config-blue/config.yaml').write_text(
+                'port: 18317\nroute: changed\nopenai-compatibility:\n  - name: existing\n')
+            self.assertIsNone(bg.additive_web_config_source(self.inventory))
+
+    def test_live_codex_compatibility_setting_can_be_unified(self):
+        (self.root / 'config-blue/config.yaml').write_text(
+            'port: 18317\nroute: retained\nopenai-compatibility:\n  - name: existing\n')
+        (self.root / 'config-amber/config.yaml').write_text(
+            'port: 18315\nroute: retained\nopenai-compatibility:\n  - name: existing\n'
+            '  - name: chatgpt-web\n  - name: chatgpt-web-gpt-6-pro\n'
+            '  - name: chatgpt-web-gpt-5-6-thinking\n  - name: chatgpt-web-gpt-5-6-pro\n'
+            'codex:\n  orphan-delegation-compatibility: true\n')
+        with patch.object(bg, 'ROOT', self.root), \
+             patch.object(bg, 'production_state', return_value=self.source):
+            self.assertEqual(bg.additive_web_config_source(self.inventory), 'amber')
+
+    def test_unify_only_rejects_unknown_difference(self):
+        (self.root / 'config-blue/config.yaml').write_text('port: 18317\nroute: changed\n')
+        with patch.object(bg, 'ROOT', self.root), \
+             patch.object(bg, 'deployment_plan', return_value=(self.source, 'green', self.inventory)), \
+             patch.object(bg, 'production_state', return_value=self.source), \
+             patch.object(bg, 'start_slot') as start:
+            with self.assertRaisesRegex(RuntimeError, '不符合已核对'):
+                bg.deploy('old', unify_only=True)
+        start.assert_not_called()
+
+    def test_unify_only_aligns_older_lane_to_live_source_image(self):
+        (self.root / 'config-blue/config.yaml').write_text(
+            'port: 18317\nroute: retained\nopenai-compatibility:\n  - name: existing\n')
+        (self.root / 'config-amber/config.yaml').write_text(
+            'port: 18315\nroute: retained\nopenai-compatibility:\n  - name: existing\n'
+            '  - name: chatgpt-web\n  - name: chatgpt-web-gpt-6-pro\n'
+            '  - name: chatgpt-web-gpt-5-6-thinking\n  - name: chatgpt-web-gpt-5-6-pro\n'
+            'codex:\n  orphan-delegation-compatibility: true\n')
+        self.inventory[0]['state']['image'] = 'older'
+        self.inventory[0]['path'].write_text(json.dumps(self.inventory[0]['state']))
+        def observed(require_applied=True):
+            return [dict(g, state=json.loads(g['path'].read_text()),
+                         status=dict(activePort=json.loads(g['path'].read_text())['port'], activeRequests={}))
+                    for g in self.inventory]
+        with patch.object(bg, 'ROOT', self.root), \
+             patch.object(bg, 'deployment_plan', return_value=(self.source, 'green', self.inventory)), \
+             patch.object(bg, 'gateway_inventory', side_effect=observed), \
+             patch.object(bg, 'slot_reusable', return_value=True), \
+             patch.object(bg, 'wait_reusable_slot'), \
+             patch.object(bg, 'prepare_config') as prepare, \
+             patch.object(bg, 'start_slot') as start, \
+             patch.object(bg, 'probe'), \
+             patch.object(bg, 'production_state', side_effect=lambda: json.loads(self.inventory[1]['path'].read_text())):
+            result = bg.deploy('old', unify_only=True)
+        self.assertEqual(result['image'], 'old')
+        self.assertEqual({json.loads(g['path'].read_text())['slot'] for g in self.inventory}, {'green'})
+        prepare.assert_called_once_with(self.root / 'config-amber', 'green')
+        self.assertEqual(start.call_args.args[1], 'old')
+
+    def test_legacy_stale_count_requires_no_backend_socket(self):
+        self.inventory[0]['status']['activeRequests']['18318'] = 16
+        with patch.object(bg, 'backend_connections', return_value=0):
+            self.assertTrue(bg.slot_reusable('green', self.inventory))
+        with patch.object(bg, 'backend_connections', return_value=1):
+            self.assertFalse(bg.slot_reusable('green', self.inventory))
 
     def test_allowed_port_intersection(self):
         self.inventory[1]['allowed'].remove(18318)
@@ -52,22 +128,57 @@ class ControllerTests(unittest.TestCase):
             self.plan()
 
     def test_switch_preserves_old_backends(self):
-        observed = [dict(status=dict(activePort=18318)) for _ in self.inventory]
-        with patch.object(bg, 'deployment_plan', return_value=(self.source, 'green', self.inventory)), \
+        def observed(require_applied=True):
+            return [dict(g, state=json.loads(g['path'].read_text()),
+                         status=dict(activePort=json.loads(g['path'].read_text())['port'], activeRequests={}))
+                    for g in self.inventory]
+        with patch.object(bg, 'ROOT', self.root), \
+             patch.object(bg, 'deployment_plan', return_value=(self.source, 'green', self.inventory)), \
              patch.object(bg, 'prepare_config'), patch.object(bg, 'start_slot'), \
              patch.object(bg, 'probe'), patch.object(bg, 'stop') as stop, \
-             patch.object(bg, 'gateway_inventory', return_value=observed):
+             patch.object(bg, 'gateway_inventory', side_effect=observed), \
+             patch.object(bg, 'slot_reusable', return_value=True), \
+             patch.object(bg, 'wait_reusable_slot'), \
+             patch.object(bg, 'production_state', side_effect=lambda: json.loads(self.inventory[1]['path'].read_text())):
             result = bg.deploy('new')
         self.assertEqual(result['image'], 'new')
         for gateway in self.inventory:
             self.assertEqual(json.loads(gateway['path'].read_text())['port'], 18318)
         stop.assert_not_called()
 
+    def test_distinct_gateway_configs_roll_separately(self):
+        (self.root / 'config-blue/config.yaml').write_text('port: 18317\nroute: standard\n')
+        (self.root / 'config-amber/config.yaml').write_text('port: 18315\nroute: web-models\n')
+        def observed(require_applied=True):
+            return [dict(g, state=json.loads(g['path'].read_text()),
+                         status=dict(activePort=json.loads(g['path'].read_text())['port'], activeRequests={}))
+                    for g in self.inventory]
+        def reusable(slot, rows):
+            return all(g['status']['activePort'] != bg.SLOTS[slot] for g in rows)
+        with patch.object(bg, 'ROOT', self.root), \
+             patch.object(bg, 'deployment_plan', return_value=(self.source, 'green', self.inventory)), \
+             patch.object(bg, 'gateway_inventory', side_effect=observed), \
+             patch.object(bg, 'slot_reusable', side_effect=reusable), \
+             patch.object(bg, 'wait_reusable_slot'), \
+             patch.object(bg, 'prepare_config') as prepare, \
+             patch.object(bg, 'start_slot'), patch.object(bg, 'probe'), \
+             patch.object(bg, 'production_state', side_effect=lambda: json.loads(self.inventory[1]['path'].read_text())):
+            result = bg.deploy('new')
+        self.assertEqual(result['slot'], 'blue')
+        self.assertEqual(json.loads(self.inventory[0]['path'].read_text())['slot'], 'green')
+        self.assertEqual(json.loads(self.inventory[1]['path'].read_text())['slot'], 'blue')
+        self.assertEqual([call.args[1] for call in prepare.call_args_list], ['green', 'blue'])
+        self.assertEqual([call.args[0].name for call in prepare.call_args_list], ['config-blue', 'config-amber'])
+
     def test_failed_switch_restores_all_pointers_without_killing_candidate(self):
-        with patch.object(bg, 'deployment_plan', return_value=(self.source, 'green', self.inventory)), \
+        with patch.object(bg, 'ROOT', self.root), \
+             patch.object(bg, 'deployment_plan', return_value=(self.source, 'green', self.inventory)), \
              patch.object(bg, 'prepare_config'), patch.object(bg, 'start_slot'), \
              patch.object(bg, 'probe'), patch.object(bg, 'stop') as stop, \
-             patch.object(bg, 'gateway_inventory', side_effect=RuntimeError('unreachable')):
+             patch.object(bg, 'slot_reusable', return_value=True), \
+             patch.object(bg, 'wait_reusable_slot'), \
+             patch.object(bg, 'production_state', return_value=self.source), \
+             patch.object(bg, 'gateway_inventory', side_effect=[self.inventory, self.inventory, RuntimeError('unreachable')]):
             with self.assertRaisesRegex(RuntimeError, 'unreachable'):
                 bg.deploy('new')
         for gateway in self.inventory:

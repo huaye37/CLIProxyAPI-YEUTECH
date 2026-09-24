@@ -79,3 +79,21 @@ authenticated Chrome page, clicking `检查更新` then showed `已合并 v7.3.1
 commit `3a4b683099b4`, a fresh check time, and a disabled deploy button with
 the configuration-divergence reason. The manager-only v5 release left every
 inference container identity and start time unchanged.
+
+## Active configuration unification (2026-09-25)
+
+The two gateway pointers previously used `blue` and `amber` with different
+images and configurations. The differences were limited to the four ChatGPT Web
+compatibility routes and `codex.orphan-delegation-compatibility` in `amber`.
+The initial config-only preflight stopped without switching because the images
+also differed. `20260925-config-unification-v9` then safely reused the already
+running `amber` image and configuration in the idle `green` slot and moved both
+gateway pointers to it. All four gateway processes report port 18318; the new
+backend returns 41 model capabilities, including the three ChatGPT Web models.
+The original `blue` and `amber` containers were not stopped or restarted, so
+their established requests could finish. A pointer/config backup is at
+`/volume1/docker/novel-ai-proxy/update-backups/20260925-config-unification-v9`.
+The upstream v7.3.17 source is integrated and installation is ready, but this
+operation did **not** deploy that new proxy version; the user retains the web
+upgrade action. The controller still records a failed *previous* update job,
+which is not the result of this unification.
