@@ -1,0 +1,63 @@
+name: YEUTECH upstream release sync
+
+on:
+  schedule:
+    - cron: '23 19 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: yeutech-upstream-release-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - name: Checkout maintained branch
+        uses: actions/checkout@v4
+        with:
+          ref: yeutech-capability-v15
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Merge official stable release
+        id: merge
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash scripts/sync-upstream-release.sh
+      - name: Verify full proxy suite
+        if: steps.merge.outputs.changed == 'true'
+        run: |
+          go test ./...
+          go build -o /tmp/yeutech-sync-proxy ./cmd/server
+      - name: Publish verified source only
+        if: steps.merge.outputs.changed == 'true'
+        run: |
+          if git diff --quiet origin/yeutech-capability-v15 HEAD; then
+            echo 'Maintained branch already current'
+          else
+            git push origin HEAD:refs/heads/yeutech-capability-v15
+          fi
+      - name: Create or update sync issue on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(gh api repos/router-for-me/CLIProxyAPI/releases/latest --jq .tag_name)
+          title="YEUTECH upstream sync $version needs attention"
+          existing=$(gh issue list --state open --search "$title in:title" --json number,title --jq ".[] | select(.title == \"$title\") | .number" | head -1)
+          body="Automatic merge or verification failed for $version. The maintained branch and running proxy were not changed. Inspect this workflow run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "$body"
+          else
+            gh issue create --title "$title" --body "$body"
+          fi

@@ -80,15 +80,29 @@ func TestModelCapabilitiesHandlerMarksRoutableGPTImageModelsSelectable(t *testin
 	server := newTestServer(t)
 	registerCapabilityTestAuth(t, server, &coreauth.Auth{ID: clientID, Provider: "codex", Status: coreauth.StatusActive})
 
+	expected := map[string]bool{
+		"gpt-image-2.5-flare":    false,
+		"gpt-image-2.5-sunburst": false,
+		"gpt-image-2.5":          false,
+	}
 	for _, model := range models {
+		if _, ok := expected[model.ID]; !ok {
+			continue
+		}
+		expected[model.ID] = true
 		target := requestModelCapabilityFromServer(t, server, model.ID)
 		if target["capability_status"] != "ready" || target["selectable"] != true {
 			t.Fatalf("GPT image model %q = %#v, want ready/selectable", model.ID, target)
 		}
-		if target["context_length"] != 32768 || target["max_output_tokens"] != 8192 {
+		if target["context_length"] != float64(32768) || target["max_output_tokens"] != float64(8192) {
 			t.Fatalf("GPT image model %q = %#v, want declared capability limits", model.ID, target)
 		}
 		assertCapabilityWorkloads(t, target, "image_generation")
+	}
+	for id, found := range expected {
+		if !found {
+			t.Fatalf("missing GPT image model %q", id)
+		}
 	}
 }
 
