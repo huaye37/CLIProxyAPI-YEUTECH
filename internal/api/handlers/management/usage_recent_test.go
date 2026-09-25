@@ -15,8 +15,9 @@ func TestRecentUsageKeepsNewestWithoutSensitiveFields(t *testing.T) {
 	for _, model := range []string{"first", "second", "third"} {
 		ring.HandleUsage(context.Background(), coreusage.Record{
 			RequestID: model, Alias: model, Model: "route-" + model,
-			ResponseModel: "served-" + model, APIKey: "never-expose",
+			ResponseModel: "served-" + model, AuthIndex: "account-1", APIKey: "never-expose",
 			RequestedAt: time.Unix(100, 0), Latency: 1500 * time.Millisecond,
+			Detail: coreusage.Detail{InputTokens: 179540, CachedTokens: 120000, CacheReadTokens: 120000},
 		})
 	}
 	got := ring.snapshot(5)
@@ -25,6 +26,12 @@ func TestRecentUsageKeepsNewestWithoutSensitiveFields(t *testing.T) {
 	}
 	if got[0].LatencyMS != 1500 || got[0].ResponseModel != "served-third" {
 		t.Fatalf("recent fields = %+v", got[0])
+	}
+	if got[0].AuthIndex != "account-1" {
+		t.Fatalf("recent account index = %q", got[0].AuthIndex)
+	}
+	if got[0].InputTokens != 179540 || got[0].CacheReadTokens != 120000 {
+		t.Fatalf("recent cache detail = %+v", got[0])
 	}
 }
 

@@ -17,6 +17,7 @@ type recentUsageEntry struct {
 	RequestID           string    `json:"requestId"`
 	TraceID             string    `json:"traceId,omitempty"`
 	Provider            string    `json:"provider"`
+	AuthIndex           string    `json:"authIndex,omitempty"`
 	RequestedModel      string    `json:"requestedModel"`
 	RoutedModel         string    `json:"routedModel"`
 	ResponseModel       string    `json:"responseModel,omitempty"`
@@ -27,6 +28,10 @@ type recentUsageEntry struct {
 	StatusCode          int       `json:"statusCode,omitempty"`
 	InputTokens         int64     `json:"inputTokens"`
 	OutputTokens        int64     `json:"outputTokens"`
+	CachedTokens        int64     `json:"cachedTokens"`
+	CacheReadTokens     int64     `json:"cacheReadTokens"`
+	CacheCreationTokens int64     `json:"cacheCreationTokens"`
+	ReasoningTokens     int64     `json:"reasoningTokens"`
 	ResponseServiceTier string    `json:"responseServiceTier,omitempty"`
 }
 
@@ -57,12 +62,16 @@ func (r *recentUsageRing) HandleUsage(_ context.Context, record coreusage.Record
 	}
 	entry := recentUsageEntry{
 		RequestID: usageField(record.RequestID), TraceID: usageField(record.TraceID),
-		Provider: usageField(record.Provider), RequestedModel: usageField(record.Alias),
+		Provider: usageField(record.Provider), AuthIndex: usageField(record.AuthIndex), RequestedModel: usageField(record.Alias),
 		RoutedModel: usageField(record.Model), ResponseModel: usageField(record.ResponseModel),
 		RequestedAt: requestedAt.UTC(), LatencyMS: record.Latency.Milliseconds(),
 		TTFTMS: record.TTFT.Milliseconds(), Failed: record.Failed,
 		StatusCode: record.Fail.StatusCode, InputTokens: record.Detail.InputTokens,
 		OutputTokens:        record.Detail.OutputTokens,
+		CachedTokens:        record.Detail.CachedTokens,
+		CacheReadTokens:     record.Detail.CacheReadTokens,
+		CacheCreationTokens: record.Detail.CacheCreationTokens,
+		ReasoningTokens:     record.Detail.ReasoningTokens,
 		ResponseServiceTier: usageField(record.ResponseServiceTier),
 	}
 	if entry.RequestedModel == "" {
