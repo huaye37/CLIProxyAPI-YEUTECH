@@ -10,6 +10,10 @@ import bluegreen as bg
 
 
 class ControllerTests(unittest.TestCase):
+    def test_major_version_upgrade_is_accepted(self):
+        self.assertTrue(agent.VERSION_RE.fullmatch('v8.0.2'))
+        self.assertEqual(agent.image_version('eceasy/cli-proxy-api:v8.0.2'), 'v8.0.2')
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)

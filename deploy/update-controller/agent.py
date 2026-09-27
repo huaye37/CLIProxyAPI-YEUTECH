@@ -39,7 +39,7 @@ YEUTECH_BRANCH = "yeutech-capability-v15"
 UPSTREAM_REPOSITORY = "https://github.com/router-for-me/CLIProxyAPI.git"
 RELEASES = ROOT / "releases"
 RELEASE_API = "https://api.github.com/repos/router-for-me/CLIProxyAPI/releases/latest"
-VERSION_RE = re.compile(r"^v7\.\d+\.\d+$")
+VERSION_RE = re.compile(r"^v(?:7|8)\.\d+\.\d+$")
 IMAGE_RE = re.compile(r"^\s*image:\s*(\S+)\s*$", re.MULTILINE)
 YEUTECH_CAPABILITIES_VARIANT = "yeutech-capabilities"
 
@@ -91,7 +91,7 @@ def image_version(image: str) -> str:
     yeutech_variant = re.search(r":yeutech-([A-Za-z0-9][A-Za-z0-9._-]*)$", image)
     if yeutech_variant:
         return "YEUTECH " + yeutech_variant.group(1)
-    match = re.search(r":(v7\.\d+\.\d+)(?:-[A-Za-z0-9._-]+)?(?:@|$)", image)
+    match = re.search(r":(v(?:7|8)\.\d+\.\d+)(?:-[A-Za-z0-9._-]+)?(?:@|$)", image)
     return match.group(1) if match else "unknown"
 
 
