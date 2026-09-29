@@ -106,7 +106,7 @@ func (e *OpenAICompatExecutor) Execute(ctx context.Context, auth *cliproxyauth.A
 	responseFormat := cliproxyexecutor.ResponseFormatOrSource(opts)
 	to := sdktranslator.FromString("openai")
 	endpoint := "/chat/completions"
-	if cfg := e.resolveCompatConfig(auth); cfg != nil && cfg.WireAPI == "responses" {
+	if cfg := e.resolveCompatConfig(auth, req); cfg != nil && cfg.WireAPI == "responses" {
 		to = sdktranslator.FormatOpenAIResponse
 		endpoint = "/responses"
 	}
@@ -334,7 +334,7 @@ func (e *OpenAICompatExecutor) ExecuteStream(ctx context.Context, auth *cliproxy
 	to := sdktranslator.FromString("openai")
 	originalPayloadSource := req.Payload
 	endpoint := "/chat/completions"
-	if cfg := e.resolveCompatConfig(auth); cfg != nil && cfg.WireAPI == "responses" {
+	if cfg := e.resolveCompatConfig(auth, req); cfg != nil && cfg.WireAPI == "responses" {
 		to = sdktranslator.FormatOpenAIResponse
 		endpoint = "/responses"
 	}
