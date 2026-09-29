@@ -48,6 +48,27 @@ type staticModelsJSON struct {
 	Meta        []*ModelInfo `json:"meta"`
 }
 
+// DeepSeek's OpenAI-compatible route only registers model IDs. Keep its
+// published capabilities separate from Devin's model with the same public ID.
+var staticDeepSeekCompatibilityModels = []*ModelInfo{
+	{
+		ID: "deepseek-flash", Type: "openai-compatibility", OwnedBy: "deepseek",
+		DisplayName: "DeepSeek V4.1 Flash", ContextLength: 1048576,
+		MaxCompletionTokens:       393216,
+		SupportedInputModalities:  []string{"text", "image"},
+		SupportedOutputModalities: []string{"text"},
+		SupportedWorkloads:        []string{ModelWorkloadConversation, ModelWorkloadAgent},
+	},
+	{
+		ID: "deepseek-v4-pro", Type: "openai-compatibility", OwnedBy: "deepseek",
+		DisplayName: "DeepSeek V4 Pro", ContextLength: 1048576,
+		MaxCompletionTokens:       393216,
+		SupportedInputModalities:  []string{"text"},
+		SupportedOutputModalities: []string{"text"},
+		SupportedWorkloads:        []string{ModelWorkloadConversation, ModelWorkloadAgent},
+	},
+}
+
 // GetClaudeModels returns the standard Claude model definitions.
 func GetClaudeModels() []*ModelInfo {
 	return cloneModelInfos(getModels().Claude)
@@ -521,6 +542,7 @@ func cloneModelInfos(models []*ModelInfo) []*ModelInfo {
 //   - xai
 //   - devin
 //   - meta
+//   - deepseek
 func GetStaticModelDefinitionsByChannel(channel string) []*ModelInfo {
 	key := strings.ToLower(strings.TrimSpace(channel))
 	switch key {
@@ -546,6 +568,8 @@ func GetStaticModelDefinitionsByChannel(channel string) []*ModelInfo {
 		return GetDevinModels()
 	case "meta", "muse":
 		return GetMetaModels()
+	case "deepseek":
+		return cloneModelInfos(staticDeepSeekCompatibilityModels)
 	default:
 		return nil
 	}

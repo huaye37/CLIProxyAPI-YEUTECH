@@ -56,6 +56,39 @@ func TestModelCapabilitiesHandlerEnrichesStaticGeminiMetadata(t *testing.T) {
 	assertCapabilityWorkloads(t, target, "image_generation")
 }
 
+func TestModelCapabilitiesHandlerEnrichesDeepSeekCompatibilityModels(t *testing.T) {
+	modelRegistry := registry.GetGlobalRegistry()
+	clientID := "test-model-capabilities-deepseek"
+	modelRegistry.RegisterClient(clientID, "openai-compatibility", []*registry.ModelInfo{
+		{ID: "deepseek-flash", Object: "model", OwnedBy: "Deepseek"},
+		{ID: "deepseek-v4-pro", Object: "model", OwnedBy: "Deepseek"},
+	})
+	t.Cleanup(func() { modelRegistry.UnregisterClient(clientID) })
+	server := newTestServer(t)
+	registerCapabilityTestAuth(t, server, &coreauth.Auth{ID: clientID, Provider: "openai-compatibility", Status: coreauth.StatusActive})
+
+	for _, tt := range []struct {
+		id    string
+		input []string
+	}{
+		{id: "deepseek-flash", input: []string{"text", "image"}},
+		{id: "deepseek-v4-pro", input: []string{"text"}},
+	} {
+		target := requestModelCapabilityFromServer(t, server, tt.id)
+		if target["capability_status"] != "ready" || target["selectable"] != true {
+			t.Fatalf("%s = %#v, want ready/selectable", tt.id, target)
+		}
+		if target["context_length"] != float64(1048576) || target["max_output_tokens"] != float64(393216) {
+			t.Fatalf("%s = %#v, want published DeepSeek limits", tt.id, target)
+		}
+		assertCapabilityWorkloads(t, target, "conversation", "agent")
+		input := target["supported_input_modalities"].([]any)
+		if len(input) != len(tt.input) {
+			t.Fatalf("%s input modalities = %#v", tt.id, input)
+		}
+	}
+}
+
 func TestModelCapabilitiesHandlerDeclaresReviewWorkloadWithoutConversation(t *testing.T) {
 	modelRegistry := registry.GetGlobalRegistry()
 	clientID := "test-model-capabilities-review"

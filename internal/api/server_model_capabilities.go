@@ -36,7 +36,11 @@ func (s *Server) modelCapabilitiesHandler(c *gin.Context) {
 			continue
 		}
 
-		info := mergeCapabilityInfo(runtimeInfo, registry.LookupStaticModelInfo(runtimeInfo.ID))
+		staticInfo := registry.LookupStaticModelInfo(runtimeInfo.ID)
+		if strings.EqualFold(runtimeInfo.OwnedBy, "deepseek") {
+			staticInfo = registry.LookupStaticModelInfoByChannel(runtimeInfo.ID, "deepseek")
+		}
+		info := mergeCapabilityInfo(runtimeInfo, staticInfo)
 		contextLength := info.MaxContextLength
 		if contextLength <= 0 {
 			contextLength = info.ContextLength
