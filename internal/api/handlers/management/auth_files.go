@@ -744,6 +744,16 @@ func (h *Handler) buildAuthFileEntryLocked(auth *coreauth.Auth, quotaSupported .
 	if claims := extractCodexIDTokenClaims(auth); claims != nil {
 		entry["id_token"] = claims
 	}
+	if strings.EqualFold(strings.TrimSpace(auth.Provider), "codex") {
+		planType := strings.TrimSpace(authAttribute(auth, "plan_type"))
+		if planType == "" && auth.Metadata != nil {
+			planType, _ = auth.Metadata["plan_type"].(string)
+			planType = strings.TrimSpace(planType)
+		}
+		if planType != "" {
+			entry["plan_type"] = planType
+		}
+	}
 	// Expose priority from Attributes (set by synthesizer from JSON "priority" field).
 	// Fall back to Metadata for auths registered via UploadAuthFile (no synthesizer).
 	if p := strings.TrimSpace(authAttribute(auth, "priority")); p != "" {

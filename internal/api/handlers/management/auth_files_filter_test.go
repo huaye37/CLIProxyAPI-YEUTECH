@@ -252,6 +252,24 @@ func TestAuthFileLookupAndEntryBuildConcurrentEnsureIndex(t *testing.T) {
 	wg.Wait()
 }
 
+func TestCodexAuthFileEntryExposesStoredPlanType(t *testing.T) {
+	authDir := t.TempDir()
+	filePath := filepath.Join(authDir, "codex.json")
+	if err := os.WriteFile(filePath, []byte(`{"type":"codex","plan_type":"pro"}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	h := NewHandlerWithoutConfigFilePath(&config.Config{AuthDir: authDir}, nil)
+	auth := &coreauth.Auth{ID: "codex-plan", Provider: "codex", Attributes: map[string]string{"path": filePath, "plan_type": "pro"}}
+	if got := h.buildAuthFileEntry(auth)["plan_type"]; got != "pro" {
+		t.Fatalf("plan_type = %#v, want pro", got)
+	}
+	auth.Attributes["plan_type"] = ""
+	auth.Metadata = map[string]any{"plan_type": "plus"}
+	if got := h.buildAuthFileEntry(auth)["plan_type"]; got != "plus" {
+		t.Fatalf("metadata plan_type = %#v, want plus", got)
+	}
+}
+
 func registerAuthForLookupTest(t *testing.T, manager *coreauth.Manager, auth *coreauth.Auth) {
 	t.Helper()
 	if _, errRegister := manager.Register(context.Background(), auth); errRegister != nil {
