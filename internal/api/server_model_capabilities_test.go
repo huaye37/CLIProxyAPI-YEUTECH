@@ -27,6 +27,11 @@ func TestModelCapabilitiesHandlerUsesSafeCatalogBudget(t *testing.T) {
 			MaxContextLength: 700000, MaxCompletionTokens: 10000,
 			SupportedInputModalities: []string{"text"}, SupportedOutputModalities: []string{"text"},
 		},
+		{
+			ID: "gpt-6-luna", Object: "model", OwnedBy: "openai", Type: "openai",
+			ContextLength: 272000, MaxCompletionTokens: 10000,
+			SupportedInputModalities: []string{"text"}, SupportedOutputModalities: []string{"text"},
+		},
 	})
 	t.Cleanup(func() { modelRegistry.UnregisterClient(clientID) })
 	server := newTestServer(t)
@@ -47,6 +52,10 @@ func TestModelCapabilitiesHandlerUsesSafeCatalogBudget(t *testing.T) {
 	large := requestModelCapabilityFromServer(t, server, "gpt-6-sol")
 	if large["context_length"] != float64(500000) || large["max_input_tokens"] != float64(500000) {
 		t.Fatalf("GPT context policy = %#v, want capped 500000", large)
+	}
+	fromClientCatalog := requestModelCapabilityFromServer(t, server, "gpt-6-luna")
+	if fromClientCatalog["context_length"] != float64(500000) || fromClientCatalog["max_input_tokens"] != float64(500000) {
+		t.Fatalf("GPT client maximum = %#v, want capped 500000", fromClientCatalog)
 	}
 }
 

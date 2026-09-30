@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"net/http"
 	"strings"
 	"time"
@@ -30,6 +31,7 @@ func (s *Server) modelCapabilitiesHandler(c *gin.Context) {
 		credentials = s.handlers.AuthManager.List()
 	}
 	now := time.Now()
+	codexMaximums := codexClientMaxContextWindows()
 	models := make([]map[string]any, 0, len(infos))
 	for _, runtimeInfo := range infos {
 		if runtimeInfo == nil || strings.TrimSpace(runtimeInfo.ID) == "" {
@@ -47,6 +49,14 @@ func (s *Server) modelCapabilitiesHandler(c *gin.Context) {
 		}
 		if contextLength <= 0 {
 			contextLength = info.InputTokenLimit
+		}
+		// The runtime registry carries Codex's default window, while the client
+		// catalog declares the larger selectable maximum. Respect an explicit
+		// route override first; otherwise use that validated maximum for GPT.
+		if info.MaxContextLength <= 0 && info.Type == "openai" && strings.HasPrefix(info.ID, "gpt-") {
+			if maximum := codexMaximums[info.ID]; maximum > contextLength {
+				contextLength = maximum
+			}
 		}
 		// Publish the shared GPT conversation budget to every catalog consumer.
 		// Never advertise more than the provider's declared window.
@@ -139,6 +149,25 @@ func (s *Server) modelCapabilitiesHandler(c *gin.Context) {
 		"generation": registry.GetGlobalRegistry().GetGeneration(),
 		"data":       models,
 	})
+}
+
+func codexClientMaxContextWindows() map[string]int {
+	var catalog struct {
+		Models []struct {
+			Slug             string `json:"slug"`
+			MaxContextWindow int    `json:"max_context_window"`
+		} `json:"models"`
+	}
+	if err := json.Unmarshal(registry.GetCodexClientModelsJSON(), &catalog); err != nil {
+		return nil
+	}
+	maximums := make(map[string]int, len(catalog.Models))
+	for _, model := range catalog.Models {
+		if model.MaxContextWindow > 0 {
+			maximums[model.Slug] = model.MaxContextWindow
+		}
+	}
+	return maximums
 }
 
 // modelRouteAvailability combines catalog registration with the live auth
