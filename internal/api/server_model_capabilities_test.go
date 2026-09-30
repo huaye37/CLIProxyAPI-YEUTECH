@@ -26,6 +26,9 @@ func TestModelCapabilitiesHandlerUsesSafeCatalogBudget(t *testing.T) {
 	registerCapabilityTestAuth(t, server, &coreauth.Auth{ID: clientID, Provider: "codex", Status: coreauth.StatusActive})
 
 	target := requestModelCapabilityFromServer(t, server, "gpt-5.3-codex-spark")
+	if target["context_length"] != float64(51200) || target["max_input_tokens"] != float64(51200) {
+		t.Fatalf("GPT context policy = %#v, want 51200", target)
+	}
 	if target["max_output_tokens"] != float64(10000) {
 		t.Fatalf("max_output_tokens = %v, want safe catalog budget 10000", target["max_output_tokens"])
 	}

@@ -48,8 +48,16 @@ func (s *Server) modelCapabilitiesHandler(c *gin.Context) {
 		if contextLength <= 0 {
 			contextLength = info.InputTokenLimit
 		}
+		// Publish the shared GPT conversation budget to every catalog consumer.
+		// Never advertise more than the provider's declared window.
+		if (strings.HasPrefix(info.ID, "gpt-") || strings.HasPrefix(info.ID, "chatgpt-web-gpt-")) && contextLength > 51200 {
+			contextLength = 51200
+		}
 		inputLimit := info.InputTokenLimit
 		if inputLimit <= 0 {
+			inputLimit = contextLength
+		}
+		if inputLimit > contextLength {
 			inputLimit = contextLength
 		}
 		outputLimit := info.CapabilityMaxOutputTokens
