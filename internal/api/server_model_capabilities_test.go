@@ -16,18 +16,25 @@ import (
 func TestModelCapabilitiesHandlerUsesSafeCatalogBudget(t *testing.T) {
 	modelRegistry := registry.GetGlobalRegistry()
 	clientID := "test-model-capabilities-budget"
-	modelRegistry.RegisterClient(clientID, "codex", []*registry.ModelInfo{{
-		ID: "gpt-5.3-codex-spark", Object: "model", OwnedBy: "openai", Type: "openai",
-		ContextLength: 128000, MaxCompletionTokens: 128000,
-		SupportedInputModalities: []string{"text"}, SupportedOutputModalities: []string{"text"},
-	}})
+	modelRegistry.RegisterClient(clientID, "codex", []*registry.ModelInfo{
+		{
+			ID: "gpt-5.3-codex-spark", Object: "model", OwnedBy: "openai", Type: "openai",
+			ContextLength: 128000, MaxCompletionTokens: 128000,
+			SupportedInputModalities: []string{"text"}, SupportedOutputModalities: []string{"text"},
+		},
+		{
+			ID: "gpt-6-sol", Object: "model", OwnedBy: "openai", Type: "openai",
+			MaxContextLength: 700000, MaxCompletionTokens: 10000,
+			SupportedInputModalities: []string{"text"}, SupportedOutputModalities: []string{"text"},
+		},
+	})
 	t.Cleanup(func() { modelRegistry.UnregisterClient(clientID) })
 	server := newTestServer(t)
 	registerCapabilityTestAuth(t, server, &coreauth.Auth{ID: clientID, Provider: "codex", Status: coreauth.StatusActive})
 
 	target := requestModelCapabilityFromServer(t, server, "gpt-5.3-codex-spark")
-	if target["context_length"] != float64(51200) || target["max_input_tokens"] != float64(51200) {
-		t.Fatalf("GPT context policy = %#v, want 51200", target)
+	if target["context_length"] != float64(128000) || target["max_input_tokens"] != float64(128000) {
+		t.Fatalf("GPT context policy = %#v, want declared 128000", target)
 	}
 	if target["max_output_tokens"] != float64(10000) {
 		t.Fatalf("max_output_tokens = %v, want safe catalog budget 10000", target["max_output_tokens"])
@@ -36,6 +43,11 @@ func TestModelCapabilitiesHandlerUsesSafeCatalogBudget(t *testing.T) {
 		t.Fatalf("capability readiness = %#v, want ready/selectable", target)
 	}
 	assertCapabilityWorkloads(t, target, "conversation", "agent")
+
+	large := requestModelCapabilityFromServer(t, server, "gpt-6-sol")
+	if large["context_length"] != float64(500000) || large["max_input_tokens"] != float64(500000) {
+		t.Fatalf("GPT context policy = %#v, want capped 500000", large)
+	}
 }
 
 func TestModelCapabilitiesHandlerEnrichesStaticGeminiMetadata(t *testing.T) {
