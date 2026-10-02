@@ -1,0 +1,202 @@
+#!/bin/zsh
+set -euo pipefail
+
+catalog_dir="/Users/fangjialiang/.codex/model-catalogs"
+catalog_path="$catalog_dir/yeutech.json"
+routes_path="$catalog_dir/openai-model-routes.json"
+temp_path="$(mktemp "${TMPDIR:-/tmp}/yeutech-model-catalog.XXXXXX")"
+bundled_path="$(mktemp "${TMPDIR:-/tmp}/yeutech-bundled-catalog.XXXXXX")"
+routes_temp_path="$(mktemp "${TMPDIR:-/tmp}/openai-model-routes.XXXXXX")"
+provider_path="$(mktemp "${TMPDIR:-/tmp}/yeutech-provider-models.XXXXXX")"
+trap 'rm -f "$temp_path" "$bundled_path" "$routes_temp_path" "$provider_path"' EXIT
+
+mkdir -p "$catalog_dir"
+/Users/fangjialiang/.local/bin/codex debug models --bundled > "$bundled_path"
+# The Codex-compatible directory exposes the provider's maximum window even
+# when the shared capability catalog still runs an older conservative cap.
+if ! {
+  printf 'header = "Authorization: Bearer '
+  /usr/bin/security find-generic-password -a codex -s cn.yeutech.llm-api -w | /usr/bin/tr -d '\r\n'
+  printf '"\n'
+  printf 'url = "https://llm-api.yeutech.cn/v1/models?client_version=cpa"\n'
+  printf 'silent\nshow-error\nfail\n'
+} | /usr/bin/curl --config - > "$provider_path" || ! /usr/bin/jq -e '.models | type == "array"' "$provider_path" >/dev/null; then
+  printf '{"models":[]}' > "$provider_path"
+fi
+policy_cache="$catalog_dir/consumer-model-policy.json"
+policy_json='{"consumers":{"codex-desktop":{"enabled":false,"allowedModelIds":[]}}}'
+if policy_remote=$(/usr/bin/ssh -o BatchMode=yes -o ConnectTimeout=3 yeutech-nas 'cat /volume1/docker/yeutech-api-manager/data/consumer-model-policy.json' 2>/dev/null); then
+  policy_json="$policy_remote"
+  printf '%s
+' "$policy_json" > "$policy_cache"
+  /bin/chmod 0600 "$policy_cache"
+elif policy_remote=$(/usr/bin/ssh -o BatchMode=yes -o ConnectTimeout=3 yeutech-nas-remote 'cat /volume1/docker/yeutech-api-manager/data/consumer-model-policy.json' 2>/dev/null); then
+  policy_json="$policy_remote"
+  printf '%s
+' "$policy_json" > "$policy_cache"
+  /bin/chmod 0600 "$policy_cache"
+elif [[ -f "$policy_cache" ]]; then
+  policy_json=$(/bin/cat "$policy_cache")
+fi
+
+{
+  printf 'header = "Authorization: Bearer '
+  /usr/bin/security find-generic-password -a codex -s cn.yeutech.llm-api -w | /usr/bin/tr -d '\r\n'
+  printf '"\n'
+  printf 'url = "https://llm-api.yeutech.cn/v1/model-capabilities"\n'
+  printf 'silent\nshow-error\nfail\n'
+} | /usr/bin/curl --config - | /usr/bin/jq --slurpfile bundled "$bundled_path" --slurpfile provider "$provider_path" --argjson policy "$policy_json" '
+  def effort_description:
+    if . == "minimal" then "Fastest response with minimal reasoning"
+    elif . == "low" then "Fast responses with lighter reasoning"
+    elif . == "medium" then "Balances speed and reasoning depth"
+    elif . == "high" then "Greater reasoning depth for complex work"
+    elif . == "xhigh" then "Extra high reasoning depth for difficult work"
+    elif . == "max" then "Maximum reasoning depth"
+    else "Provider-supported reasoning level"
+    end;
+
+  # Group presentation only; never change the upstream model IDs or routes.
+  def vendor:
+    if (.id | test("^(chatgpt-web-|gpt-|codex-)")) then "OpenAI"
+    elif (.id | startswith("claude-")) then "Anthropic"
+    elif (.id | test("^(gemini-|gemini-web-)")) then "Google"
+    elif (.id | startswith("deepseek-")) then "DeepSeek"
+    else (.owned_by // "Other") end;
+  def channel:
+    if (.owned_by == "chatgpt-web" or .owned_by == "gemini-web" or .delivery == "web") then "WEB"
+    elif .type == "openai" then "Codex"
+    elif .type == "antigravity" then "Antigravity"
+    elif .type == "openai-compatibility" then "API"
+    else (.owned_by // .type // "API") end;
+  def readable_name:
+    (.display_name // .id)
+    | sub(" · WEB$"; "")
+    | if startswith("claude-") then
+        sub("-[0-9]{8}$"; "")
+        | sub("^claude-"; "Claude ")
+        | sub("fable-"; "Fable ") | sub("opus-"; "Opus ")
+        | sub("sonnet-"; "Sonnet ") | sub("haiku-"; "Haiku ")
+        | gsub("-"; ".")
+      else . end;
+
+  [
+    .data[]
+    | select(
+        .available == true
+        and .selectable == true
+        and .capability_status == "ready"
+        and (.supported_input_modalities | index("text"))
+        and (.supported_output_modalities | index("text"))
+        and (.supported_workloads | index("agent"))
+        and (
+          if ($policy.consumers["codex-desktop"].enabled == true) then
+            .id as $mid
+            | ($policy.consumers["codex-desktop"].allowedModelIds | index($mid) != null)
+          else
+            true
+          end
+        )
+      )
+  ]
+  | sort_by(
+      (vendor | if . == "OpenAI" then 0 elif . == "Anthropic" then 1 elif . == "Google" then 2 elif . == "DeepSeek" then 3 else 4 end),
+      (channel | if . == "Codex" then 0 elif . == "WEB" then 1 elif . == "API" then 2 else 3 end),
+      .id
+    )
+  | to_entries
+  | {
+      models: map(
+        .key as $priority
+        | .value
+        | .id as $model_id
+        | ([$provider[0].models[]? | select(.slug == $model_id)][0] // null) as $provider_model
+        | ((channel) + " · " + (readable_name)) as $grouped_name
+        | ((vendor) + " / " + (channel)) as $group_label
+        | (.thinking.levels // ["medium"]) as $levels
+        | (.context_length // .max_input_tokens // 128000) as $upstream_context_window
+        | ([$provider[0].models[]? | select(.slug == $model_id) | (.max_context_window // .context_window) | select(type == "number" and . > 0)][0] // $upstream_context_window) as $provider_context_window
+        # Only an exact bundled-model match may constrain the upstream window.
+        # Third-party models (Claude/Gemini/DeepSeek) must retain the window
+        # advertised by the authenticated capability service; the former 272K
+        # fallback caused Codex to compact 1M-context models at about 258K.
+        | ([$bundled[0].models[] | select(.slug == $model_id) | .context_window][0] // $upstream_context_window) as $codex_context_window
+        | ([$bundled[0].models[] | select(.slug == $model_id) | .max_context_window][0] // $upstream_context_window) as $codex_max_context_window
+        | (
+            ([$bundled[0].models[] | select(.slug == $model_id)][0])
+            // (if $model_id == "gpt-6-sol" then ([$bundled[0].models[] | select(.slug == "gpt-6-astra")][0] | .slug = $model_id) else null end)
+            // (if $model_id == "gpt-6-luna" then ([$bundled[0].models[] | select(.slug == "gpt-5.6-luna")][0] | .slug = $model_id) else null end)
+            // null
+          ) as $bundled_model
+        | {
+            slug: .id,
+            display_name: (.display_name // .id),
+            description: (.description // ((.owned_by // "YEUTECH") + " via YEUTECH API")),
+            default_reasoning_level: (if ($levels | index("medium")) then "medium" else $levels[0] end),
+            supported_reasoning_levels: ($levels | map({effort: ., description: (. | effort_description)})),
+            shell_type: "unified_exec",
+            visibility: "list",
+            supported_in_api: true,
+            priority: ($priority + 1),
+            # Proxy-routed models receive the tool registrations but not the
+            # full global skills/plugin/apps handbooks on every request. That
+            # handbook inflated a no-op Claude request from 15K to 275K tokens.
+            # Bundled OpenAI models keep the native Codex instruction path.
+            include_skills_usage_instructions: (($bundled_model | type) == "object"),
+            include_plugin_usage_instructions: (($bundled_model | type) == "object"),
+            include_apps_usage_instructions: (($bundled_model | type) == "object"),
+            default_reasoning_summary: "none",
+            support_verbosity: true,
+            default_verbosity: "low",
+            apply_patch_tool_type: "freeform",
+            web_search_tool_type: "text",
+            truncation_policy: {mode: "tokens", limit: 10000},
+            supports_image_detail_original: (.supported_input_modalities | index("image") != null),
+            context_window: ([$upstream_context_window, $codex_context_window] | min),
+            max_context_window: ([$upstream_context_window, $codex_max_context_window] | min),
+            effective_context_window_percent: 95,
+            input_modalities: ([.supported_input_modalities[] | select(. == "text" or . == "image")] | unique),
+            supports_search_tool: (.supports_web_search == true),
+            use_responses_lite: false,
+            node_repl_auto_review_required: false,
+            node_repl_disabled: false,
+            tool_mode: "code_mode_only",
+            multi_agent_version: "v2",
+            experimental_supported_tools: [],
+            base_instructions: "You are Codex, a coding agent. Follow system, developer, and user instructions, preserve existing user work, and continue until the requested outcome is genuinely handled. Work efficiently: prefer targeted inspection, avoid rereading the same files or images, broad repeated searches, and duplicate tests; parallelize independent read-only checks when useful. Before the first tool call, send a brief user-visible commentary update in the language used by the user, stating your understanding and immediate next action. During tool-using work, send another concise commentary update after each meaningful milestone and never leave the user without an update for more than 60 seconds. Each update should say what is complete, what is happening now, and any blocker or next step. Do not reveal hidden chain-of-thought. In the final response, lead with the outcome and distinguish completed changes, verification, and remaining unknowns."
+          } as $generic_model
+        | if ((.type == "openai" or .owned_by == "openai") and ($bundled_model | type) == "object")
+          then ($bundled_model | .visibility = "list" | .supported_in_api = true)
+          else $generic_model
+          end
+        # Apply presentation after bundled inheritance so native GPT priorities
+        # cannot interleave with other suppliers on every scheduled refresh.
+        | .display_name = $grouped_name
+        | .priority = ($priority + 1)
+        | .description = ($group_label + " — " + (.description // $model_id))
+        # The gateway capability catalog is authoritative for the provider
+        # window. GPT uses at most 500K; other providers keep their maximum.
+        | .context_window = (if ($model_id | test("^(gpt-|chatgpt-web-gpt-)")) then ([$provider_context_window, 500000] | min) else $upstream_context_window end)
+        | .max_context_window = .context_window
+        | .auto_compact_token_limit = ((.context_window * 0.8) | floor)
+        # New gateways explicitly gate apply_patch by the full routing set.
+        # Preserve legacy behavior only when the old catalog lacks that field.
+        | if ($provider_model | type) == "object" and ($provider_model | has("apply_patch_tool_type")) then
+            .apply_patch_tool_type = $provider_model.apply_patch_tool_type
+          else . end
+      )
+    }
+' > "$temp_path"
+
+/usr/bin/jq -e '.models | length > 0' "$temp_path" >/dev/null
+/bin/chmod 0600 "$temp_path"
+/bin/mv "$temp_path" "$catalog_path"
+/bin/chmod 0600 "$catalog_path"
+
+/usr/bin/jq '{openai_models: [.models[].slug]}' "$bundled_path" > "$routes_temp_path"
+/bin/chmod 0600 "$routes_temp_path"
+/bin/mv "$routes_temp_path" "$routes_path"
+/bin/chmod 0600 "$routes_path"
+
+printf 'Updated %s with %s selectable agent models.\n' \
+  "$catalog_path" "$(/usr/bin/jq '.models | length' "$catalog_path")"
