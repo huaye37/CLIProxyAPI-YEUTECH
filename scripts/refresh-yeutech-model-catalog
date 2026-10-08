@@ -179,6 +179,11 @@ fi
         | .context_window = (if ($model_id | test("^(gpt-|chatgpt-web-gpt-)")) then ([$provider_context_window, 500000] | min) else $upstream_context_window end)
         | .max_context_window = .context_window
         | .auto_compact_token_limit = ((.context_window * 0.8) | floor)
+        # Astra Lite rejects preserved multi-turn histories with upstream
+        # "response protection is unavailable"; the identical standard
+        # Responses request succeeds. Override after bundled inheritance,
+        # retaining the model, history, tools and automatic review settings.
+        | if $model_id == "gpt-6-astra" then .use_responses_lite = false else . end
         # New gateways explicitly gate apply_patch by the full routing set.
         # Preserve legacy behavior only when the old catalog lacks that field.
         | if ($provider_model | type) == "object" and ($provider_model | has("apply_patch_tool_type")) then
