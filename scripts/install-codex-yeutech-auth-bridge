@@ -1,0 +1,39 @@
+#!/bin/zsh
+set -euo pipefail
+
+script_dir="${0:A:h}"
+target_dir="/Users/fangjialiang/.codex/bin"
+target="$target_dir/codex-yeutech-auth-bridge.mjs"
+log_dir="/Users/fangjialiang/.codex/log"
+plist="/Users/fangjialiang/Library/LaunchAgents/cn.yeutech.codex-auth-bridge.plist"
+label="cn.yeutech.codex-auth-bridge"
+domain="gui/$(/usr/bin/id -u)"
+
+/bin/mkdir -p "$target_dir" "$log_dir"
+/usr/bin/install -m 0700 "$script_dir/codex-yeutech-auth-bridge.mjs" "$target"
+
+/usr/bin/plutil -create xml1 "$plist"
+/usr/bin/plutil -insert Label -string "$label" "$plist"
+/usr/bin/plutil -insert ProgramArguments -json '["/usr/local/bin/node","/Users/fangjialiang/.codex/bin/codex-yeutech-auth-bridge.mjs"]' "$plist"
+/usr/bin/plutil -insert RunAtLoad -bool true "$plist"
+/usr/bin/plutil -insert KeepAlive -bool true "$plist"
+/usr/bin/plutil -insert ProcessType -string Interactive "$plist"
+/usr/bin/plutil -insert StandardOutPath -string "$log_dir/codex-auth-bridge.log" "$plist"
+/usr/bin/plutil -insert StandardErrorPath -string "$log_dir/codex-auth-bridge.error.log" "$plist"
+/bin/chmod 0600 "$plist"
+
+/bin/launchctl bootout "$domain" "$plist" 2>/dev/null || /bin/launchctl bootout "$domain/$label" 2>/dev/null || true
+for attempt in {1..50}; do
+  /bin/launchctl print "$domain/$label" >/dev/null 2>&1 || break
+  /bin/sleep 0.1
+done
+/bin/launchctl bootstrap "$domain" "$plist"
+/bin/launchctl kickstart -k "$domain/$label"
+for attempt in {1..50}; do
+  if /usr/bin/curl --silent --fail http://127.0.0.1:18401/_yeutech/health >/dev/null; then
+    break
+  fi
+  /bin/sleep 0.1
+done
+/usr/bin/curl --silent --show-error --fail http://127.0.0.1:18401/_yeutech/health >/dev/null
+printf 'Installed %s and verified the loopback health endpoint.\n' "$label"
