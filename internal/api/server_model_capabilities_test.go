@@ -59,7 +59,7 @@ func TestModelCapabilitiesHandlerUsesSafeCatalogBudget(t *testing.T) {
 	}
 }
 
-func TestModelCapabilitiesHandlerPublishesIndependentCodexServiceTiers(t *testing.T) {
+func TestModelCapabilitiesHandlerKeepsReasoningIndependentFromServiceTiers(t *testing.T) {
 	modelRegistry := registry.GetGlobalRegistry()
 	clientID := "test-model-capabilities-service-tiers"
 	modelRegistry.RegisterClient(clientID, "codex", []*registry.ModelInfo{{
@@ -74,14 +74,12 @@ func TestModelCapabilitiesHandlerPublishesIndependentCodexServiceTiers(t *testin
 
 	target := requestModelCapabilityFromServer(t, server, "gpt-6.1-sol")
 	tiers, ok := target["service_tiers"].([]any)
-	if !ok || len(tiers) != 2 {
-		t.Fatalf("service_tiers = %#v, want Fast and Ultrafast", target["service_tiers"])
+	if !ok || len(tiers) != 1 {
+		t.Fatalf("service_tiers = %#v, want only the catalog-advertised Fast tier", target["service_tiers"])
 	}
-	for index, want := range []string{"priority", "ultrafast"} {
-		tier, okTier := tiers[index].(map[string]any)
-		if !okTier || tier["id"] != want {
-			t.Fatalf("service_tiers[%d] = %#v, want id %q", index, tiers[index], want)
-		}
+	tier, okTier := tiers[0].(map[string]any)
+	if !okTier || tier["id"] != "priority" {
+		t.Fatalf("service_tiers[0] = %#v, want id %q", tiers[0], "priority")
 	}
 	levels := target["thinking"].(map[string]any)["levels"].([]any)
 	if levels[len(levels)-1] != "ultra" {

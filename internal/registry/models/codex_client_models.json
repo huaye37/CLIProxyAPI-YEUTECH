@@ -169,11 +169,6 @@
           "id": "priority",
           "name": "Fast",
           "description": "2x speed, increased usage"
-        },
-        {
-          "id": "ultrafast",
-          "name": "Ultrafast",
-          "description": "Up to 8x faster than Standard, increased usage"
         }
       ],
       "additional_speed_tiers": [
@@ -355,11 +350,6 @@
           "id": "priority",
           "name": "Fast",
           "description": "2x speed, increased usage"
-        },
-        {
-          "id": "ultrafast",
-          "name": "Ultrafast",
-          "description": "Highest-speed processing, increased usage"
         }
       ],
       "additional_speed_tiers": [

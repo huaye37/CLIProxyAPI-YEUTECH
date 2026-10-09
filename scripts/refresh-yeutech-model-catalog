@@ -56,12 +56,6 @@ fi
     else "Provider-supported reasoning level"
     end;
 
-  def service_tiers($model_id; $provider_model):
-    ($provider_model.service_tiers // []) as $tiers
-    | if (($model_id == "gpt-6.1-sol" or $model_id == "gpt-6-astra") and ([$tiers[].id] | index("ultrafast") | not))
-      then $tiers + [{id: "ultrafast", name: "Ultrafast", description: "Highest-speed processing, increased usage"}]
-      else $tiers end;
-
   # Group presentation only; never change the upstream model IDs or routes.
   def vendor:
     if (.id | test("^(chatgpt-web-|gpt-|codex-)")) then "OpenAI"
@@ -151,7 +145,7 @@ fi
             ),
             supported_reasoning_levels: ($levels | map({effort: ., description: (. | effort_description)})),
             default_service_tier: ($provider_model.default_service_tier // null),
-            service_tiers: service_tiers($model_id; $provider_model),
+            service_tiers: ($provider_model.service_tiers // []),
             shell_type: "unified_exec",
             visibility: "list",
             supported_in_api: true,
@@ -195,7 +189,7 @@ fi
         | if (($model_id | test("^(gpt-|codex-)")) and ($provider_model | type) == "object") then
             .supported_reasoning_levels = ($provider_model.supported_reasoning_levels // .supported_reasoning_levels)
             | .default_reasoning_level = ($provider_model.default_reasoning_level // .default_reasoning_level)
-            | .service_tiers = service_tiers($model_id; $provider_model)
+            | .service_tiers = ($provider_model.service_tiers // [])
             | .default_service_tier = ($provider_model.default_service_tier // null)
           else . end
         # The gateway capability catalog is authoritative for the provider
