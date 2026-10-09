@@ -59,6 +59,36 @@ func TestModelCapabilitiesHandlerUsesSafeCatalogBudget(t *testing.T) {
 	}
 }
 
+func TestModelCapabilitiesHandlerPublishesIndependentCodexServiceTiers(t *testing.T) {
+	modelRegistry := registry.GetGlobalRegistry()
+	clientID := "test-model-capabilities-service-tiers"
+	modelRegistry.RegisterClient(clientID, "codex", []*registry.ModelInfo{{
+		ID: "gpt-6.1-sol", Object: "model", OwnedBy: "openai", Type: "openai",
+		ContextLength: 272000, MaxCompletionTokens: 128000,
+		SupportedInputModalities: []string{"text"}, SupportedOutputModalities: []string{"text"},
+		Thinking: &registry.ThinkingSupport{Levels: []string{"low", "medium", "high", "xhigh", "max"}},
+	}})
+	t.Cleanup(func() { modelRegistry.UnregisterClient(clientID) })
+	server := newTestServer(t)
+	registerCapabilityTestAuth(t, server, &coreauth.Auth{ID: clientID, Provider: "codex", Status: coreauth.StatusActive})
+
+	target := requestModelCapabilityFromServer(t, server, "gpt-6.1-sol")
+	tiers, ok := target["service_tiers"].([]any)
+	if !ok || len(tiers) != 2 {
+		t.Fatalf("service_tiers = %#v, want Fast and Ultrafast", target["service_tiers"])
+	}
+	for index, want := range []string{"priority", "ultrafast"} {
+		tier, okTier := tiers[index].(map[string]any)
+		if !okTier || tier["id"] != want {
+			t.Fatalf("service_tiers[%d] = %#v, want id %q", index, tiers[index], want)
+		}
+	}
+	levels := target["thinking"].(map[string]any)["levels"].([]any)
+	if levels[len(levels)-1] != "ultra" {
+		t.Fatalf("reasoning levels = %#v, want independent Ultra reasoning", levels)
+	}
+}
+
 func TestModelCapabilitiesHandlerEnrichesStaticGeminiMetadata(t *testing.T) {
 	modelRegistry := registry.GetGlobalRegistry()
 	clientID := "test-model-capabilities-gemini"

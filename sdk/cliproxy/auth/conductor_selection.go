@@ -1377,6 +1377,12 @@ func (m *Manager) shouldRetryAfterErrorWithAttempted(ctx context.Context, opts c
 		return 0, true
 	}
 	if m.HomeEnabled() {
+		if isRetryBufferOverflowError(err) {
+			if !m.homeRetryAllowed(attempt, homeRetryLimit) {
+				return 0, false
+			}
+			return retryBufferOverflowWait(attempt, maxWait)
+		}
 		if status != http.StatusTooManyRequests || !m.homeRetryAllowed(attempt, homeRetryLimit) {
 			return 0, false
 		}
@@ -1390,6 +1396,9 @@ func (m *Manager) shouldRetryAfterErrorWithAttempted(ctx context.Context, opts c
 	pinnedAuthID := pinnedAuthIDFromMetadata(opts.Metadata)
 	if !isRequestRetryRoundError(err) || !m.retryAllowed(attempt, providers, model, eligibility, pinnedAuthID, defaultRequestRetry) {
 		return 0, false
+	}
+	if isRetryBufferOverflowError(err) {
+		return retryBufferOverflowWait(attempt, maxWait)
 	}
 	wait, found := m.closestCooldownWaitWithAttempted(providers, model, attempt, eligibility, pinnedAuthID, defaultRequestRetry, status, attempted)
 	if found {
@@ -1405,6 +1414,23 @@ func (m *Manager) shouldRetryAfterErrorWithAttempted(ctx context.Context, opts c
 		return *retryAfter, true
 	}
 	return 0, true
+}
+
+func retryBufferOverflowWait(attempt int, maxWait time.Duration) (time.Duration, bool) {
+	if maxWait <= 0 {
+		return 0, true
+	}
+	if attempt < 0 {
+		attempt = 0
+	}
+	if attempt > 4 {
+		attempt = 4
+	}
+	wait := 500 * time.Millisecond * time.Duration(1<<attempt)
+	if wait > maxWait {
+		return 0, false
+	}
+	return jitteredCooldownWait(wait, maxWait), true
 }
 
 func (m *Manager) homeRetryAllowed(attempt int, retryLimit int) bool {

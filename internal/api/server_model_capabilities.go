@@ -31,7 +31,7 @@ func (s *Server) modelCapabilitiesHandler(c *gin.Context) {
 		credentials = s.handlers.AuthManager.List()
 	}
 	now := time.Now()
-	codexMaximums := codexClientMaxContextWindows()
+	codexCapabilities := codexClientCapabilities()
 	models := make([]map[string]any, 0, len(infos))
 	for _, runtimeInfo := range infos {
 		if runtimeInfo == nil || strings.TrimSpace(runtimeInfo.ID) == "" {
@@ -53,8 +53,9 @@ func (s *Server) modelCapabilitiesHandler(c *gin.Context) {
 		// The runtime registry carries Codex's default window, while the client
 		// catalog declares the larger selectable maximum. Respect an explicit
 		// route override first; otherwise use that validated maximum for GPT.
+		clientCapability := codexCapabilities[info.ID]
 		if info.MaxContextLength <= 0 && info.Type == "openai" && strings.HasPrefix(info.ID, "gpt-") {
-			if maximum := codexMaximums[info.ID]; maximum > contextLength {
+			if maximum := clientCapability.MaxContextWindow; maximum > contextLength {
 				contextLength = maximum
 			}
 		}
@@ -137,6 +138,12 @@ func (s *Server) modelCapabilitiesHandler(c *gin.Context) {
 		if info.Thinking != nil {
 			model["thinking"] = info.Thinking
 		}
+		if levels := clientCapability.reasoningLevels(); len(levels) > 0 {
+			model["thinking"] = &registry.ThinkingSupport{Levels: levels}
+		}
+		if len(clientCapability.ServiceTiers) > 0 {
+			model["service_tiers"] = append([]codexClientServiceTier(nil), clientCapability.ServiceTiers...)
+		}
 		if info.SupportsWebSearch {
 			model["supports_web_search"] = true
 		}
@@ -151,23 +158,53 @@ func (s *Server) modelCapabilitiesHandler(c *gin.Context) {
 	})
 }
 
-func codexClientMaxContextWindows() map[string]int {
+type codexClientServiceTier struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
+
+type codexClientReasoningLevel struct {
+	Effort string `json:"effort"`
+}
+
+type codexClientCapability struct {
+	MaxContextWindow int
+	ReasoningLevels  []codexClientReasoningLevel
+	ServiceTiers     []codexClientServiceTier
+}
+
+func (c codexClientCapability) reasoningLevels() []string {
+	levels := make([]string, 0, len(c.ReasoningLevels))
+	for _, level := range c.ReasoningLevels {
+		if effort := strings.TrimSpace(level.Effort); effort != "" {
+			levels = append(levels, effort)
+		}
+	}
+	return levels
+}
+
+func codexClientCapabilities() map[string]codexClientCapability {
 	var catalog struct {
 		Models []struct {
-			Slug             string `json:"slug"`
-			MaxContextWindow int    `json:"max_context_window"`
+			Slug                     string                      `json:"slug"`
+			MaxContextWindow         int                         `json:"max_context_window"`
+			SupportedReasoningLevels []codexClientReasoningLevel `json:"supported_reasoning_levels"`
+			ServiceTiers             []codexClientServiceTier    `json:"service_tiers"`
 		} `json:"models"`
 	}
 	if err := json.Unmarshal(registry.GetCodexClientModelsJSON(), &catalog); err != nil {
 		return nil
 	}
-	maximums := make(map[string]int, len(catalog.Models))
+	capabilities := make(map[string]codexClientCapability, len(catalog.Models))
 	for _, model := range catalog.Models {
-		if model.MaxContextWindow > 0 {
-			maximums[model.Slug] = model.MaxContextWindow
+		capabilities[model.Slug] = codexClientCapability{
+			MaxContextWindow: model.MaxContextWindow,
+			ReasoningLevels:  append([]codexClientReasoningLevel(nil), model.SupportedReasoningLevels...),
+			ServiceTiers:     append([]codexClientServiceTier(nil), model.ServiceTiers...),
 		}
 	}
-	return maximums
+	return capabilities
 }
 
 // modelRouteAvailability combines catalog registration with the live auth

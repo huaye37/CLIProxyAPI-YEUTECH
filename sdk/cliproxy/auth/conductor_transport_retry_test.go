@@ -12,6 +12,7 @@ import (
 	"sync"
 	"syscall"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	internalconfig "github.com/router-for-me/CLIProxyAPI/v8/internal/config"
@@ -42,6 +43,39 @@ func dialRefusedError() error {
 	}
 }
 
+func retryBufferOverflowError() error {
+	return &Error{
+		HTTPStatus: http.StatusInsufficientStorage,
+		Message:    retryBufferOverflowMessage,
+	}
+}
+
+func TestRetryBufferOverflowWaitUsesBoundedExponentialBackoff(t *testing.T) {
+	cases := []struct {
+		attempt int
+		minWait time.Duration
+		maxWait time.Duration
+		want    bool
+	}{
+		{attempt: 0, minWait: 500 * time.Millisecond, maxWait: 625 * time.Millisecond, want: true},
+		{attempt: 1, minWait: time.Second, maxWait: 1250 * time.Millisecond, want: true},
+		{attempt: 2, minWait: 2 * time.Second, maxWait: 2 * time.Second, want: true},
+		{attempt: 3, want: false},
+	}
+	for _, tc := range cases {
+		wait, ok := retryBufferOverflowWait(tc.attempt, 2*time.Second)
+		if ok != tc.want {
+			t.Fatalf("attempt %d retry = %t, want %t", tc.attempt, ok, tc.want)
+		}
+		if !ok {
+			continue
+		}
+		if wait < tc.minWait || wait > tc.maxWait {
+			t.Fatalf("attempt %d wait = %s, want [%s, %s]", tc.attempt, wait, tc.minWait, tc.maxWait)
+		}
+	}
+}
+
 func TestManager_ShouldRetryAfterError_RetriesPreHTTPTransportFailure(t *testing.T) {
 	m := NewManager(nil, nil, nil)
 	m.SetRetryConfig(1, 0, 0)
@@ -61,6 +95,8 @@ func TestManager_ShouldRetryAfterError_RetriesPreHTTPTransportFailure(t *testing
 		{name: "windows tls handshake", err: windowsCodexTLSHandshakeError(), want: true},
 		{name: "dial refused", err: dialRefusedError(), want: true},
 		{name: "unexpected eof", err: io.ErrUnexpectedEOF, want: true},
+		{name: "upstream retry buffer overflow", err: retryBufferOverflowError(), want: true},
+		{name: "unrelated 507", err: &Error{HTTPStatus: http.StatusInsufficientStorage, Message: "storage unavailable"}, want: false},
 		{name: "unauthorized", err: &Error{HTTPStatus: http.StatusUnauthorized, Message: "unauthorized"}, want: false},
 		{name: "canceled", err: context.Canceled, want: false},
 		{name: "certificate", err: &url.Error{Op: "Post", URL: "https://chatgpt.com/backend-api/codex/responses", Err: x509.UnknownAuthorityError{}}, want: false},
@@ -99,6 +135,7 @@ func TestManager_MarkResult_PreHTTPTransportFailureDoesNotCooldown(t *testing.T)
 	}{
 		{name: "typed tls handshake", err: resultErrorFromError(windowsCodexTLSHandshakeError())},
 		{name: "connection reset message", err: &Error{Message: "connection reset"}},
+		{name: "upstream retry buffer overflow", err: resultErrorFromError(retryBufferOverflowError())},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -117,6 +154,40 @@ func TestManager_MarkResult_PreHTTPTransportFailureDoesNotCooldown(t *testing.T)
 			assertNoCooldown(t, m, auth.ID, model)
 		})
 	}
+}
+
+func TestExecuteRetriesUpstreamRetryBufferOverflowWithoutCooling(t *testing.T) {
+	previous := quotaCooldownDisabled.Load()
+	quotaCooldownDisabled.Store(false)
+	t.Cleanup(func() { quotaCooldownDisabled.Store(previous) })
+
+	manager := NewManager(nil, nil, nil)
+	manager.SetRetryConfig(1, 0, 0)
+	executor := &transportThenSuccessExecutor{
+		identifier: "codex",
+		fail:       retryBufferOverflowError(),
+	}
+	manager.RegisterExecutor(executor)
+
+	model := "gpt-retry-buffer-" + uuid.NewString()
+	authID := "codex-retry-buffer-" + uuid.NewString()
+	registry.GetGlobalRegistry().RegisterClient(authID, "codex", []*registry.ModelInfo{{ID: model}})
+	t.Cleanup(func() { registry.GetGlobalRegistry().UnregisterClient(authID) })
+	if _, errRegister := manager.Register(context.Background(), &Auth{ID: authID, Provider: "codex"}); errRegister != nil {
+		t.Fatalf("register auth: %v", errRegister)
+	}
+
+	resp, errExecute := manager.Execute(context.Background(), []string{"codex"}, cliproxyexecutor.Request{Model: model}, cliproxyexecutor.Options{})
+	if errExecute != nil {
+		t.Fatalf("Execute() error = %v, want success after retry-buffer retry", errExecute)
+	}
+	if string(resp.Payload) != "ok" {
+		t.Fatalf("Execute() payload = %q, want %q", resp.Payload, "ok")
+	}
+	if calls := executor.callCount(); calls != 2 {
+		t.Fatalf("executor calls = %d, want 2", calls)
+	}
+	assertNoCooldown(t, manager, authID, model)
 }
 
 func TestExecuteRetriesPreHTTPTransportFailureWithoutCooling(t *testing.T) {

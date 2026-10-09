@@ -56,6 +56,12 @@ fi
     else "Provider-supported reasoning level"
     end;
 
+  def service_tiers($model_id; $provider_model):
+    ($provider_model.service_tiers // []) as $tiers
+    | if (($model_id == "gpt-6.1-sol" or $model_id == "gpt-6-astra") and ([$tiers[].id] | index("ultrafast") | not))
+      then $tiers + [{id: "ultrafast", name: "Ultrafast", description: "Highest-speed processing, increased usage"}]
+      else $tiers end;
+
   # Group presentation only; never change the upstream model IDs or routes.
   def vendor:
     if (.id | test("^(chatgpt-web-|gpt-|codex-)")) then "OpenAI"
@@ -113,7 +119,12 @@ fi
         | ([$provider[0].models[]? | select(.slug == $model_id)][0] // null) as $provider_model
         | ((channel) + " · " + (readable_name)) as $grouped_name
         | ((vendor) + " / " + (channel)) as $group_label
-        | (.thinking.levels // ["medium"]) as $levels
+        | (
+            if ((.type == "openai" or .owned_by == "openai") and ($provider_model | type) == "object")
+            then (($provider_model.supported_reasoning_levels // []) | map(.effort) | map(select(type == "string" and length > 0)))
+            else [] end
+          ) as $provider_levels
+        | (if ($provider_levels | length) > 0 then $provider_levels else (.thinking.levels // ["medium"]) end) as $levels
         | (.context_length // .max_input_tokens // 128000) as $upstream_context_window
         | ([$provider[0].models[]? | select(.slug == $model_id) | (.max_context_window // .context_window) | select(type == "number" and . > 0)][0] // $upstream_context_window) as $provider_context_window
         # Only an exact bundled-model match may constrain the upstream window.
@@ -132,8 +143,15 @@ fi
             slug: .id,
             display_name: (.display_name // .id),
             description: (.description // ((.owned_by // "YEUTECH") + " via YEUTECH API")),
-            default_reasoning_level: (if ($levels | index("medium")) then "medium" else $levels[0] end),
+            default_reasoning_level: (
+              if (($provider_model.default_reasoning_level // "") as $default | $levels | index($default))
+              then $provider_model.default_reasoning_level
+              elif ($levels | index("medium")) then "medium"
+              else $levels[0] end
+            ),
             supported_reasoning_levels: ($levels | map({effort: ., description: (. | effort_description)})),
+            default_service_tier: ($provider_model.default_service_tier // null),
+            service_tiers: service_tiers($model_id; $provider_model),
             shell_type: "unified_exec",
             visibility: "list",
             supported_in_api: true,
@@ -174,6 +192,12 @@ fi
         | .display_name = $grouped_name
         | .priority = ($priority + 1)
         | .description = ($group_label + " — " + (.description // $model_id))
+        | if (($model_id | test("^(gpt-|codex-)")) and ($provider_model | type) == "object") then
+            .supported_reasoning_levels = ($provider_model.supported_reasoning_levels // .supported_reasoning_levels)
+            | .default_reasoning_level = ($provider_model.default_reasoning_level // .default_reasoning_level)
+            | .service_tiers = service_tiers($model_id; $provider_model)
+            | .default_service_tier = ($provider_model.default_service_tier // null)
+          else . end
         # The gateway capability catalog is authoritative for the provider
         # window. GPT uses at most 500K; other providers keep their maximum.
         | .context_window = (if ($model_id | test("^(gpt-|chatgpt-web-gpt-)")) then ([$provider_context_window, 500000] | min) else $upstream_context_window end)
