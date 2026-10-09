@@ -62,25 +62,42 @@ func TestModelCapabilitiesHandlerUsesSafeCatalogBudget(t *testing.T) {
 func TestModelCapabilitiesHandlerKeepsReasoningIndependentFromServiceTiers(t *testing.T) {
 	modelRegistry := registry.GetGlobalRegistry()
 	clientID := "test-model-capabilities-service-tiers"
-	modelRegistry.RegisterClient(clientID, "codex", []*registry.ModelInfo{{
-		ID: "gpt-6.1-sol", Object: "model", OwnedBy: "openai", Type: "openai",
-		ContextLength: 272000, MaxCompletionTokens: 128000,
-		SupportedInputModalities: []string{"text"}, SupportedOutputModalities: []string{"text"},
-		Thinking: &registry.ThinkingSupport{Levels: []string{"low", "medium", "high", "xhigh", "max"}},
-	}})
+	modelIDs := []string{
+		"gpt-5.6-luna",
+		"gpt-5.6-sol",
+		"gpt-5.6-terra",
+		"gpt-6-astra",
+		"gpt-6-luna",
+		"gpt-6-sol",
+		"gpt-6.1-sol",
+	}
+	models := make([]*registry.ModelInfo, 0, len(modelIDs))
+	for _, modelID := range modelIDs {
+		models = append(models, &registry.ModelInfo{
+			ID: modelID, Object: "model", OwnedBy: "openai", Type: "openai",
+			ContextLength: 272000, MaxCompletionTokens: 128000,
+			SupportedInputModalities: []string{"text"}, SupportedOutputModalities: []string{"text"},
+			Thinking: &registry.ThinkingSupport{Levels: []string{"low", "medium", "high", "xhigh", "max"}},
+		})
+	}
+	modelRegistry.RegisterClient(clientID, "codex", models)
 	t.Cleanup(func() { modelRegistry.UnregisterClient(clientID) })
 	server := newTestServer(t)
 	registerCapabilityTestAuth(t, server, &coreauth.Auth{ID: clientID, Provider: "codex", Status: coreauth.StatusActive})
 
+	for _, modelID := range modelIDs {
+		target := requestModelCapabilityFromServer(t, server, modelID)
+		tiers, ok := target["service_tiers"].([]any)
+		if !ok || len(tiers) != 1 {
+			t.Fatalf("%s service_tiers = %#v, want only the catalog-advertised Fast tier", modelID, target["service_tiers"])
+		}
+		tier, okTier := tiers[0].(map[string]any)
+		if !okTier || tier["id"] != "priority" {
+			t.Fatalf("%s service_tiers[0] = %#v, want id %q", modelID, tiers[0], "priority")
+		}
+	}
+
 	target := requestModelCapabilityFromServer(t, server, "gpt-6.1-sol")
-	tiers, ok := target["service_tiers"].([]any)
-	if !ok || len(tiers) != 1 {
-		t.Fatalf("service_tiers = %#v, want only the catalog-advertised Fast tier", target["service_tiers"])
-	}
-	tier, okTier := tiers[0].(map[string]any)
-	if !okTier || tier["id"] != "priority" {
-		t.Fatalf("service_tiers[0] = %#v, want id %q", tiers[0], "priority")
-	}
 	levels := target["thinking"].(map[string]any)["levels"].([]any)
 	if levels[len(levels)-1] != "ultra" {
 		t.Fatalf("reasoning levels = %#v, want independent Ultra reasoning", levels)
