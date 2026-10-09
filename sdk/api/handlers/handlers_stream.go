@@ -486,6 +486,10 @@ func (h *BaseAPIHandler) executeStreamWithAuthManagerFormats(ctx context.Context
 	var bootstrapHistoryChunks [][]byte
 	var bootstrapStreamErr error
 	var bootstrapErr *interfaces.ErrorMessage
+	maxBootstrapRetries := StreamingBootstrapRetries(h.Cfg)
+	if h.AuthManager.HomeEnabled() {
+		maxBootstrapRetries = 0
+	}
 	readInitialStreamChunks := func() {
 		for {
 			var chunk coreexecutor.StreamChunk
@@ -520,7 +524,10 @@ func (h *BaseAPIHandler) executeStreamWithAuthManagerFormats(ctx context.Context
 			if !deliverable {
 				continue
 			}
-			bootstrapPayload = payload
+			bootstrapPayload = append(bootstrapPayload, payload...)
+			if maxBootstrapRetries > 0 && responseProtocol == "openai-response" && responsesBootstrapControlOnly(payload) {
+				continue
+			}
 			return
 		}
 	}
@@ -539,10 +546,6 @@ func (h *BaseAPIHandler) executeStreamWithAuthManagerFormats(ctx context.Context
 		}
 	}
 
-	maxBootstrapRetries := StreamingBootstrapRetries(h.Cfg)
-	if h.AuthManager.HomeEnabled() {
-		maxBootstrapRetries = 0
-	}
 	for bootstrapRetries := 0; !streamCanceledBeforeRead; {
 		readInitialStreamChunks()
 		if streamCanceledBeforeRead || bootstrapErr != nil || bootstrapStreamErr == nil {
@@ -809,6 +812,39 @@ func (s *sseJSONValidationState) Finish() error {
 	errValidate := validateSSEFrameDataJSON(s.pending)
 	s.pending = nil
 	return errValidate
+}
+
+// responsesBootstrapControlOnly reports whether a validated SSE chunk contains
+// only lifecycle events that are safe to discard and replay before downstream
+// observes any model output or tool request. OpenAI can emit response.created or
+// response.in_progress before failing the request; treating those frames as the
+// first delivered byte would prevent the configured bootstrap retry from running.
+func responsesBootstrapControlOnly(chunk []byte) bool {
+	frames := bytes.Split(bytes.ReplaceAll(chunk, []byte("\r\n"), []byte("\n")), []byte("\n\n"))
+	found := false
+	for _, frame := range frames {
+		payload, ok := sseJSONValidationDataPayload(frame)
+		if !ok || len(bytes.TrimSpace(payload)) == 0 {
+			continue
+		}
+		payload = bytes.TrimSpace(payload)
+		if bytes.Equal(payload, []byte("[DONE]")) {
+			return false
+		}
+		var event struct {
+			Type string `json:"type"`
+		}
+		if err := json.Unmarshal(payload, &event); err != nil {
+			return false
+		}
+		switch event.Type {
+		case "response.created", "response.in_progress", "response.queued":
+			found = true
+		default:
+			return false
+		}
+	}
+	return found
 }
 
 func sseJSONValidationDataPayload(frame []byte) ([]byte, bool) {

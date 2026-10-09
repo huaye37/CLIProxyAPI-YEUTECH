@@ -584,6 +584,75 @@ func TestExecuteStreamWithAuthManager_ResetsResponsesValidatorOnBootstrapRetry(t
 	}
 }
 
+func TestExecuteStreamWithAuthManager_RetriesAfterResponsesControlEvents(t *testing.T) {
+	created := []byte("event: response.created\ndata: {\"type\":\"response.created\",\"response\":{\"status\":\"in_progress\"}}\n\n")
+	inProgress := []byte("event: response.in_progress\ndata: {\"type\":\"response.in_progress\",\"response\":{\"status\":\"in_progress\"}}\n\n")
+	completed := []byte("event: response.completed\ndata: {\"type\":\"response.completed\",\"response\":{\"status\":\"completed\"}}\n\n")
+	executor := &bootstrapStreamExecutor{stream: func(_ context.Context, call int) (*coreexecutor.StreamResult, error) {
+		chunks := make(chan coreexecutor.StreamChunk, 3)
+		if call == 1 {
+			chunks <- coreexecutor.StreamChunk{Payload: created}
+			chunks <- coreexecutor.StreamChunk{Payload: inProgress}
+			chunks <- coreexecutor.StreamChunk{Err: &coreauth.Error{HTTPStatus: http.StatusBadGateway, Message: "upstream server error"}}
+		} else {
+			chunks <- coreexecutor.StreamChunk{Payload: created}
+			chunks <- coreexecutor.StreamChunk{Payload: completed}
+		}
+		close(chunks)
+		return &coreexecutor.StreamResult{Chunks: chunks}, nil
+	}}
+	handler, _ := registerBootstrapExecutor(t, executor)
+
+	dataChan, _, errChan := handler.ExecuteStreamWithAuthManager(context.Background(), "openai-response", "bootstrap-model", []byte(`{"model":"bootstrap-model"}`), "")
+	var got []byte
+	for chunk := range dataChan {
+		got = append(got, chunk...)
+	}
+	for msg := range errChan {
+		if msg != nil {
+			t.Fatalf("unexpected stream error after retry: %+v", msg)
+		}
+	}
+	if executor.Calls() != 2 {
+		t.Fatalf("stream attempts = %d, want 2", executor.Calls())
+	}
+	if strings.Count(string(got), "event: response.created") != 1 || !strings.Contains(string(got), "response.completed") {
+		t.Fatalf("stream payload = %q, want only retry attempt lifecycle", got)
+	}
+}
+
+func TestExecuteStreamWithAuthManager_DoesNotRetryAfterResponsesOutput(t *testing.T) {
+	created := []byte("event: response.created\ndata: {\"type\":\"response.created\",\"response\":{\"status\":\"in_progress\"}}\n\n")
+	delta := []byte("event: response.output_text.delta\ndata: {\"type\":\"response.output_text.delta\",\"delta\":\"partial\"}\n\n")
+	executor := &bootstrapStreamExecutor{stream: func(_ context.Context, _ int) (*coreexecutor.StreamResult, error) {
+		chunks := make(chan coreexecutor.StreamChunk, 3)
+		chunks <- coreexecutor.StreamChunk{Payload: created}
+		chunks <- coreexecutor.StreamChunk{Payload: delta}
+		chunks <- coreexecutor.StreamChunk{Err: &coreauth.Error{HTTPStatus: http.StatusBadGateway, Message: "upstream server error"}}
+		close(chunks)
+		return &coreexecutor.StreamResult{Chunks: chunks}, nil
+	}}
+	handler, _ := registerBootstrapExecutor(t, executor)
+
+	dataChan, _, errChan := handler.ExecuteStreamWithAuthManager(context.Background(), "openai-response", "bootstrap-model", []byte(`{"model":"bootstrap-model"}`), "")
+	var got []byte
+	for chunk := range dataChan {
+		got = append(got, chunk...)
+	}
+	var gotErr *interfaces.ErrorMessage
+	for msg := range errChan {
+		if msg != nil {
+			gotErr = msg
+		}
+	}
+	if executor.Calls() != 1 {
+		t.Fatalf("stream attempts = %d, want 1 after output", executor.Calls())
+	}
+	if gotErr == nil || !strings.Contains(string(got), "response.output_text.delta") {
+		t.Fatalf("payload=%q error=%+v, want partial output and terminal error", got, gotErr)
+	}
+}
+
 func TestExecuteStreamWithAuthManager_CancelDuringSynchronousBootstrap(t *testing.T) {
 	started := make(chan struct{})
 	executor := &bootstrapStreamExecutor{stream: func(_ context.Context, _ int) (*coreexecutor.StreamResult, error) {
