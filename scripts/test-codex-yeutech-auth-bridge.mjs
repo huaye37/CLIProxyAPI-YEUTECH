@@ -74,3 +74,74 @@ test("strips ChatGPT auth and preserves the Fast request payload", async (t) => 
     body: { model: "gpt-6.1-sol", service_tier: "fast", input: "ok" },
   });
 });
+
+test("routes Codex Live directly with ChatGPT auth and preserves Location", async (t) => {
+  let gatewayCalled = false;
+  const gateway = http.createServer((_request, response) => {
+    gatewayCalled = true;
+    response.writeHead(500).end();
+  });
+  const gatewayPort = await listen(gateway);
+  t.after(() => gateway.close());
+
+  let observed;
+  const live = http.createServer((request, response) => {
+    const chunks = [];
+    request.on("data", (chunk) => chunks.push(chunk));
+    request.on("end", () => {
+      observed = {
+        authorization: request.headers.authorization,
+        account: request.headers["chatgpt-account-id"],
+        consumer: request.headers["x-yeutech-consumer"],
+        contentType: request.headers["content-type"],
+        path: request.url,
+        body: Buffer.concat(chunks).toString("utf8"),
+      };
+      response.writeHead(201, {
+        "content-type": "application/sdp",
+        location: "/v1/live/rtc_test",
+      });
+      response.end("v=answer\r\n");
+    });
+  });
+  const livePort = await listen(live);
+  t.after(() => live.close());
+
+  const bridgePort = livePort + 1;
+  const child = spawn(process.execPath, [fileURLToPath(new URL("./codex-yeutech-auth-bridge.mjs", import.meta.url))], {
+    env: {
+      ...process.env,
+      YEUTECH_CODEX_BRIDGE_PORT: String(bridgePort),
+      YEUTECH_UPSTREAM_BASE_URL: `http://127.0.0.1:${gatewayPort}`,
+      OPENAI_LIVE_BASE_URL: `http://127.0.0.1:${livePort}`,
+      YEUTECH_UPSTREAM_BEARER_TOKEN: "gateway-token",
+    },
+    stdio: ["ignore", "ignore", "inherit"],
+  });
+  t.after(() => child.kill("SIGTERM"));
+  await waitForHealth(bridgePort);
+
+  const response = await fetch(`http://127.0.0.1:${bridgePort}/v1/live`, {
+    method: "POST",
+    headers: {
+      authorization: "Bearer chatgpt-oauth-token",
+      "chatgpt-account-id": "account-id",
+      "content-type": "multipart/form-data; boundary=test-boundary",
+      "x-yeutech-consumer": "codex-desktop",
+    },
+    body: "--test-boundary--\r\n",
+  });
+
+  assert.equal(response.status, 201);
+  assert.equal(response.headers.get("location"), "/v1/live/rtc_test");
+  assert.equal(await response.text(), "v=answer\r\n");
+  assert.equal(gatewayCalled, false);
+  assert.deepEqual(observed, {
+    authorization: "Bearer chatgpt-oauth-token",
+    account: "account-id",
+    consumer: "codex-desktop",
+    contentType: "multipart/form-data; boundary=test-boundary",
+    path: "/v1/live",
+    body: "--test-boundary--\r\n",
+  });
+});
