@@ -345,24 +345,36 @@ func TestCodexClientModelsApplyPatchRouting(t *testing.T) {
 	manager.RegisterExecutor(catalogUnknownExecutor{executor.NewOpenAICompatExecutor("catalog-remote", &config.Config{})})
 	manager.RegisterExecutor(catalogUnsupportedExecutor{executor.NewOpenAICompatExecutor("catalog-disabled", &config.Config{})})
 	enabledCfg := &config.SDKConfig{Client: config.ClientConfig{Codex: config.CodexClientConfig{EnableApplyPatch: true}}}
+	testModelIDs := []string{
+		"gpt-5.5",
+		"gpt-reserve",
+		"gpt-image-2",
+		"catalog-patch-synthetic",
+		"catalog-patch-mixed",
+		"catalog-patch-partial",
+		"catalog-patch-alias",
+		"catalog-patch-unknown",
+		"team/gpt-5.5",
+		"catalog-patch-disabled",
+	}
 	for _, cfg := range []*config.SDKConfig{nil, {}, enabledCfg, {}} {
 		handler.UpdateClients(cfg)
 		for _, version := range []string{"", "0.137.0", "0.153.4", "cpa"} {
 			response := handler.codexClientModelsResponse(version)
-			for _, entry := range response["models"].([]map[string]any) {
+			for _, id := range testModelIDs {
 				want := any(nil)
 				if cfg == enabledCfg {
-					switch entry["slug"] {
+					switch id {
 					case "gpt-5.5", "gpt-reserve", "catalog-patch-synthetic", "catalog-patch-alias", "catalog-patch-mixed":
 						want = "freeform"
 					}
 				} else {
-					switch entry["slug"] {
+					switch id {
 					case "gpt-5.5", "gpt-reserve":
 						want = "freeform"
 					}
 				}
-				assertPatch(t, response, entry["slug"].(string), want)
+				assertPatch(t, response, id, want)
 			}
 		}
 	}
