@@ -14,25 +14,31 @@ import (
 
 // recentUsageEntry deliberately excludes credentials, prompts and response bodies.
 type recentUsageEntry struct {
-	RequestID           string    `json:"requestId"`
-	TraceID             string    `json:"traceId,omitempty"`
-	Provider            string    `json:"provider"`
-	AuthIndex           string    `json:"authIndex,omitempty"`
-	RequestedModel      string    `json:"requestedModel"`
-	RoutedModel         string    `json:"routedModel"`
-	ResponseModel       string    `json:"responseModel,omitempty"`
-	RequestedAt         time.Time `json:"requestedAt"`
-	LatencyMS           int64     `json:"latencyMs"`
-	TTFTMS              int64     `json:"ttftMs,omitempty"`
-	Failed              bool      `json:"failed"`
-	StatusCode          int       `json:"statusCode,omitempty"`
-	InputTokens         int64     `json:"inputTokens"`
-	OutputTokens        int64     `json:"outputTokens"`
-	CachedTokens        int64     `json:"cachedTokens"`
-	CacheReadTokens     int64     `json:"cacheReadTokens"`
-	CacheCreationTokens int64     `json:"cacheCreationTokens"`
-	ReasoningTokens     int64     `json:"reasoningTokens"`
-	ResponseServiceTier string    `json:"responseServiceTier,omitempty"`
+	RequestID            string    `json:"requestId"`
+	TraceID              string    `json:"traceId,omitempty"`
+	Provider             string    `json:"provider"`
+	AuthIndex            string    `json:"authIndex,omitempty"`
+	RequestedModel       string    `json:"requestedModel"`
+	RoutedModel          string    `json:"routedModel"`
+	ResponseModel        string    `json:"responseModel,omitempty"`
+	RequestedAt          time.Time `json:"requestedAt"`
+	LatencyMS            int64     `json:"latencyMs"`
+	TTFTMS               int64     `json:"ttftMs,omitempty"`
+	Failed               bool      `json:"failed"`
+	StatusCode           int       `json:"statusCode,omitempty"`
+	InputTokens          int64     `json:"inputTokens"`
+	OutputTokens         int64     `json:"outputTokens"`
+	CachedTokens         int64     `json:"cachedTokens"`
+	CacheReadTokens      int64     `json:"cacheReadTokens"`
+	CacheCreationTokens  int64     `json:"cacheCreationTokens"`
+	ReasoningTokens      int64     `json:"reasoningTokens"`
+	RequestedServiceTier string    `json:"-"`
+	ResponseServiceTier  string    `json:"responseServiceTier,omitempty"`
+}
+
+type recentUsageEntryV8 struct {
+	recentUsageEntry
+	RequestedServiceTier string `json:"requestedServiceTier,omitempty"`
 }
 
 type recentUsageRing struct {
@@ -67,12 +73,13 @@ func (r *recentUsageRing) HandleUsage(_ context.Context, record coreusage.Record
 		RequestedAt: requestedAt.UTC(), LatencyMS: record.Latency.Milliseconds(),
 		TTFTMS: record.TTFT.Milliseconds(), Failed: record.Failed,
 		StatusCode: record.Fail.StatusCode, InputTokens: record.Detail.InputTokens,
-		OutputTokens:        record.Detail.OutputTokens,
-		CachedTokens:        record.Detail.CachedTokens,
-		CacheReadTokens:     record.Detail.CacheReadTokens,
-		CacheCreationTokens: record.Detail.CacheCreationTokens,
-		ReasoningTokens:     record.Detail.ReasoningTokens,
-		ResponseServiceTier: usageField(record.ResponseServiceTier),
+		OutputTokens:         record.Detail.OutputTokens,
+		CachedTokens:         record.Detail.CachedTokens,
+		CacheReadTokens:      record.Detail.CacheReadTokens,
+		CacheCreationTokens:  record.Detail.CacheCreationTokens,
+		ReasoningTokens:      record.Detail.ReasoningTokens,
+		RequestedServiceTier: usageField(record.ServiceTier),
+		ResponseServiceTier:  usageField(record.ResponseServiceTier),
 	}
 	if entry.RequestedModel == "" {
 		entry.RequestedModel = entry.RoutedModel
@@ -106,14 +113,36 @@ func (r *recentUsageRing) snapshot(limit int) []recentUsageEntry {
 
 // GetRecentUsage reads a bounded in-memory copy without consuming the usage queue.
 func (h *Handler) GetRecentUsage(c *gin.Context) {
+	limit, ok := recentUsageLimit(c)
+	if !ok {
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"records": recentUsage.snapshot(limit), "retention": "memory", "capacity": recentUsage.limit})
+}
+
+// GetRecentUsageV8 reports both the requested and upstream response service tiers.
+func (h *Handler) GetRecentUsageV8(c *gin.Context) {
+	limit, ok := recentUsageLimit(c)
+	if !ok {
+		return
+	}
+	entries := recentUsage.snapshot(limit)
+	records := make([]recentUsageEntryV8, 0, len(entries))
+	for _, entry := range entries {
+		records = append(records, recentUsageEntryV8{recentUsageEntry: entry, RequestedServiceTier: entry.RequestedServiceTier})
+	}
+	c.JSON(http.StatusOK, gin.H{"records": records, "retention": "memory", "capacity": recentUsage.limit})
+}
+
+func recentUsageLimit(c *gin.Context) (int, bool) {
 	limit := 50
 	if raw := c.Query("limit"); raw != "" {
 		parsed, err := strconv.Atoi(raw)
 		if err != nil || parsed < 1 || parsed > 100 {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "limit must be between 1 and 100"})
-			return
+			return 0, false
 		}
 		limit = parsed
 	}
-	c.JSON(http.StatusOK, gin.H{"records": recentUsage.snapshot(limit), "retention": "memory", "capacity": recentUsage.limit})
+	return limit, true
 }
