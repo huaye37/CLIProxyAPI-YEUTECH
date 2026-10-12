@@ -260,12 +260,12 @@ func TestCodexAuthFileEntryExposesStoredPlanType(t *testing.T) {
 	}
 	h := NewHandlerWithoutConfigFilePath(&config.Config{AuthDir: authDir}, nil)
 	auth := &coreauth.Auth{ID: "codex-plan", Provider: "codex", Attributes: map[string]string{"path": filePath, "plan_type": "pro"}}
-	if got := h.buildAuthFileEntry(auth)["plan_type"]; got != "pro" {
+	if got := h.buildAuthFileEntry(auth, authFileQuotaContext{})["plan_type"]; got != "pro" {
 		t.Fatalf("plan_type = %#v, want pro", got)
 	}
 	auth.Attributes["plan_type"] = ""
 	auth.Metadata = map[string]any{"plan_type": "plus"}
-	if got := h.buildAuthFileEntry(auth)["plan_type"]; got != "plus" {
+	if got := h.buildAuthFileEntry(auth, authFileQuotaContext{})["plan_type"]; got != "plus" {
 		t.Fatalf("metadata plan_type = %#v, want plus", got)
 	}
 }
