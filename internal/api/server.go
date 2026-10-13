@@ -38,6 +38,7 @@ import (
 // Server represents the main API server.
 // It encapsulates the Gin engine, HTTP server, handlers, and configuration.
 type Server struct {
+	memoryAdmission *memoryAdmission
 	// engine is the Gin web framework engine instance.
 	engine *gin.Engine
 
@@ -153,6 +154,7 @@ func NewServer(cfg *config.Config, authManager *auth.Manager, accessManager *sdk
 
 	// Create server instance
 	s := &Server{
+		memoryAdmission:              newMemoryAdmission(),
 		engine:                       engine,
 		handlers:                     handlers.NewBaseAPIHandlers(effectiveSDKConfig(cfg), authManager),
 		cfg:                          cfg,
@@ -170,6 +172,7 @@ func NewServer(cfg *config.Config, authManager *auth.Manager, accessManager *sdk
 	engine.Use(logging.GinLogrusRecovery())
 	engine.Use(logging.CPATraceIDMiddleware())
 	engine.Use(s.maxRequestBodyBytesMiddleware())
+	engine.Use(s.memoryAdmission.middleware())
 	for _, mw := range optionState.extraMiddleware {
 		engine.Use(mw)
 	}

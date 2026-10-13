@@ -228,7 +228,7 @@ def remove(name: str) -> None:
 def start_slot(slot: str, image: str, env_source: str) -> None:
     name = container_name(slot)
     remove(name)
-    args = [DOCKER, 'run', '-d', '--name', name, '--restart', 'unless-stopped', '--network', 'host', '--user', '1026:100', '--workdir', '/CLIProxyAPI', '--read-only', '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges:true', '--memory', '512m']
+    args = [DOCKER, 'run', '-d', '--name', name, '--restart', 'unless-stopped', '--network', 'host', '--user', '1026:100', '--workdir', '/CLIProxyAPI', '--read-only', '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges:true', '--memory', '4g', '--memory-swap', '4g', '-e', 'GOMEMLIMIT=3GiB', '-e', 'YEUTECH_MEMORY_GUARD=1']
     environment = runtime_environment(env_source)
     if not any(value.startswith('WEB_SUBSCRIPTION_GEMINI_URL=') for value in environment):
         environment.append('WEB_SUBSCRIPTION_GEMINI_URL=http://127.0.0.1:18792')

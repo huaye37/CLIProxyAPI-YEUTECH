@@ -48,7 +48,11 @@ func (s *Server) setupRoutes() {
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"status": "ok"})
+		body := gin.H{"status": "ok"}
+		if admission := s.memoryAdmission.snapshot(); admission != nil {
+			body["memoryGuard"] = admission
+		}
+		c.JSON(http.StatusOK, body)
 	}
 	s.engine.GET("/healthz", healthzHandler)
 	s.engine.HEAD("/healthz", healthzHandler)
