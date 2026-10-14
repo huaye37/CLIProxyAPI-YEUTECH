@@ -4,8 +4,8 @@ set -euo pipefail
 branch=yeutech-capability-v15
 upstream=https://github.com/router-for-me/CLIProxyAPI.git
 current_branch=$(git branch --show-current)
-if [[ "$current_branch" != "$branch" && "$current_branch" != yeutech-upstream-* ]]; then
-  echo "Expected $branch or an isolated yeutech-upstream-* branch, got $current_branch" >&2
+if [[ "$current_branch" != "$branch" && "$current_branch" != yeutech-upstream-* && "$current_branch" != codex/cliproxy-* ]]; then
+  echo "Expected $branch or an isolated upstream integration branch, got $current_branch" >&2
   exit 2
 fi
 if [[ -n "$(git status --porcelain)" ]]; then
