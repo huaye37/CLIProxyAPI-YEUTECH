@@ -97,6 +97,13 @@ func (m *Manager) Register(ctx context.Context, auth *Auth) (*Auth, error) {
 		return nil, errMutation
 	}
 	defer releaseMutation()
+	if !auth.sourceFileSnapshotCurrent() {
+		return nil, fmt.Errorf("auth source changed before registration")
+	}
+	if auth.sourceFileSnapshot != nil {
+		auth = auth.Clone()
+		auth.sourceFileSnapshot = nil
+	}
 	now := time.Now()
 	if auth.Generation == 0 {
 		auth.Generation = 1
@@ -236,6 +243,16 @@ func (m *Manager) finishAuthUpdate(ctx context.Context, committed *Auth, persist
 func (m *Manager) updateInternalLocked(ctx context.Context, base, auth *Auth, mode updateAuthMode) (committedAuth *Auth, committed bool, persistCooldown bool, err error) {
 	if auth == nil || auth.ID == "" {
 		return nil, false, false, nil
+	}
+	// The per-auth mutation gate also serializes management persistence. Do
+	// file I/O before taking m.mu so unrelated credentials remain responsive.
+	if !auth.sourceFileSnapshotCurrent() {
+		current, _ := m.GetByID(auth.ID)
+		return current, false, false, nil
+	}
+	if auth.sourceFileSnapshot != nil {
+		auth = auth.Clone()
+		auth.sourceFileSnapshot = nil
 	}
 	NormalizeCredentialMetadata(auth.Metadata)
 	if errWeight := ValidateAuthWeight(auth); errWeight != nil {

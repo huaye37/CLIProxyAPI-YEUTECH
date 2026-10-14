@@ -63,6 +63,9 @@ type Auth struct {
 	Prefix string `json:"prefix,omitempty"`
 	// FileName stores the relative or absolute path of the backing auth file.
 	FileName string `json:"-"`
+	// sourceFileSnapshot fences a pending file observation until its first commit.
+	// It is never persisted or retained in the manager's committed auth.
+	sourceFileSnapshot *authFileSnapshot
 	// Storage holds the token persistence implementation used during login flows.
 	Storage baseauth.TokenStorage `json:"-"`
 	// CodexRefreshPatch carries an immutable pending credential update, never configuration.

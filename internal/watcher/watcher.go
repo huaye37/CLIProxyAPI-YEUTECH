@@ -37,6 +37,7 @@ type Watcher struct {
 	clientsMutex      sync.RWMutex
 	authRescanMu      sync.Mutex
 	configReloadMu    sync.Mutex
+	configApplyMu     sync.Mutex // Serializes complete file reloads, independently of debounce timers.
 	configReloadTimer *time.Timer
 	serverUpdateMu    sync.Mutex
 	serverUpdateTimer *time.Timer

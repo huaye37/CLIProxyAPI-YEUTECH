@@ -71,7 +71,14 @@ func SynthesizeAuthFile(ctx *SynthesisContext, fullPath string, data []byte) ([]
 	return synthesizeFileAuths(ctx, fullPath, data)
 }
 
-func synthesizeFileAuths(ctx *SynthesisContext, fullPath string, data []byte) ([]*coreauth.Auth, error) {
+func synthesizeFileAuths(ctx *SynthesisContext, fullPath string, data []byte) (authsOut []*coreauth.Auth, errOut error) {
+	defer func() {
+		if errOut == nil {
+			for _, auth := range authsOut {
+				auth.SetSourceFileSnapshot(fullPath, data)
+			}
+		}
+	}()
 	if ctx == nil || len(data) == 0 {
 		return nil, nil
 	}
