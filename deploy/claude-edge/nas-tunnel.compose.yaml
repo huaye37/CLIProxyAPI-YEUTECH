@@ -1,0 +1,37 @@
+version: "2.4"
+services:
+  tunnel:
+    image: ${TOKYO_TUNNEL_IMAGE:?Set the verified tunnel image digest}
+    container_name: yeutech-claude-edge-tunnel
+    network_mode: host
+    restart: unless-stopped
+    mem_limit: 64m
+    memswap_limit: 64m
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    volumes:
+      - ./ssh:/run/ssh:ro
+    command:
+      - -NT
+      - -i
+      - /run/ssh/id_ed25519
+      - -o
+      - IdentitiesOnly=yes
+      - -o
+      - BatchMode=yes
+      - -o
+      - StrictHostKeyChecking=yes
+      - -o
+      - UserKnownHostsFile=/run/ssh/known_hosts
+      - -o
+      - ExitOnForwardFailure=yes
+      - -o
+      - ConnectTimeout=8
+      - -o
+      - ServerAliveInterval=30
+      - -o
+      - ServerAliveCountMax=3
+      - -L
+      - 127.0.0.1:18340:127.0.0.1:18340
+      - yeutech-nas-tunnel@${TOKYO_HOST:?Set the Tokyo host}

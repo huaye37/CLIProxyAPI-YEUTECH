@@ -3,6 +3,7 @@ package api
 import (
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -21,11 +22,19 @@ const (
 )
 
 type memoryAdmission struct {
-	mu      sync.Mutex
-	enabled bool
-	active  int
-	bytes   int64
-	large   bool
+	mu          sync.Mutex
+	enabled     bool
+	active      int
+	bytes       int64
+	large       bool
+	maxRequests int
+}
+
+func (m *memoryAdmission) requestLimit() int {
+	if m.maxRequests > 0 && m.maxRequests < memoryMaxRequests {
+		return m.maxRequests
+	}
+	return memoryMaxRequests
 }
 
 func (m *memoryAdmission) snapshot() gin.H {
@@ -35,7 +44,7 @@ func (m *memoryAdmission) snapshot() gin.H {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	return gin.H{"version": memoryAdmissionVersion, "maxBodyBytes": memoryBodyLimit,
-		"bodyBudgetBytes": memoryBodyLimit, "maxConcurrentRequests": memoryMaxRequests,
+		"bodyBudgetBytes": memoryBodyLimit, "maxConcurrentRequests": m.requestLimit(),
 		"largeBodyThresholdBytes": memoryLargeBody, "maxConcurrentLargeRequests": 1,
 		"activeRequests": m.active, "reservedBodyBytes": m.bytes}
 }
@@ -43,7 +52,7 @@ func (m *memoryAdmission) snapshot() gin.H {
 func (m *memoryAdmission) acquire(size int64) bool {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	if m.active >= memoryMaxRequests || size > memoryBodyLimit-m.bytes || (size >= memoryLargeBody && m.large) {
+	if m.active >= m.requestLimit() || size > memoryBodyLimit-m.bytes || (size >= memoryLargeBody && m.large) {
 		return false
 	}
 	m.active++
@@ -65,7 +74,9 @@ func (m *memoryAdmission) release(size int64) {
 }
 
 func newMemoryAdmission() *memoryAdmission {
-	return &memoryAdmission{enabled: os.Getenv("YEUTECH_MEMORY_GUARD") == "1"}
+	// Edge deployments may reduce admission without raising the tested ceiling.
+	limit, _ := strconv.Atoi(strings.TrimSpace(os.Getenv("YEUTECH_MEMORY_MAX_REQUESTS")))
+	return &memoryAdmission{enabled: os.Getenv("YEUTECH_MEMORY_GUARD") == "1", maxRequests: limit}
 }
 
 func (m *memoryAdmission) middleware() gin.HandlerFunc {

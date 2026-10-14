@@ -52,6 +52,12 @@ func (s *Server) setupRoutes() {
 		if admission := s.memoryAdmission.snapshot(); admission != nil {
 			body["memoryGuard"] = admission
 		}
+		if privacy := s.clientMetadataPrivacy.snapshot(); privacy != nil {
+			body["clientMetadataPrivacy"] = privacy
+		}
+		if admission := s.edgeAdmission.snapshot(); admission != nil {
+			body["edgeControl"] = admission
+		}
 		c.JSON(http.StatusOK, body)
 	}
 	s.engine.GET("/healthz", healthzHandler)

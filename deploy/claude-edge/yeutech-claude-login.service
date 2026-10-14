@@ -1,0 +1,19 @@
+[Unit]
+Description=User-operated Claude browser in Tokyo
+After=network-online.target
+
+[Service]
+Type=simple
+User=yeutech-claude-login
+Group=yeutech-claude-login
+UMask=0077
+RuntimeDirectory=yeutech-claude-login
+RuntimeDirectoryMode=0700
+Environment=XDG_RUNTIME_DIR=/run/yeutech-claude-login
+ExecStart=/usr/bin/xvfb-run -a -s "-screen 0 1440x900x24 -nolisten tcp" /opt/yeutech-claude-edge/login-desktop.sh
+PrivateTmp=true
+MemoryMax=1500M
+CPUQuota=150%
+RuntimeMaxSec=infinity
+KillMode=control-group
+Restart=no

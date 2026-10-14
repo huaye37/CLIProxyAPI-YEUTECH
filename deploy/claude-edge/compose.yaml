@@ -1,0 +1,37 @@
+version: "2.4"
+services:
+  claude-edge:
+    image: ${CLAUDE_EDGE_IMAGE:?Set the verified image digest}
+    container_name: yeutech-claude-edge
+    command: ["./CLIProxyAPI", "-config", "/run/claude-edge/config.yaml", "-local-model"]
+    restart: unless-stopped
+    mem_limit: 3g
+    memswap_limit: 3g
+    cpus: 2.0
+    pids_limit: 128
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    environment:
+      TZ: Asia/Tokyo
+      GOMEMLIMIT: 2GiB
+      GOMAXPROCS: "2"
+      YEUTECH_MEMORY_GUARD: "1"
+      YEUTECH_MEMORY_MAX_REQUESTS: "2"
+      YEUTECH_STRIP_CLIENT_METADATA: "1"
+      YEUTECH_EDGE_CONTROL_FILE: /run/edge-control/gate.json
+    ports:
+      - "127.0.0.1:18340:8317"
+      - "127.0.0.1:54545:54545"
+    volumes:
+      - ./config:/run/claude-edge:ro
+      - ./auth:/auth
+      - ./control:/run/edge-control:ro
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: "2"
+

@@ -149,3 +149,47 @@ func TestMemoryAdmissionHonorsSmallerConfiguredLimit(t *testing.T) {
 		t.Fatal("read failure leaked reservation")
 	}
 }
+
+func TestMemoryAdmissionEdgeConcurrencyRejectsBeforeReadAndRecovers(t *testing.T) {
+	t.Setenv("YEUTECH_MEMORY_GUARD", "1")
+	t.Setenv("YEUTECH_MEMORY_MAX_REQUESTS", "2")
+	m := newMemoryAdmission()
+	if !m.acquire(memoryMinReservation) || !m.acquire(memoryMinReservation) {
+		t.Fatal("edge capacity should admit two requests")
+	}
+	r := gin.New()
+	r.Use(m.middleware())
+	r.POST("/v1/responses", func(c *gin.Context) { c.Status(http.StatusOK) })
+	body := &unreadBody{}
+	req := httptest.NewRequest(http.MethodPost, "/v1/responses", body)
+	req.ContentLength = 2
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusServiceUnavailable || body.read || m.active != 2 {
+		t.Fatalf("edge overload was not rejected before reading: code=%d read=%v active=%d", w.Code, body.read, m.active)
+	}
+	if m.snapshot()["maxConcurrentRequests"] != 2 {
+		t.Fatal("health must report the configured limit")
+	}
+	m.release(memoryMinReservation)
+	w = httptest.NewRecorder()
+	r.ServeHTTP(w, httptest.NewRequest(http.MethodPost, "/v1/responses", strings.NewReader("{}")))
+	if w.Code != http.StatusOK || m.active != 1 {
+		t.Fatal("edge admission did not recover after a request finished")
+	}
+	m.release(memoryMinReservation)
+	if m.active != 0 || m.bytes != 0 {
+		t.Fatal("edge reservations leaked")
+	}
+}
+
+func TestMemoryAdmissionOverrideCannotRaiseTestedCeiling(t *testing.T) {
+	for _, value := range []string{"", "0", "-1", "invalid", "99999999"} {
+		t.Run(value, func(t *testing.T) {
+			t.Setenv("YEUTECH_MEMORY_MAX_REQUESTS", value)
+			if got := newMemoryAdmission().requestLimit(); got != memoryMaxRequests {
+				t.Fatalf("override %q changed the default ceiling to %d", value, got)
+			}
+		})
+	}
+}

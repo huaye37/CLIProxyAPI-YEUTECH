@@ -1,0 +1,46 @@
+config-version: 8
+server:
+  host: "0.0.0.0"
+  port: 8317
+  max-request-body-bytes: 67108864
+  commercial-mode: true
+  discovery:
+    enabled: false
+management:
+  allow-remote: false
+  secret-key: ""
+  disable-control-panel: true
+access:
+  api-keys:
+    - "REPLACE_WITH_SERVER_GENERATED_BRIDGE_KEY"
+oauth:
+  auth-dir: /auth
+  auth-auto-refresh-workers: 1
+routing:
+  strategy: fill-first
+  retry:
+    request-retry: 0
+    max-retry-credentials: 1
+    max-retry-interval: 0
+requests:
+  proxy-url: "direct"
+  streaming:
+    keepalive-seconds: 15
+    bootstrap-retries: 0
+upstream:
+  claude:
+    disable-claude-cloak-mode: true
+    disable-cloaking-model-list: true
+    # Match this deployment's actual Linux/amd64 host, not the generic defaults.
+    header-defaults:
+      os: Linux
+      arch: x64
+      timezone: Asia/Tokyo
+observability:
+  logs:
+    debug: false
+    logging-to-file: false
+    request-log: false
+  usage:
+    usage-statistics-enabled: true
+
