@@ -64,3 +64,35 @@ authoritative manager's `scripts/stage-unified-proxy.py`; verify NAS proxy,
 paired manager and Tokyo catalog/image manifests against one full source commit.
 This document alone does not set either node ready. User-triggered installation,
 real paid provider scenarios and production observation remain separate evidence.
+
+## v8.0.30 integration on 2026-10-15
+
+The official release appeared at 21:55:09 Asia/Shanghai while the v8.0.29 paired
+candidate was being checked. The updater correctly refused to call that older
+pair current. This candidate merges the v8.0.30 tag on top of maintenance commit
+191515d0, including the Hong Kong relay sources and incident-preservation contract.
+
+The watcher conflict is semantic: both branches introduced configApplyMu. Keep
+one mutex, use upstream SourceHash for the exact bytes actually parsed, and retain
+the existing auth-file source-digest fence from 20b4a41d. Neither the previous
+config/auth regression nor its assertions is removed. Catalog IDs were checked
+for duplicates after the automatic merge.
+
+| Upstream change | Existing call chain and implementation | Frontend / consumer impact | Verification boundary |
+| --- | --- | --- | --- |
+| 1631875b management-save/reload fence | All NAS/Tokyo config writes -> management handler -> watcher -> runtime; internal/config/config_load.go, internal/api/handlers/management, internal/watcher | No new control. Preserve settings and current auth registration. | Resolve the duplicate mutex and parsed-source hash as above; repeat Issue6559/6631 and local snapshot tests with race detection, then full suite. |
+| 35af74f9 stale success/cooldown fence | Existing provider execution -> auth conductor/model cooldown; sdk/cliproxy/auth/conductor_*.go | Existing cooldown/quota UI consumes the same state shape; no new account or retry policy. | Issue6643 tests cover in-flight success, persistence and real post-cooldown success. No account load test is claimed. |
+| 9db0729f, 4e8a4125 Claude header operator overrides | Tokyo Claude executor/header defaults and fingerprint policy | Optional operator configuration, not a user model-generation parameter. Existing Linux/x64, Asia/Tokyo and caller-header filtering remain. Do not enable new diagnostic/header modes merely because supported. | Upstream override/config tests plus existing Tokyo profile/privacy protocol tests; no anonymity or account-policy guarantee. |
+| 59930ba3 incomplete Responses tool status | Local client/workbench/novel/Kaoyan tools -> Responses-to-Claude translator -> tool_result.is_error | Existing tool result/error path; no UI parameter or changed tool authority. | Translator regression covers incomplete statuses; synthetic tool round trip remains required in both-node staging. |
+| e9ba5c50 unsupported discriminator removal | Existing Gemini/Antigravity tool schemas -> internal/util/gemini_schema.go -> provider | Shared protocol adaptation for all policy-controlled consumers; no changed model settings. | Schema fixtures and executor suite; does not authorize new tools. |
+| ceb4397f, 2d7f5377 (+ 5be2cdab) Vertex thought-only tail and full publisher URLs | Vertex execution/content normalization and config/vertex_compat.go | No Vertex supplier enabled in this deployment; optional existing base-URL field already carries the full prefix. Independent image path keeps its own contract. | Retain upstream tests, no paid Vertex claim or new supplier registration. |
+| bbfd7886 (+ 207d119d) xAI web-search arguments | xAI Responses request builder | No enabled xAI supplier here; no frontend or model registration change. | Upstream request-builder tests; not a live web-search claim. |
+| f9437700 pre-upload hashing and remote store seed | Startup/config normalization -> Git/Postgres/object storage seed | NAS/Tokyo currently use file-backed config/auth. Do not migrate storage or rewrite credentials for this feature. | Config-load/seed regression suite; no production remote-store migration. |
+| 74592556 Gemini 4 Argon definition | Registry -> entitlement intersection -> live consumer capability catalog | Existing model selectors and saved preferences; preserve account filtering and custom metadata. A definition is not new account access. | Duplicate-ID check plus registry tests; no automatic provider/model enablement. |
+
+The affected shared paths serve local clients, the AI workbench, novel text,
+independent image generation, Kaoyan assistant/explanation/grading and other
+policy-controlled entries. Existing IDs, histories, defaults, quota sources,
+GPT 500k/80% compression, independent speed/reasoning fields and material contract
+are unchanged. Source tests, prepared paired manifests, production installation
+and real long-workload acceptance remain separate outcomes.
