@@ -214,3 +214,69 @@ technical connectivity.
   natural token refresh, controlled
   disconnect/restart recovery, sustained load and consumer acceptance.
   Initial health checks do not establish these pending outcomes.
+
+### 2026-10-15: NAS transport moved through the Hong Kong relay
+
+At 21:22:33 Asia/Shanghai, only the NAS SSH tunnel was recreated. The route is
+NAS -> restricted Hong Kong SSH jump -> Tokyo loopback 18340 -> existing Claude
+proxy. Claude OAuth and upstream connections remain on Tokyo. Both proxy
+containers and the API manager retained their existing images/start times.
+
+Evidence from this incident:
+
+| Probe | Observed duration |
+| --- | ---: |
+| Tokyo-local invalid JSON, 8 MiB, no model call | 0.035 s |
+| Old uncompressed direct tunnel, 8 MiB | about 196 s on Tokyo's request log |
+| Fresh direct SSH, 1 MiB | 37.651 s |
+| Direct SSH with compression, varied 8 MiB fixture | 41.498 s |
+| NAS -> Hong Kong -> Tokyo, compressed, same varied fixture | 5.248 s |
+| Published relay, same varied fixture | 4.391 s |
+| Published NAS main-proxy Opus stream | first content 1.380 s; complete 2.010 s |
+
+The varied fixture is 8,388,608 bytes and compresses to 1,489,934 bytes with
+zlib. Its intentional HTTP 400 response proves transfer/body handling without
+dispatching inference. These are single-run transport samples, not a promise
+that every large model prompt will complete in this time. A 500,017-token
+Tokyo-local counting request took 2.623 s; counting is not generation.
+The full earlier 615k-token conversation was not replayed. A real browser
+verification on the production API platform returned YEUTECH_OK for Opus 5.5
+at 21:25:53 Asia/Shanghai.
+
+Deployment sources:
+
+- Keep `nas-tunnel.compose.yaml` as the common service definition.
+- Copy `nas-tunnel-relay.compose.yaml` to NAS `compose.yaml` beside that base.
+  Its `extends` changes only the SSH command; resource limits, private bind,
+  image pinning and container restrictions are inherited from the common file.
+- Install `nas-relay.ssh_config.example` as NAS `ssh/config`, mode 0600.
+  Substitute the deployment's reviewed hosts if provisioning another system.
+- The original Tokyo key remains `ssh/id_ed25519`. Generate
+  `ssh/id_ed25519_hk_relay` on NAS, mode 0600; install only its public key on
+  Hong Kong's `yeutech-tokyo-relay` account. Do not copy any private key or OAuth
+  token to Hong Kong.
+- Pin the Hong Kong host key read through the already authenticated management
+  SSH connection. Do not disable host-key verification.
+- Install `hk-relay.sshd.conf.example` under `/etc/ssh/sshd_config.d/`, validate
+  with `sshd -t`, then reload SSH. The account uses `/usr/sbin/nologin`;
+  its authorized key is restricted and permits only `47.79.89.19:22`.
+  Actual shell execution and forwarding to Tokyo 18340 were both rejected.
+- Compression runs inside the end-to-end Tokyo SSH connection. The outer Hong
+  Kong connection does not try to compress already encrypted traffic.
+- `transport_probe.py` runs on NAS and prints only sizes, status and timing.
+  It reads the bridge key at execution time and never emits request headers or
+  payloads. Temporary port 18341 tunnels were removed after validation.
+
+Production directory: `/volume1/docker/yeutech-claude-edge-tunnel`.
+The active tunnel retains image
+`sha256:8df7b258a2d2dff70c368e16aee73dba3f51c59a3f9e622b7bf5fd60e2ecc7b8`.
+The deployed base, relay Compose and SSH config were byte-for-byte matched to
+their repository sources; resolved Compose output was identical before and
+after conversion to the shared-base layout.
+
+Rollback: after confirming zero active Tokyo requests, restore
+`backups/before-hk-relay-20261015-212233/compose.yaml` to `compose.yaml`, then
+run Docker Compose `up -d --no-deps tunnel` and recheck health/inference.
+That restores the old direct path, whose throughput was poor at diagnosis time.
+The new route adds a Hong Kong availability dependency; automatic failover and
+long-running workload acceptance have not been claimed as tested.

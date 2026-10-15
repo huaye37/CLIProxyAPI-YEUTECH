@@ -1,0 +1,28 @@
+Host yeutech-hk-relay
+    HostName 8.217.64.178
+    User yeutech-tokyo-relay
+    IdentityFile /run/ssh/id_ed25519_hk_relay
+    Compression no
+
+Host tokyo-via-hk
+    HostName 47.79.89.19
+    User yeutech-nas-tunnel
+    IdentityFile /run/ssh/id_ed25519
+    ProxyJump yeutech-hk-relay
+    Compression yes
+
+Host tokyo-direct
+    HostName 47.79.89.19
+    User yeutech-nas-tunnel
+    IdentityFile /run/ssh/id_ed25519
+    Compression yes
+
+Host *
+    IdentitiesOnly yes
+    BatchMode yes
+    StrictHostKeyChecking yes
+    UserKnownHostsFile /run/ssh/known_hosts
+    ExitOnForwardFailure yes
+    ConnectTimeout 8
+    ServerAliveInterval 15
+    ServerAliveCountMax 3

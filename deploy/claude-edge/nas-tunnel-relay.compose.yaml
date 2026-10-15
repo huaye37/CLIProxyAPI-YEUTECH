@@ -1,0 +1,13 @@
+version: "2.4"
+services:
+  tunnel:
+    extends:
+      file: ./nas-tunnel.compose.yaml
+      service: tunnel
+    command:
+      - -F
+      - /run/ssh/config
+      - -NT
+      - -L
+      - 127.0.0.1:18340:127.0.0.1:18340
+      - tokyo-via-hk

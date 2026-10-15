@@ -1,0 +1,16 @@
+# NAS may relay encrypted SSH only to the existing Tokyo node.
+Match User yeutech-tokyo-relay
+    AuthenticationMethods publickey
+    PasswordAuthentication no
+    KbdInteractiveAuthentication no
+    AllowTcpForwarding local
+    PermitOpen 47.79.89.19:22
+    PermitListen none
+    AllowStreamLocalForwarding no
+    AllowAgentForwarding no
+    X11Forwarding no
+    PermitTTY no
+    PermitTunnel no
+    GatewayPorts no
+    ForceCommand /usr/sbin/nologin
+Match all
