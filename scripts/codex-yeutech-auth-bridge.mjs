@@ -3,6 +3,8 @@
 import { execFileSync } from "node:child_process";
 import http from "node:http";
 import https from "node:https";
+import { randomUUID } from "node:crypto";
+import { isCodexStreamingResponse, rateLimitDisplay } from "./codex-yeutech-errors.mjs";
 
 const listenHost = process.env.YEUTECH_CODEX_BRIDGE_HOST || "127.0.0.1";
 const listenPort = Number(process.env.YEUTECH_CODEX_BRIDGE_PORT || "18401");
@@ -19,6 +21,7 @@ const liveTransport = liveBase.protocol === "https:" ? https : http;
 
 let cachedToken = null;
 let cachedTokenAt = 0;
+let activeRequests = 0;
 
 function upstreamToken() {
   const envToken = process.env.YEUTECH_UPSTREAM_BEARER_TOKEN?.trim();
@@ -66,12 +69,74 @@ function responseHeaders(headers) {
   return result;
 }
 
+function forwardResponse(request, response, upstreamResponse) {
+  const status = upstreamResponse.statusCode || 502;
+  const encoding = upstreamResponse.headers["content-encoding"];
+  if (status !== 429 || !isCodexStreamingResponse(request) || (encoding && encoding !== "identity")) {
+    response.writeHead(status, responseHeaders(upstreamResponse.headers));
+    upstreamResponse.pipe(response);
+    return;
+  }
+
+  // Bound only the error body; inference requests and successful streams stay unbuffered.
+  const chunks = [];
+  let bytes = 0;
+  let passthrough = false;
+  upstreamResponse.on("data", (chunk) => {
+    if (passthrough) return;
+    chunks.push(chunk);
+    bytes += chunk.length;
+    if (bytes > 64 * 1024) {
+      passthrough = true;
+      response.writeHead(status, responseHeaders(upstreamResponse.headers));
+      for (const buffered of chunks) response.write(buffered);
+      chunks.length = 0;
+      upstreamResponse.pipe(response);
+    }
+  });
+  upstreamResponse.on("end", () => {
+    if (passthrough || response.destroyed) return;
+    const body = Buffer.concat(chunks);
+    const display = rateLimitDisplay(body.toString("utf8"), upstreamResponse.headers);
+    if (!display) {
+      response.writeHead(status, responseHeaders(upstreamResponse.headers));
+      response.end(body);
+      return;
+    }
+    // Codex discards HTTP 429 bodies. A failed Responses event preserves the
+    // diagnostic while remaining a failed turn, never a synthetic model answer.
+    const headers = responseHeaders(upstreamResponse.headers);
+    for (const key of ["content-length", "content-encoding", "etag", "content-md5", "digest"]) delete headers[key];
+    headers["content-type"] = "text/event-stream; charset=utf-8";
+    headers["cache-control"] = "no-store";
+    headers["x-yeutech-upstream-status"] = "429";
+    const failure = { type: "response.failed", sequence_number: 0, response: {
+      id: `resp_${randomUUID()}`, object: "response", status: "failed", output: [],
+      error: { type: "rate_limit_error", code: "rate_limit_exceeded", message: display.message,
+        reason: display.reason, upstream_status: 429, retry_after_seconds: display.retryAfterSeconds,
+        resets_at: display.resetsAt === null ? null : Math.ceil(display.resetsAt / 1000) },
+    } };
+    response.writeHead(200, headers);
+    response.end(`event: response.failed\ndata: ${JSON.stringify(failure)}\n\n`);
+  });
+  upstreamResponse.on("error", (error) => response.destroy(error));
+}
+
 const server = http.createServer((request, response) => {
   if (request.method === "GET" && request.url === "/_yeutech/health") {
     response.writeHead(200, { "content-type": "application/json" });
-    response.end(JSON.stringify({ ok: true, upstream: upstreamBase.origin, liveUpstream: liveBase.origin }));
+    response.end(JSON.stringify({ ok: true, version: "20261016-rate-limit-display-v1", activeRequests, upstream: upstreamBase.origin, liveUpstream: liveBase.origin }));
     return;
   }
+
+  activeRequests += 1;
+  let finished = false;
+  const finishRequest = () => {
+    if (!finished) activeRequests -= 1;
+    finished = true;
+  };
+  response.once("finish", finishRequest);
+  response.once("close", finishRequest);
 
   const live = isLiveRequest(request.url);
   const target = live ? liveBase : upstreamBase;
@@ -95,8 +160,7 @@ const server = http.createServer((request, response) => {
     headers,
     agent,
   }, (upstreamResponse) => {
-    response.writeHead(upstreamResponse.statusCode || 502, responseHeaders(upstreamResponse.headers));
-    upstreamResponse.pipe(response);
+    forwardResponse(request, response, upstreamResponse);
   });
 
   upstreamRequest.on("error", (error) => {

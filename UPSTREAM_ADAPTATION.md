@@ -96,3 +96,42 @@ policy-controlled entries. Existing IDs, histories, defaults, quota sources,
 GPT 500k/80% compression, independent speed/reasoning fields and material contract
 are unchanged. Source tests, prepared paired manifests, production installation
 and real long-workload acceptance remain separate outcomes.
+
+## 2026-10-16: Codex rate-limit diagnostics at the local auth bridge
+
+Tokyo's read-only live quota observation at 01:21 Shanghai time reported the
+five-hour window at 100%, resetting at 01:50, while the seven-day window was 7%
+used. The node remained reachable, accepting and profile-valid; the credential
+was present, refreshable and not disabled. This is quota evidence, not an account
+ban. NAS preserved HTTP 429/model_cooldown and Retry-After, but installed Codex
+0.162.0-alpha.17.2 discarded the error body and rendered only the retry-limit text.
+
+scripts/codex-yeutech-auth-bridge.mjs now adapts only official Codex POST
+/v1/responses calls accepting text/event-stream: a bounded JSON HTTP 429 error
+becomes one standard response.failed event with a Chinese explanation and bounded
+upstream retry advice in Asia/Shanghai. The Responses turn remains failed, with
+empty output and upstream_status=429; there is no fabricated assistant answer.
+Ordinary clients, non-streaming calls, successful streams, other HTTP statuses,
+malformed/oversized bodies and compressed errors retain their original transport.
+Codex Live routing and OAuth replacement remain unchanged.
+
+The pure formatter lives in scripts/codex-yeutech-errors.mjs and is installed
+alongside the bridge. It distinguishes explicit quota exhaustion, model cooldown,
+ordinary rate limits, concurrency and Fast entitlement errors. A generic cooldown
+does not prove which subscription window ran out, and absent retry advice does
+not receive an invented reset time. Raw upstream messages, credentials, paths and
+account identifiers are not copied into the display text.
+
+Validation: 14 Node assertions/integration tests pass, including unchanged Fast
+payload/auth isolation, Live routing, bounded fallback and failed-event semantics;
+Go build ./... passes. A loopback-only HTTP fixture reproduced the exact screenshot
+error in the installed Codex CLI. Through the candidate bridge, the same native
+client reports the Chinese cooldown and retry time as turn.failed (exit 1), with
+its configured two stream retries finishing in 2.18 seconds. No paid inference
+was used for this client regression. Local runtime deployment is a separate gate;
+this source change does not install or restart NAS or Tokyo proxy binaries.
+
+Daily maintenance must preserve both bridge modules and the installer's new copy
+step. Do not overwrite the running bridge with the old one-file implementation
+while syncing catalogs or Fast support. Preserve the provider IDs, credentials,
+saved model choices, historical chats and existing inference traffic on rollout.

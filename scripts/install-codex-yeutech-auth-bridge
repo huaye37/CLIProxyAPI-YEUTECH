@@ -11,6 +11,7 @@ domain="gui/$(/usr/bin/id -u)"
 
 /bin/mkdir -p "$target_dir" "$log_dir"
 /usr/bin/install -m 0700 "$script_dir/codex-yeutech-auth-bridge.mjs" "$target"
+/usr/bin/install -m 0600 "$script_dir/codex-yeutech-errors.mjs" "$target_dir/codex-yeutech-errors.mjs"
 
 /usr/bin/plutil -create xml1 "$plist"
 /usr/bin/plutil -insert Label -string "$label" "$plist"
