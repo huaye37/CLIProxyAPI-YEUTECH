@@ -135,3 +135,35 @@ Daily maintenance must preserve both bridge modules and the installer's new copy
 step. Do not overwrite the running bridge with the old one-file implementation
 while syncing catalogs or Fast support. Preserve the provider IDs, credentials,
 saved model choices, historical chats and existing inference traffic on rollout.
+
+## 2026-10-17: full registered-model audit and shared capability repair (not deployed)
+
+Scope is all 56 models registered by the live NAS proxy, not only the local
+Codex picker. Evidence is under `docs/audits/2026-10-17-*.json`; the summary has
+one row per model, provider, call chain, implementation, frontend requirement,
+actual result and remaining acceptance boundary. No production configuration,
+consumer allowlist, credential, tunnel, gateway or proxy process was replaced.
+
+| API / feature | Providers and call chain | Implementation | Frontend / consumers | Evidence | Conclusion |
+| --- | --- | --- | --- | --- | --- |
+| Shared capability enrichment | Registered routes -> standard /v1/models, capability API and Codex client catalog | registry/capability_metadata.go; model_registry.go; client/codex/models/models.go | Every catalog reader; GPT policy unchanged | DeepSeek was 1,048,576 in capabilities but 272,000 in the Codex-shaped catalog. Provider-scoped enrichment and override-preservation regressions pass. Unknown entries no longer borrow a GPT window. | Source repaired, not installed |
+| Independent image/video/speech metadata | xAI exact media IDs -> existing generation, edit, retrieval and speech handlers | server_model_capabilities.go, exact-ID metadata enrichment | Opt-in /v1/model-capabilities?schema=2; manager contract and BFF parser deltas prepared separately | Eight NAS direct image responses contain valid image bytes, two speech responses contain audio, three video jobs reached done with a URL. Gemini image uses the business plugin and returned an artifact/dimensions/hash. | Basic output verified; editing, video playback and speech quality untested |
+| Backward-compatible capability rollout | Existing strict capability-v1 BFF and new schema=2 consumers | Schema opt-in on the same authenticated endpoint; no new management exposure | Old v1 fields/workloads remain compatible; new BFF accepts media without treating it as a text agent | v1/v2 regression tests; BFF source files matched installed NAS SHA256 before edits; 233 BFF tests pass | Source repaired; precise agent image not prepared or deployed |
+| Public media API paths | Public domain -> HK Caddy -> existing inference forwarding -> NAS | Separate portal Caddy matcher delta only | Other API clients; no consumer whitelist changes | All public media paths returned HTML 404. Live Caddy matcher excluded them. NAS-side calls succeeded. Candidate config passes Caddy adapt, no reload performed. | Source repaired; public entry remains blocked until authorized rollout |
+| Actual function tools | Text-model routes -> chat/completions -> tool result continuation | Existing executors; audit scripts | Workbench, writing, Kaoyan and other text agents | 36 models passed tool/result roundtrips. Tokyo Claude 5.5 and DeepSeek require auto tool choice in the tested reasoning modes; forced selection failures remain in the original evidence. Grok 4.20 Multi-Agent failed both forced and auto custom-tool requests. | Do not claim universal agent/tool support |
+| Model identity and account entitlement | Existing xAI OAuth and ChatGPT-account Codex routes | Existing runtime routing, no alias rewrite | Do not enable unresolved entries just to fill the picker | Mini/Mini Fast returned grok-4.3; Composer Fast returned grok-4.5-build; GPT 5.5 was explicitly unsupported on the current ChatGPT route. xAI authenticated model catalog advertises four Build entries with context_windows [256000,500000]. | Three identities unresolved; GPT 5.5 not applicable to current route; no full-window load proof |
+| Speed and quota attribution | Same accounts and routes | No speed defaults changed | No Ultrafast or paid route enabled | Grok 4.7 Fast returned its Fast model ID but final service_tier remained default. This is requested Fast, upstream grant unconfirmed, not measured acceleration. | Preserve Standard recovery; quota charging source unverified |
+
+Validation at this checkpoint: Go 1.26.4 full `go test ./...` and `go build ./...`,
+focused post-change tests, audit-script tests, manager 94 Node/71 Python tests,
+and BFF 233 Node tests passed. These are distinct from browser, production,
+max-window, long-session and independent business-image acceptance.
+
+Release remains held: no exact NAS/Tokyo/manager paired candidate was prepared.
+The authoritative manager tree still has its pre-existing paused UI merge;
+this work uses isolated deltas and does not resolve or overwrite that scene.
+The business image plugin still needs a provider-specific xAI parameter adapter
+before exposing Grok images to the novel/workbench consumers. Preserve existing
+selections, history and the relay; do not publish a partial or falsely verified
+catalog. Reconcile these failures and consumer acceptance, then stage from the
+authoritative manager tree and leave proxy/paired installation to the user.

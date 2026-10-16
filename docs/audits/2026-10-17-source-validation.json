@@ -1,0 +1,25 @@
+{
+  "observedDateShanghai": "2026-10-17",
+  "goToolchain": "1.26.4",
+  "goFullSuite": {"passed":true,"packagesWithPassingTests":103},
+  "goBuildAll": {"passed":true},
+  "auditScriptTests": {"passed":3},
+  "managerNodeTests": {"passed":94},
+  "managerPythonTests": {"passed":71},
+  "agentBffNodeTests": {"passed":233},
+  "caddyAdapt": {"passed":true,"reloaded":false,"existingWarnings":"Redundant X-Forwarded-Host and formatting warnings"},
+  "companionCommits": {
+    "manager":"0bcc8a5",
+    "agentBff":"1974f16df",
+    "edge":"3c31dd4"
+  },
+  "liveAgentSourceParityBeforeEdits": {
+    "model-catalog.mjs":"dc54a7e4a1fa2820a1109e8a715e45f793171057f9555ef7bac7dbf77421a699",
+    "image-generation-plugin.mjs":"0f9a61d8697025d9a5eb715f64cece1195afc39d52d60fb7d3794a004f889b6a"
+  },
+  "productionChanged":false,
+  "installableCandidatePrepared":false,
+  "browserAcceptancePerformed":false,
+  "maximumContextLoadTested":false,
+  "originalPausedWorktreesPreserved":true
+}

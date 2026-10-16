@@ -1,0 +1,50 @@
+{
+  "observedAt": "2026-10-16T22:24:56.126Z",
+  "scope": "chat_completions_function_call_and_continuation",
+  "results": [
+    {
+      "id": "claude-opus-5-5-tokyo",
+      "status": "passed_tool_roundtrip",
+      "httpStatus": 200,
+      "responseModel": "claude-opus-5-5",
+      "continuationStatus": 200,
+      "serviceTier": null,
+      "outputContainsResult": true,
+      "toolChoiceMode": "auto",
+      "seconds": 4.1
+    },
+    {
+      "id": "claude-sonnet-5-5-tokyo",
+      "status": "passed_tool_roundtrip",
+      "httpStatus": 200,
+      "responseModel": "claude-sonnet-5-5",
+      "continuationStatus": 200,
+      "serviceTier": null,
+      "outputContainsResult": true,
+      "toolChoiceMode": "auto",
+      "seconds": 2.78
+    },
+    {
+      "id": "deepseek-flash",
+      "status": "passed_tool_roundtrip",
+      "httpStatus": 200,
+      "responseModel": "deepseek-flash",
+      "continuationStatus": 200,
+      "serviceTier": null,
+      "outputContainsResult": true,
+      "toolChoiceMode": "auto",
+      "seconds": 1.5
+    },
+    {
+      "id": "deepseek-v4-pro",
+      "status": "passed_tool_roundtrip",
+      "httpStatus": 200,
+      "responseModel": "deepseek-v4-pro",
+      "continuationStatus": 200,
+      "serviceTier": null,
+      "outputContainsResult": true,
+      "toolChoiceMode": "auto",
+      "seconds": 2.29
+    }
+  ]
+}

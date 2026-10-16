@@ -1,0 +1,2334 @@
+{
+  "schemaVersion": 1,
+  "observedAt": "2026-10-16T22:09:07.567Z",
+  "baseUrl": "https://llm-api.yeutech.cn",
+  "generation": 254,
+  "sourceCommit": "c91552e20681a7a03678957c4e91195ee06230d8",
+  "sourceDirty": true,
+  "boundaries": {
+    "productionChanged": false,
+    "consumerPoliciesChanged": false,
+    "maximumContextLoadTested": false,
+    "fastGranted": false
+  },
+  "models": [
+    {
+      "id": "claude-haiku-4-5-20251001-tokyo",
+      "provider": "tokyo-claude",
+      "type": "openai-compatibility",
+      "context": 200000,
+      "inputLimit": 200000,
+      "outputLimit": 64000,
+      "input": [
+        "text",
+        "image"
+      ],
+      "output": [
+        "text"
+      ],
+      "workloads": [
+        "conversation",
+        "agent"
+      ],
+      "thinking": {
+        "min": 1024,
+        "max": 128000,
+        "zero_allowed": true
+      },
+      "parameters": [],
+      "serviceTiers": [],
+      "available": true,
+      "selectable": true,
+      "capabilityStatus": "ready",
+      "unavailableReason": null,
+      "clientContext": 200000,
+      "clientMaxContext": 200000,
+      "gaps": [],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "claude-haiku-5-5-tokyo",
+      "provider": "tokyo-claude",
+      "type": "openai-compatibility",
+      "context": 1000000,
+      "inputLimit": 1000000,
+      "outputLimit": 128000,
+      "input": [
+        "text",
+        "image"
+      ],
+      "output": [
+        "text"
+      ],
+      "workloads": [
+        "conversation",
+        "agent"
+      ],
+      "thinking": {
+        "zero_allowed": true,
+        "dynamic_allowed": true,
+        "levels": [
+          "low",
+          "medium",
+          "high",
+          "xhigh",
+          "max"
+        ]
+      },
+      "parameters": [],
+      "serviceTiers": [],
+      "available": true,
+      "selectable": true,
+      "capabilityStatus": "ready",
+      "unavailableReason": null,
+      "clientContext": 1000000,
+      "clientMaxContext": 1000000,
+      "gaps": [],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "claude-opus-4-5-20251101-tokyo",
+      "provider": "tokyo-claude",
+      "type": "openai-compatibility",
+      "context": 200000,
+      "inputLimit": 200000,
+      "outputLimit": 64000,
+      "input": [
+        "text",
+        "image"
+      ],
+      "output": [
+        "text"
+      ],
+      "workloads": [
+        "conversation",
+        "agent"
+      ],
+      "thinking": {
+        "min": 1024,
+        "max": 128000,
+        "zero_allowed": true
+      },
+      "parameters": [],
+      "serviceTiers": [],
+      "available": true,
+      "selectable": true,
+      "capabilityStatus": "ready",
+      "unavailableReason": null,
+      "clientContext": 200000,
+      "clientMaxContext": 200000,
+      "gaps": [],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "claude-opus-4-6-tokyo",
+      "provider": "tokyo-claude",
+      "type": "openai-compatibility",
+      "context": 1000000,
+      "inputLimit": 1000000,
+      "outputLimit": 128000,
+      "input": [
+        "text",
+        "image"
+      ],
+      "output": [
+        "text"
+      ],
+      "workloads": [
+        "conversation",
+        "agent"
+      ],
+      "thinking": {
+        "min": 1024,
+        "max": 128000,
+        "zero_allowed": true,
+        "levels": [
+          "low",
+          "medium",
+          "high",
+          "max"
+        ]
+      },
+      "parameters": [],
+      "serviceTiers": [],
+      "available": true,
+      "selectable": true,
+      "capabilityStatus": "ready",
+      "unavailableReason": null,
+      "clientContext": 1000000,
+      "clientMaxContext": 1000000,
+      "gaps": [],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "claude-opus-4-7-tokyo",
+      "provider": "tokyo-claude",
+      "type": "openai-compatibility",
+      "context": 1000000,
+      "inputLimit": 1000000,
+      "outputLimit": 128000,
+      "input": [
+        "text",
+        "image"
+      ],
+      "output": [
+        "text"
+      ],
+      "workloads": [
+        "conversation",
+        "agent"
+      ],
+      "thinking": {
+        "min": 1024,
+        "max": 128000,
+        "zero_allowed": true,
+        "levels": [
+          "low",
+          "medium",
+          "high",
+          "xhigh",
+          "max"
+        ]
+      },
+      "parameters": [],
+      "serviceTiers": [],
+      "available": true,
+      "selectable": true,
+      "capabilityStatus": "ready",
+      "unavailableReason": null,
+      "clientContext": 1000000,
+      "clientMaxContext": 1000000,
+      "gaps": [],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "claude-opus-4-8-tokyo",
+      "provider": "tokyo-claude",
+      "type": "openai-compatibility",
+      "context": 1000000,
+      "inputLimit": 1000000,
+      "outputLimit": 128000,
+      "input": [
+        "text",
+        "image"
+      ],
+      "output": [
+        "text"
+      ],
+      "workloads": [
+        "conversation",
+        "agent"
+      ],
+      "thinking": {
+        "min": 1024,
+        "max": 128000,
+        "zero_allowed": true,
+        "levels": [
+          "low",
+          "medium",
+          "high",
+          "xhigh",
+          "max"
+        ]
+      },
+      "parameters": [],
+      "serviceTiers": [],
+      "available": true,
+      "selectable": true,
+      "capabilityStatus": "ready",
+      "unavailableReason": null,
+      "clientContext": 1000000,
+      "clientMaxContext": 1000000,
+      "gaps": [],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "claude-opus-5-5-high",
+      "provider": "antigravity",
+      "type": "antigravity",
+      "context": 1000000,
+      "inputLimit": 1000000,
+      "outputLimit": 128000,
+      "input": [
+        "text",
+        "image"
+      ],
+      "output": [
+        "text"
+      ],
+      "workloads": [
+        "conversation",
+        "agent"
+      ],
+      "thinking": {
+        "min": 1024,
+        "max": 64000,
+        "zero_allowed": true,
+        "dynamic_allowed": true
+      },
+      "parameters": [],
+      "serviceTiers": [],
+      "available": true,
+      "selectable": true,
+      "capabilityStatus": "ready",
+      "unavailableReason": null,
+      "clientContext": 1000000,
+      "clientMaxContext": 1000000,
+      "gaps": [],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "claude-opus-5-5-tokyo",
+      "provider": "tokyo-claude",
+      "type": "openai-compatibility",
+      "context": 1000000,
+      "inputLimit": 1000000,
+      "outputLimit": 128000,
+      "input": [
+        "text",
+        "image"
+      ],
+      "output": [
+        "text"
+      ],
+      "workloads": [
+        "conversation",
+        "agent"
+      ],
+      "thinking": {
+        "zero_allowed": true,
+        "dynamic_allowed": true,
+        "levels": [
+          "low",
+          "medium",
+          "high",
+          "xhigh",
+          "max"
+        ]
+      },
+      "parameters": [],
+      "serviceTiers": [],
+      "available": true,
+      "selectable": true,
+      "capabilityStatus": "ready",
+      "unavailableReason": null,
+      "clientContext": 1000000,
+      "clientMaxContext": 1000000,
+      "gaps": [],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "claude-opus-5-tokyo",
+      "provider": "tokyo-claude",
+      "type": "openai-compatibility",
+      "context": 1000000,
+      "inputLimit": 1000000,
+      "outputLimit": 128000,
+      "input": [
+        "text",
+        "image"
+      ],
+      "output": [
+        "text"
+      ],
+      "workloads": [
+        "conversation",
+        "agent"
+      ],
+      "thinking": {
+        "zero_allowed": true,
+        "dynamic_allowed": true,
+        "levels": [
+          "low",
+          "medium",
+          "high",
+          "xhigh",
+          "max"
+        ]
+      },
+      "parameters": [],
+      "serviceTiers": [],
+      "available": true,
+      "selectable": true,
+      "capabilityStatus": "ready",
+      "unavailableReason": null,
+      "clientContext": 1000000,
+      "clientMaxContext": 1000000,
+      "gaps": [],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "claude-sonnet-4-6-tokyo",
+      "provider": "tokyo-claude",
+      "type": "openai-compatibility",
+      "context": 200000,
+      "inputLimit": 200000,
+      "outputLimit": 64000,
+      "input": [
+        "text",
+        "image"
+      ],
+      "output": [
+        "text"
+      ],
+      "workloads": [
+        "conversation",
+        "agent"
+      ],
+      "thinking": {
+        "min": 1024,
+        "max": 128000,
+        "zero_allowed": true,
+        "levels": [
+          "low",
+          "medium",
+          "high",
+          "max"
+        ]
+      },
+      "parameters": [],
+      "serviceTiers": [],
+      "available": true,
+      "selectable": true,
+      "capabilityStatus": "ready",
+      "unavailableReason": null,
+      "clientContext": 200000,
+      "clientMaxContext": 200000,
+      "gaps": [],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "claude-sonnet-5-5-high",
+      "provider": "antigravity",
+      "type": "antigravity",
+      "context": 1000000,
+      "inputLimit": 1000000,
+      "outputLimit": 128000,
+      "input": [
+        "text",
+        "image"
+      ],
+      "output": [
+        "text"
+      ],
+      "workloads": [
+        "conversation",
+        "agent"
+      ],
+      "thinking": {
+        "min": 1024,
+        "max": 64000,
+        "zero_allowed": true,
+        "dynamic_allowed": true
+      },
+      "parameters": [],
+      "serviceTiers": [],
+      "available": true,
+      "selectable": true,
+      "capabilityStatus": "ready",
+      "unavailableReason": null,
+      "clientContext": 1000000,
+      "clientMaxContext": 1000000,
+      "gaps": [],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "claude-sonnet-5-5-tokyo",
+      "provider": "tokyo-claude",
+      "type": "openai-compatibility",
+      "context": 1000000,
+      "inputLimit": 1000000,
+      "outputLimit": 128000,
+      "input": [
+        "text",
+        "image"
+      ],
+      "output": [
+        "text"
+      ],
+      "workloads": [
+        "conversation",
+        "agent"
+      ],
+      "thinking": {
+        "zero_allowed": true,
+        "dynamic_allowed": true,
+        "levels": [
+          "low",
+          "medium",
+          "high",
+          "xhigh",
+          "max"
+        ]
+      },
+      "parameters": [],
+      "serviceTiers": [],
+      "available": true,
+      "selectable": true,
+      "capabilityStatus": "ready",
+      "unavailableReason": null,
+      "clientContext": 1000000,
+      "clientMaxContext": 1000000,
+      "gaps": [],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "claude-sonnet-5-tokyo",
+      "provider": "tokyo-claude",
+      "type": "openai-compatibility",
+      "context": 1000000,
+      "inputLimit": 1000000,
+      "outputLimit": 128000,
+      "input": [
+        "text",
+        "image"
+      ],
+      "output": [
+        "text"
+      ],
+      "workloads": [
+        "conversation",
+        "agent"
+      ],
+      "thinking": {
+        "zero_allowed": true,
+        "dynamic_allowed": true,
+        "levels": [
+          "low",
+          "medium",
+          "high",
+          "xhigh",
+          "max"
+        ]
+      },
+      "parameters": [],
+      "serviceTiers": [],
+      "available": true,
+      "selectable": true,
+      "capabilityStatus": "ready",
+      "unavailableReason": null,
+      "clientContext": 1000000,
+      "clientMaxContext": 1000000,
+      "gaps": [],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "codex-auto-review",
+      "provider": "openai",
+      "type": "openai",
+      "context": 272000,
+      "inputLimit": 272000,
+      "outputLimit": 128000,
+      "input": [
+        "text",
+        "image"
+      ],
+      "output": [
+        "text"
+      ],
+      "workloads": [
+        "review"
+      ],
+      "thinking": {
+        "levels": [
+          "low",
+          "medium",
+          "high",
+          "xhigh",
+          "max"
+        ]
+      },
+      "parameters": [
+        "tools"
+      ],
+      "serviceTiers": [
+        {
+          "id": "priority",
+          "name": "Fast",
+          "description": "1.5x speed, increased usage"
+        }
+      ],
+      "available": true,
+      "selectable": true,
+      "capabilityStatus": "ready",
+      "unavailableReason": null,
+      "clientContext": 272000,
+      "clientMaxContext": 872000,
+      "gaps": [],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "deepseek-flash",
+      "provider": "Deepseek",
+      "type": "openai-compatibility",
+      "context": 1048576,
+      "inputLimit": 1048576,
+      "outputLimit": 393216,
+      "input": [
+        "text",
+        "image"
+      ],
+      "output": [
+        "text"
+      ],
+      "workloads": [
+        "conversation",
+        "agent"
+      ],
+      "thinking": {
+        "levels": [
+          "low",
+          "medium",
+          "high"
+        ]
+      },
+      "parameters": [],
+      "serviceTiers": [],
+      "available": true,
+      "selectable": true,
+      "capabilityStatus": "ready",
+      "unavailableReason": null,
+      "clientContext": 272000,
+      "clientMaxContext": 272000,
+      "gaps": [
+        "client_context_mismatch"
+      ],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "deepseek-v4-pro",
+      "provider": "Deepseek",
+      "type": "openai-compatibility",
+      "context": 1048576,
+      "inputLimit": 1048576,
+      "outputLimit": 393216,
+      "input": [
+        "text"
+      ],
+      "output": [
+        "text"
+      ],
+      "workloads": [
+        "conversation",
+        "agent"
+      ],
+      "thinking": {
+        "levels": [
+          "low",
+          "medium",
+          "high"
+        ]
+      },
+      "parameters": [],
+      "serviceTiers": [],
+      "available": true,
+      "selectable": true,
+      "capabilityStatus": "ready",
+      "unavailableReason": null,
+      "clientContext": 272000,
+      "clientMaxContext": 272000,
+      "gaps": [
+        "client_context_mismatch"
+      ],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "gemini-3-flash",
+      "provider": "antigravity",
+      "type": "antigravity",
+      "context": 1048576,
+      "inputLimit": 1048576,
+      "outputLimit": 65536,
+      "input": [
+        "text",
+        "image",
+        "audio",
+        "video"
+      ],
+      "output": [
+        "text"
+      ],
+      "workloads": [
+        "conversation",
+        "agent"
+      ],
+      "thinking": {
+        "min": 128,
+        "max": 32768,
+        "dynamic_allowed": true,
+        "levels": [
+          "minimal",
+          "low",
+          "medium",
+          "high"
+        ]
+      },
+      "parameters": [],
+      "serviceTiers": [],
+      "available": true,
+      "selectable": true,
+      "capabilityStatus": "ready",
+      "unavailableReason": null,
+      "clientContext": 1048576,
+      "clientMaxContext": 1048576,
+      "gaps": [],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "gemini-3.1-flash-image",
+      "provider": "antigravity",
+      "type": "antigravity",
+      "context": 1048576,
+      "inputLimit": 1048576,
+      "outputLimit": 65536,
+      "input": [
+        "text",
+        "image"
+      ],
+      "output": [
+        "text",
+        "image"
+      ],
+      "workloads": [
+        "image_generation"
+      ],
+      "thinking": {
+        "min": 128,
+        "max": 32768,
+        "dynamic_allowed": true,
+        "levels": [
+          "minimal",
+          "high"
+        ]
+      },
+      "parameters": [],
+      "serviceTiers": [],
+      "available": true,
+      "selectable": true,
+      "capabilityStatus": "ready",
+      "unavailableReason": null,
+      "clientContext": 272000,
+      "clientMaxContext": 272000,
+      "gaps": [],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "gemini-3.1-flash-lite",
+      "provider": "antigravity",
+      "type": "antigravity",
+      "context": 1048576,
+      "inputLimit": 1048576,
+      "outputLimit": 65536,
+      "input": [
+        "text",
+        "image",
+        "audio",
+        "video"
+      ],
+      "output": [
+        "text"
+      ],
+      "workloads": [
+        "conversation",
+        "agent"
+      ],
+      "thinking": {
+        "min": 1,
+        "max": 65535,
+        "zero_allowed": true,
+        "dynamic_allowed": true,
+        "levels": [
+          "minimal",
+          "low",
+          "medium",
+          "high"
+        ]
+      },
+      "parameters": [],
+      "serviceTiers": [],
+      "available": true,
+      "selectable": true,
+      "capabilityStatus": "ready",
+      "unavailableReason": null,
+      "clientContext": 1048576,
+      "clientMaxContext": 1048576,
+      "gaps": [],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "gemini-3.5-flash-lite",
+      "provider": "antigravity",
+      "type": "antigravity",
+      "context": 1048576,
+      "inputLimit": 1048576,
+      "outputLimit": 65536,
+      "input": [
+        "text",
+        "image",
+        "audio",
+        "video"
+      ],
+      "output": [
+        "text"
+      ],
+      "workloads": [
+        "conversation",
+        "agent"
+      ],
+      "thinking": {
+        "min": 1,
+        "max": 65535,
+        "dynamic_allowed": true,
+        "levels": [
+          "minimal",
+          "low",
+          "medium",
+          "high"
+        ]
+      },
+      "parameters": [],
+      "serviceTiers": [],
+      "available": true,
+      "selectable": true,
+      "capabilityStatus": "ready",
+      "unavailableReason": null,
+      "clientContext": 1048576,
+      "clientMaxContext": 1048576,
+      "gaps": [],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "gemini-3.8-flash-high",
+      "provider": "antigravity",
+      "type": "antigravity",
+      "context": 1048576,
+      "inputLimit": 1048576,
+      "outputLimit": 65536,
+      "input": [
+        "text",
+        "image",
+        "audio",
+        "video"
+      ],
+      "output": [
+        "text"
+      ],
+      "workloads": [
+        "conversation",
+        "agent"
+      ],
+      "thinking": {
+        "min": 1,
+        "max": 65535,
+        "dynamic_allowed": true,
+        "levels": [
+          "low",
+          "medium",
+          "high"
+        ]
+      },
+      "parameters": [],
+      "serviceTiers": [],
+      "available": true,
+      "selectable": true,
+      "capabilityStatus": "ready",
+      "unavailableReason": null,
+      "clientContext": 1048576,
+      "clientMaxContext": 1048576,
+      "gaps": [],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "gemini-4-argon-high",
+      "provider": "antigravity",
+      "type": "antigravity",
+      "context": 1048576,
+      "inputLimit": 1048576,
+      "outputLimit": 10000,
+      "input": [
+        "text",
+        "image",
+        "audio",
+        "video"
+      ],
+      "output": [
+        "text"
+      ],
+      "workloads": [
+        "conversation",
+        "agent"
+      ],
+      "thinking": {
+        "min": 1,
+        "max": 65535,
+        "dynamic_allowed": true,
+        "levels": [
+          "low",
+          "medium",
+          "high"
+        ]
+      },
+      "parameters": [],
+      "serviceTiers": [],
+      "available": true,
+      "selectable": true,
+      "capabilityStatus": "ready",
+      "unavailableReason": null,
+      "clientContext": 1048576,
+      "clientMaxContext": 1048576,
+      "gaps": [],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "gpt-5.5",
+      "provider": "openai",
+      "type": "openai",
+      "context": 272000,
+      "inputLimit": 272000,
+      "outputLimit": 128000,
+      "input": [
+        "text",
+        "image"
+      ],
+      "output": [
+        "text"
+      ],
+      "workloads": [
+        "conversation",
+        "agent"
+      ],
+      "thinking": {
+        "levels": [
+          "low",
+          "medium",
+          "high",
+          "xhigh"
+        ]
+      },
+      "parameters": [
+        "tools"
+      ],
+      "serviceTiers": [
+        {
+          "id": "priority",
+          "name": "Fast",
+          "description": "1.5x speed, increased usage"
+        }
+      ],
+      "available": false,
+      "selectable": false,
+      "capabilityStatus": "ready",
+      "unavailableReason": "cooldown",
+      "clientContext": null,
+      "clientMaxContext": null,
+      "gaps": [],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "gpt-5.6-luna",
+      "provider": "openai",
+      "type": "openai",
+      "context": 500000,
+      "inputLimit": 500000,
+      "outputLimit": 128000,
+      "input": [
+        "text",
+        "image"
+      ],
+      "output": [
+        "text"
+      ],
+      "workloads": [
+        "conversation",
+        "agent"
+      ],
+      "thinking": {
+        "levels": [
+          "low",
+          "medium",
+          "high",
+          "xhigh",
+          "max"
+        ]
+      },
+      "parameters": [
+        "tools"
+      ],
+      "serviceTiers": [
+        {
+          "id": "priority",
+          "name": "Fast",
+          "description": "1.5x speed, increased usage"
+        }
+      ],
+      "available": true,
+      "selectable": true,
+      "capabilityStatus": "ready",
+      "unavailableReason": null,
+      "clientContext": 272000,
+      "clientMaxContext": 872000,
+      "gaps": [
+        "client_context_mismatch"
+      ],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "gpt-5.6-sol",
+      "provider": "openai",
+      "type": "openai",
+      "context": 500000,
+      "inputLimit": 500000,
+      "outputLimit": 128000,
+      "input": [
+        "text",
+        "image"
+      ],
+      "output": [
+        "text"
+      ],
+      "workloads": [
+        "conversation",
+        "agent"
+      ],
+      "thinking": {
+        "levels": [
+          "low",
+          "medium",
+          "high",
+          "xhigh",
+          "max",
+          "ultra"
+        ]
+      },
+      "parameters": [
+        "tools"
+      ],
+      "serviceTiers": [
+        {
+          "id": "priority",
+          "name": "Fast",
+          "description": "1.5x speed, increased usage"
+        }
+      ],
+      "available": true,
+      "selectable": true,
+      "capabilityStatus": "ready",
+      "unavailableReason": null,
+      "clientContext": 272000,
+      "clientMaxContext": 872000,
+      "gaps": [
+        "client_context_mismatch"
+      ],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "gpt-5.6-terra",
+      "provider": "openai",
+      "type": "openai",
+      "context": 500000,
+      "inputLimit": 500000,
+      "outputLimit": 128000,
+      "input": [
+        "text",
+        "image"
+      ],
+      "output": [
+        "text"
+      ],
+      "workloads": [
+        "conversation",
+        "agent"
+      ],
+      "thinking": {
+        "levels": [
+          "low",
+          "medium",
+          "high",
+          "xhigh",
+          "max",
+          "ultra"
+        ]
+      },
+      "parameters": [
+        "tools"
+      ],
+      "serviceTiers": [
+        {
+          "id": "priority",
+          "name": "Fast",
+          "description": "1.5x speed, increased usage"
+        }
+      ],
+      "available": true,
+      "selectable": true,
+      "capabilityStatus": "ready",
+      "unavailableReason": null,
+      "clientContext": 272000,
+      "clientMaxContext": 872000,
+      "gaps": [
+        "client_context_mismatch"
+      ],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "gpt-6-astra",
+      "provider": "openai",
+      "type": "openai",
+      "context": 500000,
+      "inputLimit": 500000,
+      "outputLimit": 128000,
+      "input": [
+        "text",
+        "image"
+      ],
+      "output": [
+        "text"
+      ],
+      "workloads": [
+        "conversation",
+        "agent"
+      ],
+      "thinking": {
+        "levels": [
+          "low",
+          "medium",
+          "high",
+          "xhigh",
+          "max",
+          "ultra"
+        ]
+      },
+      "parameters": [
+        "tools"
+      ],
+      "serviceTiers": [
+        {
+          "id": "priority",
+          "name": "Fast",
+          "description": "2x speed, increased usage"
+        }
+      ],
+      "available": true,
+      "selectable": true,
+      "capabilityStatus": "ready",
+      "unavailableReason": null,
+      "clientContext": 272000,
+      "clientMaxContext": 872000,
+      "gaps": [
+        "client_context_mismatch"
+      ],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "gpt-6-luna",
+      "provider": "openai",
+      "type": "openai",
+      "context": 500000,
+      "inputLimit": 500000,
+      "outputLimit": 128000,
+      "input": [
+        "text",
+        "image"
+      ],
+      "output": [
+        "text"
+      ],
+      "workloads": [
+        "conversation",
+        "agent"
+      ],
+      "thinking": {
+        "levels": [
+          "low",
+          "medium",
+          "high",
+          "xhigh",
+          "max"
+        ]
+      },
+      "parameters": [
+        "tools"
+      ],
+      "serviceTiers": [
+        {
+          "id": "priority",
+          "name": "Fast",
+          "description": "1.5x speed"
+        }
+      ],
+      "available": true,
+      "selectable": true,
+      "capabilityStatus": "ready",
+      "unavailableReason": null,
+      "clientContext": 272000,
+      "clientMaxContext": 872000,
+      "gaps": [
+        "client_context_mismatch"
+      ],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "gpt-6-sol",
+      "provider": "openai",
+      "type": "openai",
+      "context": 500000,
+      "inputLimit": 500000,
+      "outputLimit": 128000,
+      "input": [
+        "text",
+        "image"
+      ],
+      "output": [
+        "text"
+      ],
+      "workloads": [
+        "conversation",
+        "agent"
+      ],
+      "thinking": {
+        "levels": [
+          "low",
+          "medium",
+          "high",
+          "xhigh",
+          "max",
+          "ultra"
+        ]
+      },
+      "parameters": [
+        "tools"
+      ],
+      "serviceTiers": [
+        {
+          "id": "priority",
+          "name": "Fast",
+          "description": "1.5x speed"
+        }
+      ],
+      "available": true,
+      "selectable": true,
+      "capabilityStatus": "ready",
+      "unavailableReason": null,
+      "clientContext": 272000,
+      "clientMaxContext": 872000,
+      "gaps": [
+        "client_context_mismatch"
+      ],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "gpt-6.1-sol",
+      "provider": "openai",
+      "type": "openai",
+      "context": 500000,
+      "inputLimit": 500000,
+      "outputLimit": 128000,
+      "input": [
+        "text",
+        "image"
+      ],
+      "output": [
+        "text"
+      ],
+      "workloads": [
+        "conversation",
+        "agent"
+      ],
+      "thinking": {
+        "levels": [
+          "low",
+          "medium",
+          "high",
+          "xhigh",
+          "max",
+          "ultra"
+        ]
+      },
+      "parameters": [
+        "tools"
+      ],
+      "serviceTiers": [
+        {
+          "id": "priority",
+          "name": "Fast",
+          "description": "2x speed, increased usage"
+        }
+      ],
+      "available": true,
+      "selectable": true,
+      "capabilityStatus": "ready",
+      "unavailableReason": null,
+      "clientContext": 500000,
+      "clientMaxContext": 872000,
+      "gaps": [
+        "client_context_mismatch"
+      ],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "gpt-image-1.5",
+      "provider": "openai",
+      "type": "openai",
+      "context": 32768,
+      "inputLimit": 32768,
+      "outputLimit": 8192,
+      "input": [
+        "text",
+        "image"
+      ],
+      "output": [
+        "image"
+      ],
+      "workloads": [
+        "image_generation"
+      ],
+      "thinking": null,
+      "parameters": [
+        "size",
+        "quality",
+        "n",
+        "response_format"
+      ],
+      "serviceTiers": [],
+      "available": true,
+      "selectable": true,
+      "capabilityStatus": "ready",
+      "unavailableReason": null,
+      "clientContext": 32768,
+      "clientMaxContext": 32768,
+      "gaps": [],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "gpt-image-2",
+      "provider": "openai",
+      "type": "openai",
+      "context": 32768,
+      "inputLimit": 32768,
+      "outputLimit": 8192,
+      "input": [
+        "text",
+        "image"
+      ],
+      "output": [
+        "image"
+      ],
+      "workloads": [
+        "image_generation"
+      ],
+      "thinking": null,
+      "parameters": [
+        "size",
+        "quality",
+        "n",
+        "response_format"
+      ],
+      "serviceTiers": [],
+      "available": true,
+      "selectable": true,
+      "capabilityStatus": "ready",
+      "unavailableReason": null,
+      "clientContext": 32768,
+      "clientMaxContext": 32768,
+      "gaps": [],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "gpt-image-2.5",
+      "provider": "openai",
+      "type": "openai",
+      "context": 32768,
+      "inputLimit": 32768,
+      "outputLimit": 8192,
+      "input": [
+        "text",
+        "image"
+      ],
+      "output": [
+        "image"
+      ],
+      "workloads": [
+        "image_generation"
+      ],
+      "thinking": null,
+      "parameters": [
+        "size",
+        "quality",
+        "n",
+        "response_format"
+      ],
+      "serviceTiers": [],
+      "available": true,
+      "selectable": true,
+      "capabilityStatus": "ready",
+      "unavailableReason": null,
+      "clientContext": 32768,
+      "clientMaxContext": 32768,
+      "gaps": [],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "gpt-image-2.5-flare",
+      "provider": "openai",
+      "type": "openai",
+      "context": 32768,
+      "inputLimit": 32768,
+      "outputLimit": 8192,
+      "input": [
+        "text",
+        "image"
+      ],
+      "output": [
+        "image"
+      ],
+      "workloads": [
+        "image_generation"
+      ],
+      "thinking": null,
+      "parameters": [
+        "size",
+        "quality",
+        "n",
+        "response_format"
+      ],
+      "serviceTiers": [],
+      "available": true,
+      "selectable": true,
+      "capabilityStatus": "ready",
+      "unavailableReason": null,
+      "clientContext": 32768,
+      "clientMaxContext": 32768,
+      "gaps": [],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "gpt-image-2.5-sunburst",
+      "provider": "openai",
+      "type": "openai",
+      "context": 32768,
+      "inputLimit": 32768,
+      "outputLimit": 8192,
+      "input": [
+        "text",
+        "image"
+      ],
+      "output": [
+        "image"
+      ],
+      "workloads": [
+        "image_generation"
+      ],
+      "thinking": null,
+      "parameters": [
+        "size",
+        "quality",
+        "n",
+        "response_format"
+      ],
+      "serviceTiers": [],
+      "available": true,
+      "selectable": true,
+      "capabilityStatus": "ready",
+      "unavailableReason": null,
+      "clientContext": 32768,
+      "clientMaxContext": 32768,
+      "gaps": [],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "gpt-oss-120b-medium",
+      "provider": "antigravity",
+      "type": "antigravity",
+      "context": 114000,
+      "inputLimit": 114000,
+      "outputLimit": 32768,
+      "input": [
+        "text"
+      ],
+      "output": [
+        "text"
+      ],
+      "workloads": [
+        "conversation",
+        "agent"
+      ],
+      "thinking": null,
+      "parameters": [],
+      "serviceTiers": [],
+      "available": true,
+      "selectable": true,
+      "capabilityStatus": "ready",
+      "unavailableReason": null,
+      "clientContext": 114000,
+      "clientMaxContext": 114000,
+      "gaps": [],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "grok-3-mini",
+      "provider": "xai",
+      "type": "xai",
+      "context": 131072,
+      "inputLimit": 131072,
+      "outputLimit": 32768,
+      "input": [
+        "text"
+      ],
+      "output": [
+        "text"
+      ],
+      "workloads": [
+        "conversation",
+        "agent"
+      ],
+      "thinking": {
+        "levels": [
+          "low",
+          "medium",
+          "high"
+        ]
+      },
+      "parameters": [],
+      "serviceTiers": [],
+      "available": true,
+      "selectable": true,
+      "capabilityStatus": "ready",
+      "unavailableReason": null,
+      "clientContext": 131072,
+      "clientMaxContext": 131072,
+      "gaps": [],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "grok-3-mini-fast",
+      "provider": "xai",
+      "type": "xai",
+      "context": 131072,
+      "inputLimit": 131072,
+      "outputLimit": 32768,
+      "input": [
+        "text"
+      ],
+      "output": [
+        "text"
+      ],
+      "workloads": [
+        "conversation",
+        "agent"
+      ],
+      "thinking": {
+        "levels": [
+          "low",
+          "medium",
+          "high"
+        ]
+      },
+      "parameters": [],
+      "serviceTiers": [],
+      "available": true,
+      "selectable": true,
+      "capabilityStatus": "ready",
+      "unavailableReason": null,
+      "clientContext": 131072,
+      "clientMaxContext": 131072,
+      "gaps": [],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "grok-4.20-0309-non-reasoning",
+      "provider": "xai",
+      "type": "xai",
+      "context": 2000000,
+      "inputLimit": 2000000,
+      "outputLimit": 65536,
+      "input": [
+        "text",
+        "image"
+      ],
+      "output": [
+        "text"
+      ],
+      "workloads": [
+        "conversation",
+        "agent"
+      ],
+      "thinking": null,
+      "parameters": [],
+      "serviceTiers": [],
+      "available": true,
+      "selectable": true,
+      "capabilityStatus": "ready",
+      "unavailableReason": null,
+      "clientContext": 2000000,
+      "clientMaxContext": 2000000,
+      "gaps": [],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "grok-4.20-0309-reasoning",
+      "provider": "xai",
+      "type": "xai",
+      "context": 2000000,
+      "inputLimit": 2000000,
+      "outputLimit": 65536,
+      "input": [
+        "text",
+        "image"
+      ],
+      "output": [
+        "text"
+      ],
+      "workloads": [
+        "conversation",
+        "agent"
+      ],
+      "thinking": null,
+      "parameters": [],
+      "serviceTiers": [],
+      "available": true,
+      "selectable": true,
+      "capabilityStatus": "ready",
+      "unavailableReason": null,
+      "clientContext": 2000000,
+      "clientMaxContext": 2000000,
+      "gaps": [],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "grok-4.20-multi-agent-0309",
+      "provider": "xai",
+      "type": "xai",
+      "context": 2000000,
+      "inputLimit": 2000000,
+      "outputLimit": 65536,
+      "input": [
+        "text",
+        "image"
+      ],
+      "output": [
+        "text"
+      ],
+      "workloads": [
+        "conversation",
+        "agent"
+      ],
+      "thinking": {
+        "levels": [
+          "low",
+          "medium",
+          "high"
+        ]
+      },
+      "parameters": [],
+      "serviceTiers": [],
+      "available": true,
+      "selectable": true,
+      "capabilityStatus": "ready",
+      "unavailableReason": null,
+      "clientContext": 2000000,
+      "clientMaxContext": 2000000,
+      "gaps": [],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "grok-4.3",
+      "provider": "xai",
+      "type": "xai",
+      "context": 1000000,
+      "inputLimit": 1000000,
+      "outputLimit": 65536,
+      "input": [
+        "text",
+        "image"
+      ],
+      "output": [
+        "text"
+      ],
+      "workloads": [
+        "conversation",
+        "agent"
+      ],
+      "thinking": {
+        "zero_allowed": true,
+        "levels": [
+          "none",
+          "low",
+          "medium",
+          "high"
+        ]
+      },
+      "parameters": [],
+      "serviceTiers": [],
+      "available": true,
+      "selectable": true,
+      "capabilityStatus": "ready",
+      "unavailableReason": null,
+      "clientContext": 1000000,
+      "clientMaxContext": 1000000,
+      "gaps": [],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "grok-4.5",
+      "provider": "xai",
+      "type": "xai",
+      "context": 500000,
+      "inputLimit": 500000,
+      "outputLimit": 65536,
+      "input": [
+        "text",
+        "image"
+      ],
+      "output": [
+        "text"
+      ],
+      "workloads": [
+        "conversation",
+        "agent"
+      ],
+      "thinking": {
+        "levels": [
+          "low",
+          "medium",
+          "high"
+        ]
+      },
+      "parameters": [],
+      "serviceTiers": [],
+      "available": true,
+      "selectable": true,
+      "capabilityStatus": "ready",
+      "unavailableReason": null,
+      "clientContext": 500000,
+      "clientMaxContext": 500000,
+      "gaps": [],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "grok-4.6",
+      "provider": "xai",
+      "type": "xai",
+      "context": 500000,
+      "inputLimit": 500000,
+      "outputLimit": 65536,
+      "input": [
+        "text",
+        "image"
+      ],
+      "output": [
+        "text"
+      ],
+      "workloads": [
+        "conversation",
+        "agent"
+      ],
+      "thinking": {
+        "levels": [
+          "low",
+          "medium",
+          "high",
+          "xhigh"
+        ]
+      },
+      "parameters": [],
+      "serviceTiers": [],
+      "available": true,
+      "selectable": true,
+      "capabilityStatus": "ready",
+      "unavailableReason": null,
+      "clientContext": 500000,
+      "clientMaxContext": 500000,
+      "gaps": [],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "grok-4.7",
+      "provider": "xai",
+      "type": "xai",
+      "context": 500000,
+      "inputLimit": 500000,
+      "outputLimit": 10000,
+      "input": [
+        "text",
+        "image"
+      ],
+      "output": [
+        "text"
+      ],
+      "workloads": [
+        "conversation",
+        "agent"
+      ],
+      "thinking": {
+        "levels": [
+          "low",
+          "medium",
+          "high",
+          "xhigh"
+        ]
+      },
+      "parameters": [],
+      "serviceTiers": [],
+      "available": true,
+      "selectable": true,
+      "capabilityStatus": "ready",
+      "unavailableReason": null,
+      "clientContext": 500000,
+      "clientMaxContext": 500000,
+      "gaps": [],
+      "verification": {
+        "scope": "short_text_chat_completions",
+        "observedAt": "2026-10-16T22:09:13.915Z",
+        "httpStatus": 200,
+        "status": "unexpected_or_incomplete_output",
+        "responseModel": "grok-4.7-build",
+        "seconds": 6.31,
+        "finishReason": "stop",
+        "usage": {
+          "completion_tokens": 140,
+          "total_tokens": 1394,
+          "prompt_tokens": 1254,
+          "prompt_tokens_details": {
+            "cached_tokens": 1152
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 119
+          }
+        },
+        "serviceTier": "default",
+        "outputMatched": false,
+        "syntheticOutput": "No. I won't output an exact forced phrase or token. Ask a normal question if you want help."
+      }
+    },
+    {
+      "id": "grok-4.7-build-fast",
+      "provider": "xai",
+      "type": "xai",
+      "context": 500000,
+      "inputLimit": 500000,
+      "outputLimit": 10000,
+      "input": [
+        "text",
+        "image"
+      ],
+      "output": [
+        "text"
+      ],
+      "workloads": [
+        "conversation",
+        "agent"
+      ],
+      "thinking": {
+        "levels": [
+          "low",
+          "medium",
+          "high",
+          "xhigh"
+        ]
+      },
+      "parameters": [],
+      "serviceTiers": [],
+      "available": true,
+      "selectable": true,
+      "capabilityStatus": "ready",
+      "unavailableReason": null,
+      "clientContext": 500000,
+      "clientMaxContext": 500000,
+      "gaps": [],
+      "verification": {
+        "scope": "short_text_chat_completions",
+        "observedAt": "2026-10-16T22:09:15.920Z",
+        "httpStatus": 200,
+        "status": "unexpected_or_incomplete_output",
+        "responseModel": "grok-4.7-build-fast",
+        "seconds": 2.01,
+        "finishReason": "stop",
+        "usage": {
+          "completion_tokens": 150,
+          "total_tokens": 1404,
+          "prompt_tokens": 1254,
+          "prompt_tokens_details": {
+            "cached_tokens": 1152
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 133
+          }
+        },
+        "serviceTier": "default",
+        "outputMatched": false,
+        "syntheticOutput": "No. I won't output an exact forced phrase. Tell me what you actually need."
+      }
+    },
+    {
+      "id": "grok-build-0.1",
+      "provider": "xai",
+      "type": "xai",
+      "context": 256000,
+      "inputLimit": 256000,
+      "outputLimit": 10000,
+      "input": [
+        "text",
+        "image"
+      ],
+      "output": [
+        "text"
+      ],
+      "workloads": [
+        "conversation",
+        "agent"
+      ],
+      "thinking": null,
+      "parameters": [],
+      "serviceTiers": [],
+      "available": true,
+      "selectable": true,
+      "capabilityStatus": "ready",
+      "unavailableReason": null,
+      "clientContext": 256000,
+      "clientMaxContext": 256000,
+      "gaps": [],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "grok-composer-2.5-fast",
+      "provider": "xai",
+      "type": "xai",
+      "context": 200000,
+      "inputLimit": 200000,
+      "outputLimit": 32768,
+      "input": [],
+      "output": [],
+      "workloads": [],
+      "thinking": null,
+      "parameters": [],
+      "serviceTiers": [],
+      "available": true,
+      "selectable": false,
+      "capabilityStatus": "incomplete",
+      "unavailableReason": null,
+      "clientContext": 200000,
+      "clientMaxContext": 200000,
+      "gaps": [
+        "supported_input_modalities",
+        "supported_output_modalities",
+        "supported_workloads"
+      ],
+      "verification": {
+        "scope": "short_text_chat_completions",
+        "observedAt": "2026-10-16T22:09:19.332Z",
+        "httpStatus": 200,
+        "status": "passed",
+        "responseModel": "grok-4.5-build",
+        "seconds": 3.41,
+        "finishReason": "stop",
+        "usage": {
+          "completion_tokens": 130,
+          "total_tokens": 348,
+          "prompt_tokens": 218,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 125
+          }
+        },
+        "serviceTier": "default",
+        "outputMatched": true,
+        "syntheticOutput": "YEUTECH_OK"
+      }
+    },
+    {
+      "id": "grok-imagine-image",
+      "provider": "xai",
+      "type": "xai",
+      "context": 0,
+      "inputLimit": 0,
+      "outputLimit": 0,
+      "input": [],
+      "output": [],
+      "workloads": [],
+      "thinking": null,
+      "parameters": [],
+      "serviceTiers": [],
+      "available": true,
+      "selectable": false,
+      "capabilityStatus": "incomplete",
+      "unavailableReason": null,
+      "clientContext": 272000,
+      "clientMaxContext": 272000,
+      "gaps": [
+        "supported_input_modalities",
+        "supported_output_modalities",
+        "supported_workloads",
+        "context_length",
+        "max_output_tokens"
+      ],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "grok-imagine-image-2.0",
+      "provider": "xai",
+      "type": "xai",
+      "context": 0,
+      "inputLimit": 0,
+      "outputLimit": 0,
+      "input": [],
+      "output": [],
+      "workloads": [],
+      "thinking": null,
+      "parameters": [],
+      "serviceTiers": [],
+      "available": true,
+      "selectable": false,
+      "capabilityStatus": "incomplete",
+      "unavailableReason": null,
+      "clientContext": 272000,
+      "clientMaxContext": 272000,
+      "gaps": [
+        "supported_input_modalities",
+        "supported_output_modalities",
+        "supported_workloads",
+        "context_length",
+        "max_output_tokens"
+      ],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "grok-imagine-image-quality",
+      "provider": "xai",
+      "type": "xai",
+      "context": 0,
+      "inputLimit": 0,
+      "outputLimit": 0,
+      "input": [],
+      "output": [],
+      "workloads": [],
+      "thinking": null,
+      "parameters": [],
+      "serviceTiers": [],
+      "available": true,
+      "selectable": false,
+      "capabilityStatus": "incomplete",
+      "unavailableReason": null,
+      "clientContext": 272000,
+      "clientMaxContext": 272000,
+      "gaps": [
+        "supported_input_modalities",
+        "supported_output_modalities",
+        "supported_workloads",
+        "context_length",
+        "max_output_tokens"
+      ],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "grok-imagine-video",
+      "provider": "xai",
+      "type": "xai",
+      "context": 0,
+      "inputLimit": 0,
+      "outputLimit": 0,
+      "input": [],
+      "output": [],
+      "workloads": [],
+      "thinking": null,
+      "parameters": [],
+      "serviceTiers": [],
+      "available": true,
+      "selectable": false,
+      "capabilityStatus": "incomplete",
+      "unavailableReason": null,
+      "clientContext": 272000,
+      "clientMaxContext": 272000,
+      "gaps": [
+        "supported_input_modalities",
+        "supported_output_modalities",
+        "supported_workloads",
+        "context_length",
+        "max_output_tokens"
+      ],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "grok-imagine-video-1.5",
+      "provider": "xai",
+      "type": "xai",
+      "context": 0,
+      "inputLimit": 0,
+      "outputLimit": 0,
+      "input": [],
+      "output": [],
+      "workloads": [],
+      "thinking": null,
+      "parameters": [],
+      "serviceTiers": [],
+      "available": true,
+      "selectable": false,
+      "capabilityStatus": "incomplete",
+      "unavailableReason": null,
+      "clientContext": 272000,
+      "clientMaxContext": 272000,
+      "gaps": [
+        "supported_input_modalities",
+        "supported_output_modalities",
+        "supported_workloads",
+        "context_length",
+        "max_output_tokens"
+      ],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "grok-imagine-video-1.5-preview",
+      "provider": "xai",
+      "type": "xai",
+      "context": 0,
+      "inputLimit": 0,
+      "outputLimit": 0,
+      "input": [],
+      "output": [],
+      "workloads": [],
+      "thinking": null,
+      "parameters": [],
+      "serviceTiers": [],
+      "available": true,
+      "selectable": false,
+      "capabilityStatus": "incomplete",
+      "unavailableReason": null,
+      "clientContext": 272000,
+      "clientMaxContext": 272000,
+      "gaps": [
+        "supported_input_modalities",
+        "supported_output_modalities",
+        "supported_workloads",
+        "context_length",
+        "max_output_tokens"
+      ],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "grok-tts",
+      "provider": "xai",
+      "type": "xai",
+      "context": 0,
+      "inputLimit": 0,
+      "outputLimit": 0,
+      "input": [],
+      "output": [],
+      "workloads": [],
+      "thinking": null,
+      "parameters": [],
+      "serviceTiers": [],
+      "available": true,
+      "selectable": false,
+      "capabilityStatus": "incomplete",
+      "unavailableReason": null,
+      "clientContext": 272000,
+      "clientMaxContext": 272000,
+      "gaps": [
+        "supported_input_modalities",
+        "supported_output_modalities",
+        "supported_workloads",
+        "context_length",
+        "max_output_tokens"
+      ],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    },
+    {
+      "id": "grok-voice-tts-1.0",
+      "provider": "xai",
+      "type": "xai",
+      "context": 0,
+      "inputLimit": 0,
+      "outputLimit": 0,
+      "input": [],
+      "output": [],
+      "workloads": [],
+      "thinking": null,
+      "parameters": [],
+      "serviceTiers": [],
+      "available": true,
+      "selectable": false,
+      "capabilityStatus": "incomplete",
+      "unavailableReason": null,
+      "clientContext": 272000,
+      "clientMaxContext": 272000,
+      "gaps": [
+        "supported_input_modalities",
+        "supported_output_modalities",
+        "supported_workloads",
+        "context_length",
+        "max_output_tokens"
+      ],
+      "verification": {
+        "status": "not_tested",
+        "scope": "none"
+      }
+    }
+  ],
+  "finishedAt": "2026-10-16T22:09:19.334Z",
+  "summary": {
+    "models": 56,
+    "metadataGaps": 18,
+    "verification": {
+      "not_tested": 53,
+      "unexpected_or_incomplete_output": 2,
+      "passed": 1
+    }
+  }
+}

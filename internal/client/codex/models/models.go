@@ -651,7 +651,7 @@ func applyCodexClientSearchToolSupport(entry map[string]any, id string, template
 }
 
 func applyCodexClientModelMetadata(entry map[string]any, id string, model map[string]any, optimizeMultiAgentV2 bool, clientVersion string) {
-	info := registry.LookupModelInfo(id)
+	info := registry.EnrichCapabilityInfo(registry.LookupModelInfo(id))
 
 	displayName := stringModelValue(model, "display_name")
 	description := stringModelValue(model, "description")
@@ -668,7 +668,7 @@ func applyCodexClientModelMetadata(entry map[string]any, id string, model map[st
 		if contextWindow <= 0 && info.ContextLength > 0 {
 			contextWindow = info.ContextLength
 		}
-		if info.Type == registry.OpenAIImageModelType {
+		if info.Type == registry.OpenAIImageModelType || hasNonTextCapabilityOutput(info.SupportedOutputModalities) {
 			entry["visibility"] = "hide"
 			delete(entry, "input_modalities")
 			delete(entry, "supports_image_detail_original")
@@ -705,6 +705,11 @@ func applyCodexClientModelMetadata(entry map[string]any, id string, model map[st
 	if contextWindow > 0 {
 		entry["context_window"] = contextWindow
 		entry["max_context_window"] = contextWindow
+	} else {
+		// Unknown or media models must not inherit the default GPT window.
+		delete(entry, "context_window")
+		delete(entry, "max_context_window")
+		entry["visibility"] = "hide"
 	}
 
 	if plans, ok := model["available_in_plans"]; ok {
@@ -714,6 +719,15 @@ func applyCodexClientModelMetadata(entry map[string]any, id string, model map[st
 	// full template instructions onto every non-template model exceeds that limit
 	// and the client keeps its bundled catalog.
 	useCompactCodexClientInstructions(entry)
+}
+
+func hasNonTextCapabilityOutput(modalities []string) bool {
+	for _, modality := range modalities {
+		if modality != "text" {
+			return true
+		}
+	}
+	return false
 }
 
 func codexClientThinkingSupport(model map[string]any) *registry.ThinkingSupport {

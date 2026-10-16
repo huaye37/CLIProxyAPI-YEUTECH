@@ -1,0 +1,361 @@
+{
+  "observedAt": "2026-10-16T22:23:12.604Z",
+  "scope": "chat_completions_function_call_and_continuation",
+  "results": [
+    {
+      "id": "claude-haiku-4-5-20251001-tokyo",
+      "status": "passed_tool_roundtrip",
+      "httpStatus": 200,
+      "responseModel": "claude-haiku-4-5-20251001",
+      "continuationStatus": 200,
+      "serviceTier": null,
+      "outputContainsResult": true,
+      "seconds": 2.23
+    },
+    {
+      "id": "claude-haiku-5-5-tokyo",
+      "status": "passed_tool_roundtrip",
+      "httpStatus": 200,
+      "responseModel": "claude-haiku-5-5",
+      "continuationStatus": 200,
+      "serviceTier": null,
+      "outputContainsResult": true,
+      "seconds": 2.26
+    },
+    {
+      "id": "claude-opus-4-5-20251101-tokyo",
+      "status": "passed_tool_roundtrip",
+      "httpStatus": 200,
+      "responseModel": "claude-opus-4-5-20251101",
+      "continuationStatus": 200,
+      "serviceTier": null,
+      "outputContainsResult": true,
+      "seconds": 3.28
+    },
+    {
+      "id": "claude-opus-4-6-tokyo",
+      "status": "passed_tool_roundtrip",
+      "httpStatus": 200,
+      "responseModel": "claude-opus-4-6",
+      "continuationStatus": 200,
+      "serviceTier": null,
+      "outputContainsResult": true,
+      "seconds": 3.21
+    },
+    {
+      "id": "claude-opus-4-7-tokyo",
+      "status": "passed_tool_roundtrip",
+      "httpStatus": 200,
+      "responseModel": "claude-opus-4-7",
+      "continuationStatus": 200,
+      "serviceTier": null,
+      "outputContainsResult": true,
+      "seconds": 2.57
+    },
+    {
+      "id": "claude-opus-4-8-tokyo",
+      "status": "passed_tool_roundtrip",
+      "httpStatus": 200,
+      "responseModel": "claude-opus-4-8",
+      "continuationStatus": 200,
+      "serviceTier": null,
+      "outputContainsResult": true,
+      "seconds": 2.88
+    },
+    {
+      "id": "claude-opus-5-5-high",
+      "status": "passed_tool_roundtrip",
+      "httpStatus": 200,
+      "responseModel": "claude-opus-5-5-high",
+      "continuationStatus": 200,
+      "serviceTier": null,
+      "outputContainsResult": true,
+      "seconds": 3.72
+    },
+    {
+      "id": "claude-opus-5-5-tokyo",
+      "status": "request_rejected",
+      "httpStatus": 400,
+      "responseModel": null,
+      "seconds": 0.75
+    },
+    {
+      "id": "claude-opus-5-tokyo",
+      "status": "passed_tool_roundtrip",
+      "httpStatus": 200,
+      "responseModel": "claude-opus-5",
+      "continuationStatus": 200,
+      "serviceTier": null,
+      "outputContainsResult": true,
+      "seconds": 2.58
+    },
+    {
+      "id": "claude-sonnet-4-6-tokyo",
+      "status": "passed_tool_roundtrip",
+      "httpStatus": 200,
+      "responseModel": "claude-sonnet-4-6",
+      "continuationStatus": 200,
+      "serviceTier": null,
+      "outputContainsResult": true,
+      "seconds": 2.54
+    },
+    {
+      "id": "claude-sonnet-5-5-high",
+      "status": "passed_tool_roundtrip",
+      "httpStatus": 200,
+      "responseModel": "claude-sonnet-5-5-high",
+      "continuationStatus": 200,
+      "serviceTier": null,
+      "outputContainsResult": true,
+      "seconds": 3.17
+    },
+    {
+      "id": "claude-sonnet-5-5-tokyo",
+      "status": "request_rejected",
+      "httpStatus": 400,
+      "responseModel": null,
+      "seconds": 0.48
+    },
+    {
+      "id": "claude-sonnet-5-tokyo",
+      "status": "passed_tool_roundtrip",
+      "httpStatus": 200,
+      "responseModel": "claude-sonnet-5",
+      "continuationStatus": 200,
+      "serviceTier": null,
+      "outputContainsResult": true,
+      "seconds": 3.48
+    },
+    {
+      "id": "deepseek-flash",
+      "status": "request_rejected",
+      "httpStatus": 400,
+      "responseModel": null,
+      "seconds": 0.16
+    },
+    {
+      "id": "deepseek-v4-pro",
+      "status": "request_rejected",
+      "httpStatus": 400,
+      "responseModel": null,
+      "seconds": 0.1
+    },
+    {
+      "id": "gemini-3-flash",
+      "status": "passed_tool_roundtrip",
+      "httpStatus": 200,
+      "responseModel": "gemini-3-flash",
+      "continuationStatus": 200,
+      "serviceTier": null,
+      "outputContainsResult": true,
+      "seconds": 2.44
+    },
+    {
+      "id": "gemini-3.1-flash-lite",
+      "status": "passed_tool_roundtrip",
+      "httpStatus": 200,
+      "responseModel": "gemini-3.1-flash-lite",
+      "continuationStatus": 200,
+      "serviceTier": null,
+      "outputContainsResult": true,
+      "seconds": 2.22
+    },
+    {
+      "id": "gemini-3.5-flash-lite",
+      "status": "passed_tool_roundtrip",
+      "httpStatus": 200,
+      "responseModel": "gemini-3.5-flash-lite",
+      "continuationStatus": 200,
+      "serviceTier": null,
+      "outputContainsResult": true,
+      "seconds": 1.98
+    },
+    {
+      "id": "gemini-3.8-flash-high",
+      "status": "passed_tool_roundtrip",
+      "httpStatus": 200,
+      "responseModel": "gemini-3.8-flash",
+      "continuationStatus": 200,
+      "serviceTier": null,
+      "outputContainsResult": true,
+      "seconds": 2.79
+    },
+    {
+      "id": "gemini-4-argon-high",
+      "status": "passed_tool_roundtrip",
+      "httpStatus": 200,
+      "responseModel": "gemini-4-argon",
+      "continuationStatus": 200,
+      "serviceTier": null,
+      "outputContainsResult": true,
+      "seconds": 8.88
+    },
+    {
+      "id": "gpt-5.6-luna",
+      "status": "passed_tool_roundtrip",
+      "httpStatus": 200,
+      "responseModel": "gpt-5.6-luna",
+      "continuationStatus": 200,
+      "serviceTier": "default",
+      "outputContainsResult": true,
+      "seconds": 3.34
+    },
+    {
+      "id": "gpt-5.6-sol",
+      "status": "passed_tool_roundtrip",
+      "httpStatus": 200,
+      "responseModel": "gpt-5.6-sol",
+      "continuationStatus": 200,
+      "serviceTier": "default",
+      "outputContainsResult": true,
+      "seconds": 3.98
+    },
+    {
+      "id": "gpt-5.6-terra",
+      "status": "passed_tool_roundtrip",
+      "httpStatus": 200,
+      "responseModel": "gpt-5.6-terra",
+      "continuationStatus": 200,
+      "serviceTier": "default",
+      "outputContainsResult": true,
+      "seconds": 3.88
+    },
+    {
+      "id": "gpt-6-astra",
+      "status": "passed_tool_roundtrip",
+      "httpStatus": 200,
+      "responseModel": "gpt-6-astra",
+      "continuationStatus": 200,
+      "serviceTier": "default",
+      "outputContainsResult": true,
+      "seconds": 4.05
+    },
+    {
+      "id": "gpt-6-luna",
+      "status": "passed_tool_roundtrip",
+      "httpStatus": 200,
+      "responseModel": "gpt-6-luna",
+      "continuationStatus": 200,
+      "serviceTier": "default",
+      "outputContainsResult": true,
+      "seconds": 3.87
+    },
+    {
+      "id": "gpt-6-sol",
+      "status": "passed_tool_roundtrip",
+      "httpStatus": 200,
+      "responseModel": "gpt-6-sol",
+      "continuationStatus": 200,
+      "serviceTier": "default",
+      "outputContainsResult": true,
+      "seconds": 3.35
+    },
+    {
+      "id": "gpt-6.1-sol",
+      "status": "passed_tool_roundtrip",
+      "httpStatus": 200,
+      "responseModel": "gpt-6.1-sol",
+      "continuationStatus": 200,
+      "serviceTier": "default",
+      "outputContainsResult": true,
+      "seconds": 4.22
+    },
+    {
+      "id": "gpt-oss-120b-medium",
+      "status": "passed_tool_roundtrip",
+      "httpStatus": 200,
+      "responseModel": "gpt-oss-120b-medium",
+      "continuationStatus": 200,
+      "serviceTier": null,
+      "outputContainsResult": true,
+      "seconds": 2.58
+    },
+    {
+      "id": "grok-4.20-0309-non-reasoning",
+      "status": "passed_tool_roundtrip",
+      "httpStatus": 200,
+      "responseModel": "grok-4.20-0309-non-reasoning",
+      "continuationStatus": 200,
+      "serviceTier": "default",
+      "outputContainsResult": true,
+      "seconds": 4.77
+    },
+    {
+      "id": "grok-4.20-0309-reasoning",
+      "status": "passed_tool_roundtrip",
+      "httpStatus": 200,
+      "responseModel": "grok-4.20-0309-reasoning",
+      "continuationStatus": 200,
+      "serviceTier": "default",
+      "outputContainsResult": true,
+      "seconds": 4.95
+    },
+    {
+      "id": "grok-4.20-multi-agent-0309",
+      "status": "request_rejected",
+      "httpStatus": 400,
+      "responseModel": null,
+      "seconds": 0.59
+    },
+    {
+      "id": "grok-4.3",
+      "status": "passed_tool_roundtrip",
+      "httpStatus": 200,
+      "responseModel": "grok-4.3",
+      "continuationStatus": 200,
+      "serviceTier": "default",
+      "outputContainsResult": true,
+      "seconds": 6.72
+    },
+    {
+      "id": "grok-4.5",
+      "status": "passed_tool_roundtrip",
+      "httpStatus": 200,
+      "responseModel": "grok-4.5-build",
+      "continuationStatus": 200,
+      "serviceTier": "default",
+      "outputContainsResult": true,
+      "seconds": 3.93
+    },
+    {
+      "id": "grok-4.6",
+      "status": "passed_tool_roundtrip",
+      "httpStatus": 200,
+      "responseModel": "grok-4.6-build",
+      "continuationStatus": 200,
+      "serviceTier": "default",
+      "outputContainsResult": true,
+      "seconds": 4.19
+    },
+    {
+      "id": "grok-4.7",
+      "status": "passed_tool_roundtrip",
+      "httpStatus": 200,
+      "responseModel": "grok-4.7-build",
+      "continuationStatus": 200,
+      "serviceTier": "default",
+      "outputContainsResult": true,
+      "seconds": 3.61
+    },
+    {
+      "id": "grok-4.7-build-fast",
+      "status": "passed_tool_roundtrip",
+      "httpStatus": 200,
+      "responseModel": "grok-4.7-build-fast",
+      "continuationStatus": 200,
+      "serviceTier": "default",
+      "outputContainsResult": true,
+      "seconds": 3.09
+    },
+    {
+      "id": "grok-build-0.1",
+      "status": "passed_tool_roundtrip",
+      "httpStatus": 200,
+      "responseModel": "grok-build-0.1",
+      "continuationStatus": 200,
+      "serviceTier": "default",
+      "outputContainsResult": true,
+      "seconds": 6.11
+    }
+  ]
+}

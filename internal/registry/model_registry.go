@@ -21,12 +21,14 @@ import (
 const OpenAIImageModelType = "openai-image"
 
 const (
-	DefaultClaudeMaxInputTokens  = 200000
-	DefaultClaudeMaxOutputTokens = 64000
-	ModelWorkloadConversation    = "conversation"
-	ModelWorkloadAgent           = "agent"
-	ModelWorkloadReview          = "review"
-	ModelWorkloadImageGeneration = "image_generation"
+	DefaultClaudeMaxInputTokens   = 200000
+	DefaultClaudeMaxOutputTokens  = 64000
+	ModelWorkloadConversation     = "conversation"
+	ModelWorkloadAgent            = "agent"
+	ModelWorkloadReview           = "review"
+	ModelWorkloadImageGeneration  = "image_generation"
+	ModelWorkloadVideoGeneration  = "video_generation"
+	ModelWorkloadSpeechGeneration = "speech_generation"
 )
 
 // NativeCapabilities contains tri-state native capability metadata from the catalog.
@@ -1754,6 +1756,7 @@ func (r *ModelRegistry) convertModelToMap(model *ModelInfo, handlerType string) 
 	if model == nil {
 		return nil
 	}
+	model = EnrichCapabilityInfo(model)
 
 	switch handlerType {
 	case "openai":
@@ -1788,6 +1791,15 @@ func (r *ModelRegistry) convertModelToMap(model *ModelInfo, handlerType string) 
 		}
 		if len(model.SupportedParameters) > 0 {
 			result["supported_parameters"] = append([]string(nil), model.SupportedParameters...)
+		}
+		if len(model.SupportedInputModalities) > 0 {
+			result["supported_input_modalities"] = append([]string(nil), model.SupportedInputModalities...)
+		}
+		if len(model.SupportedOutputModalities) > 0 {
+			result["supported_output_modalities"] = append([]string(nil), model.SupportedOutputModalities...)
+		}
+		if len(model.SupportedWorkloads) > 0 {
+			result["supported_workloads"] = append([]string(nil), model.SupportedWorkloads...)
 		}
 		return result
 

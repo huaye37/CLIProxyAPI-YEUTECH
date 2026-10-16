@@ -13,6 +13,25 @@ import (
 	coreauth "github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/auth"
 )
 
+func TestMediaCapabilitiesDoNotRequireInventedTokenLimits(t *testing.T) {
+	r := registry.GetGlobalRegistry()
+	const client = "test-media-capabilities"
+	r.RegisterClient(client, "xai", []*registry.ModelInfo{{ID: "grok-imagine-image", Type: "xai", OwnedBy: "xai"}, {ID: "grok-imagine-video", Type: "xai", OwnedBy: "xai"}, {ID: "grok-tts", Type: "xai", OwnedBy: "xai"}})
+	t.Cleanup(func() { r.UnregisterClient(client) })
+	s := newTestServer(t)
+	registerCapabilityTestAuth(t, s, &coreauth.Auth{ID: client, Provider: "xai", Status: coreauth.StatusActive})
+	for _, id := range []string{"grok-imagine-image", "grok-imagine-video", "grok-tts"} {
+		m := requestModelCapabilityFromServer(t, s, id, "2")
+		if m["capability_status"] != "ready" || m["token_limits_applicable"] != false || m["context_length"] != float64(0) || m["verification_status"] != "not_verified_by_catalog" {
+			t.Fatalf("media contract invalid: %#v", m)
+		}
+		legacy := requestModelCapabilityFromServer(t, s, id)
+		if _, exists := legacy["token_limits_applicable"]; exists || legacy["selectable"] != false {
+			t.Fatalf("legacy schema changed: %#v", legacy)
+		}
+	}
+}
+
 func TestModelCapabilitiesHandlerUsesSafeCatalogBudget(t *testing.T) {
 	modelRegistry := registry.GetGlobalRegistry()
 	clientID := "test-model-capabilities-budget"
@@ -446,9 +465,13 @@ func assertCapabilityWorkloads(t *testing.T, model map[string]any, expected ...s
 	}
 }
 
-func requestModelCapabilityFromServer(t *testing.T, server *Server, modelID string) map[string]any {
+func requestModelCapabilityFromServer(t *testing.T, server *Server, modelID string, schemas ...string) map[string]any {
 	t.Helper()
-	req := httptest.NewRequest(http.MethodGet, "/v1/model-capabilities", nil)
+	path := "/v1/model-capabilities"
+	if len(schemas) > 0 {
+		path += "?schema=" + schemas[0]
+	}
+	req := httptest.NewRequest(http.MethodGet, path, nil)
 	req.Header.Set("Authorization", "Bearer test-key")
 	recorder := httptest.NewRecorder()
 	server.engine.ServeHTTP(recorder, req)

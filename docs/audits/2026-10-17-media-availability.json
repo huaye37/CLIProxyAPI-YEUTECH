@@ -1,0 +1,134 @@
+{
+  "observedAt": "2026-10-16T22:11:37.429Z",
+  "scope": "minimum_media_generation",
+  "productionChanged": false,
+  "results": [
+    {
+      "id": "gpt-image-1.5",
+      "path": "/v1/images/generations",
+      "status": "upstream_error",
+      "httpStatus": 404,
+      "contentType": "text/html",
+      "seconds": 0.04,
+      "observedAt": "2026-10-16T22:11:37.467Z"
+    },
+    {
+      "id": "gpt-image-2",
+      "path": "/v1/images/generations",
+      "status": "upstream_error",
+      "httpStatus": 404,
+      "contentType": "text/html",
+      "seconds": 0.01,
+      "observedAt": "2026-10-16T22:11:37.474Z"
+    },
+    {
+      "id": "gpt-image-2.5",
+      "path": "/v1/images/generations",
+      "status": "upstream_error",
+      "httpStatus": 404,
+      "contentType": "text/html",
+      "seconds": 0,
+      "observedAt": "2026-10-16T22:11:37.477Z"
+    },
+    {
+      "id": "gpt-image-2.5-flare",
+      "path": "/v1/images/generations",
+      "status": "upstream_error",
+      "httpStatus": 404,
+      "contentType": "text/html",
+      "seconds": 0,
+      "observedAt": "2026-10-16T22:11:37.480Z"
+    },
+    {
+      "id": "gpt-image-2.5-sunburst",
+      "path": "/v1/images/generations",
+      "status": "upstream_error",
+      "httpStatus": 404,
+      "contentType": "text/html",
+      "seconds": 0,
+      "observedAt": "2026-10-16T22:11:37.482Z"
+    },
+    {
+      "id": "gemini-3.1-flash-image",
+      "path": "/v1/images/generations",
+      "status": "upstream_error",
+      "httpStatus": 404,
+      "contentType": "text/html",
+      "seconds": 0,
+      "observedAt": "2026-10-16T22:11:37.484Z"
+    },
+    {
+      "id": "grok-imagine-image",
+      "path": "/v1/images/generations",
+      "status": "upstream_error",
+      "httpStatus": 404,
+      "contentType": "text/html",
+      "seconds": 0,
+      "observedAt": "2026-10-16T22:11:37.486Z"
+    },
+    {
+      "id": "grok-imagine-image-2.0",
+      "path": "/v1/images/generations",
+      "status": "upstream_error",
+      "httpStatus": 404,
+      "contentType": "text/html",
+      "seconds": 0,
+      "observedAt": "2026-10-16T22:11:37.487Z"
+    },
+    {
+      "id": "grok-imagine-image-quality",
+      "path": "/v1/images/generations",
+      "status": "upstream_error",
+      "httpStatus": 404,
+      "contentType": "text/html",
+      "seconds": 0,
+      "observedAt": "2026-10-16T22:11:37.489Z"
+    },
+    {
+      "id": "grok-tts",
+      "path": "/v1/audio/speech",
+      "status": "upstream_error",
+      "httpStatus": 404,
+      "contentType": "text/html",
+      "seconds": 0,
+      "observedAt": "2026-10-16T22:11:37.491Z"
+    },
+    {
+      "id": "grok-voice-tts-1.0",
+      "path": "/v1/audio/speech",
+      "status": "upstream_error",
+      "httpStatus": 404,
+      "contentType": "text/html",
+      "seconds": 0,
+      "observedAt": "2026-10-16T22:11:37.492Z"
+    },
+    {
+      "id": "grok-imagine-video",
+      "path": "/v1/videos/generations",
+      "status": "upstream_error",
+      "httpStatus": 404,
+      "contentType": "text/html",
+      "seconds": 0,
+      "observedAt": "2026-10-16T22:11:37.493Z"
+    },
+    {
+      "id": "grok-imagine-video-1.5",
+      "path": "/v1/videos/generations",
+      "status": "upstream_error",
+      "httpStatus": 404,
+      "contentType": "text/html",
+      "seconds": 0,
+      "observedAt": "2026-10-16T22:11:37.494Z"
+    },
+    {
+      "id": "grok-imagine-video-1.5-preview",
+      "path": "/v1/videos/generations",
+      "status": "upstream_error",
+      "httpStatus": 404,
+      "contentType": "text/html",
+      "seconds": 0,
+      "observedAt": "2026-10-16T22:11:37.496Z"
+    }
+  ],
+  "finishedAt": "2026-10-16T22:11:37.496Z"
+}

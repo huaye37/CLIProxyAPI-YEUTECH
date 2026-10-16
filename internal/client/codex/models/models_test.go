@@ -476,7 +476,8 @@ func TestApplyCodexClientModelMetadataPreservesMultiAgentVersionWhenDisabled(t *
 
 func TestCodexClientModelsResponseAppliesMaxContextLengthOverride(t *testing.T) {
 	const wantOverride = 1048576
-	const wantDefault = 272000
+	// Missing provider metadata must not inherit the unrelated GPT template.
+	const wantDefault = 0
 
 	resp := BuildResponse([]map[string]any{
 		{"id": "deepseek-v4-flash", "max_context_length": wantOverride},
@@ -511,6 +512,21 @@ func TestCodexClientModelsResponseAppliesMaxContextLengthOverride(t *testing.T) 
 		if got := intModelValue(entry, "max_context_window"); got != testCase.want {
 			t.Errorf("%s max_context_window = %d, want %d", testCase.slug, got, testCase.want)
 		}
+	}
+}
+
+func TestCodexClientCatalogUsesProviderScopedDeepSeekCapabilities(t *testing.T) {
+	r := registry.GetGlobalRegistry()
+	r.RegisterClient("capability-deepseek", "openai-compatibility", []*registry.ModelInfo{{ID: "deepseek-flash", OwnedBy: "Deepseek", Type: "openai-compatibility"}})
+	t.Cleanup(func() { r.UnregisterClient("capability-deepseek") })
+	entry := map[string]any{"context_window": 272000, "max_context_window": 272000}
+	applyCodexClientModelMetadata(entry, "deepseek-flash", map[string]any{"id": "deepseek-flash"}, false, "")
+	if intModelValue(entry, "context_window") != 1048576 || intModelValue(entry, "max_context_window") != 1048576 {
+		t.Fatalf("provider window not propagated: %#v", entry)
+	}
+	applyCodexClientModelMetadata(entry, "deepseek-flash", map[string]any{"id": "deepseek-flash", "max_context_length": 128000}, false, "")
+	if intModelValue(entry, "context_window") != 128000 {
+		t.Fatal("explicit route cap was overwritten")
 	}
 }
 

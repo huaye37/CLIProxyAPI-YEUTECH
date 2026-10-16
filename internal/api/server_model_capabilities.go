@@ -22,6 +22,9 @@ const (
 // credentials or provider internals. Missing runtime fields are enriched from
 // the central static registry, never inferred by consumers from model names.
 func (s *Server) modelCapabilitiesHandler(c *gin.Context) {
+	// Existing BFFs validate capability-v1 fields strictly. Opt in to media
+	// semantics instead of breaking their complete catalog during rollout.
+	mediaSchema := c.Query("schema") == "2"
 	// Capability discovery keeps registered-but-unavailable models visible so
 	// callers can explain and recover them. Execution endpoints continue to use
 	// the registry's availability-filtered model list.
@@ -38,11 +41,7 @@ func (s *Server) modelCapabilitiesHandler(c *gin.Context) {
 			continue
 		}
 
-		staticInfo := registry.LookupStaticModelInfo(runtimeInfo.ID)
-		if strings.EqualFold(runtimeInfo.OwnedBy, "deepseek") {
-			staticInfo = registry.LookupStaticModelInfoByChannel(runtimeInfo.ID, "deepseek")
-		}
-		info := mergeCapabilityInfo(runtimeInfo, staticInfo)
+		info := registry.EnrichCapabilityInfo(runtimeInfo)
 		contextLength := info.MaxContextLength
 		if contextLength <= 0 {
 			contextLength = info.ContextLength
@@ -89,8 +88,21 @@ func (s *Server) modelCapabilitiesHandler(c *gin.Context) {
 			}
 		}
 		workloads := capabilityWorkloads(info)
+		if !mediaSchema {
+			filtered := workloads[:0]
+			for _, workload := range workloads {
+				if workload != registry.ModelWorkloadVideoGeneration && workload != registry.ModelWorkloadSpeechGeneration {
+					filtered = append(filtered, workload)
+				}
+			}
+			workloads = filtered
+		}
 		complete := len(info.SupportedInputModalities) > 0 && len(info.SupportedOutputModalities) > 0 && len(workloads) > 0
-		complete = complete && contextLength > 0 && outputLimit > 0 && contextLength > outputLimit
+		// Media uses pixels, duration or characters, not a fabricated text window.
+		tokenLimitsApplicable := hasCapabilityModality(info.SupportedOutputModalities, "text") || !hasNonTextOutputModality(info.SupportedOutputModalities)
+		if tokenLimitsApplicable || !mediaSchema {
+			complete = complete && contextLength > 0 && outputLimit > 0 && contextLength > outputLimit
+		}
 		status := "incomplete"
 		if complete {
 			status = "ready"
@@ -111,6 +123,11 @@ func (s *Server) modelCapabilitiesHandler(c *gin.Context) {
 			"supported_input_modalities":  capabilityStrings(info.SupportedInputModalities),
 			"supported_output_modalities": capabilityStrings(info.SupportedOutputModalities),
 			"supported_workloads":         workloads,
+		}
+		if mediaSchema {
+			model["token_limits_applicable"] = tokenLimitsApplicable
+			model["availability_basis"] = "registered_route_state"
+			model["verification_status"] = "not_verified_by_catalog"
 		}
 		if !routeAvailable {
 			model["unavailable_reason"] = unavailableReason
@@ -339,63 +356,6 @@ func capabilityStrings(values []string) []string {
 	return append([]string(nil), values...)
 }
 
-func mergeCapabilityInfo(runtimeInfo, staticInfo *registry.ModelInfo) *registry.ModelInfo {
-	if runtimeInfo == nil {
-		return staticInfo
-	}
-	merged := *runtimeInfo
-	if staticInfo == nil {
-		return &merged
-	}
-	if merged.OwnedBy == "" {
-		merged.OwnedBy = staticInfo.OwnedBy
-	}
-	if merged.Type == "" {
-		merged.Type = staticInfo.Type
-	}
-	if merged.DisplayName == "" {
-		merged.DisplayName = staticInfo.DisplayName
-	}
-	if merged.Description == "" {
-		merged.Description = staticInfo.Description
-	}
-	if merged.ContextLength <= 0 {
-		merged.ContextLength = staticInfo.ContextLength
-	}
-	if merged.MaxContextLength <= 0 {
-		merged.MaxContextLength = staticInfo.MaxContextLength
-	}
-	if merged.InputTokenLimit <= 0 {
-		merged.InputTokenLimit = staticInfo.InputTokenLimit
-	}
-	if merged.OutputTokenLimit <= 0 {
-		merged.OutputTokenLimit = staticInfo.OutputTokenLimit
-	}
-	if merged.MaxCompletionTokens <= 0 {
-		merged.MaxCompletionTokens = staticInfo.MaxCompletionTokens
-	}
-	if merged.CapabilityMaxOutputTokens <= 0 {
-		merged.CapabilityMaxOutputTokens = staticInfo.CapabilityMaxOutputTokens
-	}
-	if len(merged.SupportedParameters) == 0 {
-		merged.SupportedParameters = append([]string(nil), staticInfo.SupportedParameters...)
-	}
-	if len(merged.SupportedInputModalities) == 0 {
-		merged.SupportedInputModalities = append([]string(nil), staticInfo.SupportedInputModalities...)
-	}
-	if len(merged.SupportedOutputModalities) == 0 {
-		merged.SupportedOutputModalities = append([]string(nil), staticInfo.SupportedOutputModalities...)
-	}
-	if len(merged.SupportedWorkloads) == 0 {
-		merged.SupportedWorkloads = append([]string(nil), staticInfo.SupportedWorkloads...)
-	}
-	if merged.Thinking == nil {
-		merged.Thinking = staticInfo.Thinking
-	}
-	merged.SupportsWebSearch = merged.SupportsWebSearch || staticInfo.SupportsWebSearch
-	return &merged
-}
-
 func capabilityWorkloads(info *registry.ModelInfo) []string {
 	if info == nil {
 		return []string{}
@@ -419,10 +379,12 @@ func capabilityWorkloads(info *registry.ModelInfo) []string {
 
 func normalizeCapabilityWorkloads(values []string) []string {
 	allowed := map[string]struct{}{
-		registry.ModelWorkloadConversation:    {},
-		registry.ModelWorkloadAgent:           {},
-		registry.ModelWorkloadReview:          {},
-		registry.ModelWorkloadImageGeneration: {},
+		registry.ModelWorkloadConversation:     {},
+		registry.ModelWorkloadAgent:            {},
+		registry.ModelWorkloadReview:           {},
+		registry.ModelWorkloadImageGeneration:  {},
+		registry.ModelWorkloadVideoGeneration:  {},
+		registry.ModelWorkloadSpeechGeneration: {},
 	}
 	result := make([]string, 0, len(values))
 	seen := make(map[string]struct{}, len(values))

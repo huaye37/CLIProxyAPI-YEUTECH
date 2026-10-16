@@ -1,0 +1,107 @@
+{
+  "observedAt": "2026-10-16T22:12:53.672Z",
+  "baseUrl": "http://127.0.0.1:18479",
+  "scope": "minimum_media_generation",
+  "productionChanged": false,
+  "results": [
+    {
+      "id": "gpt-image-1.5",
+      "path": "/v1/images/generations",
+      "status": "transport_error",
+      "seconds": 0.01,
+      "observedAt": "2026-10-16T22:12:53.687Z"
+    },
+    {
+      "id": "gpt-image-2",
+      "path": "/v1/images/generations",
+      "status": "transport_error",
+      "seconds": 0,
+      "observedAt": "2026-10-16T22:12:53.690Z"
+    },
+    {
+      "id": "gpt-image-2.5",
+      "path": "/v1/images/generations",
+      "status": "transport_error",
+      "seconds": 0,
+      "observedAt": "2026-10-16T22:12:53.692Z"
+    },
+    {
+      "id": "gpt-image-2.5-flare",
+      "path": "/v1/images/generations",
+      "status": "transport_error",
+      "seconds": 0,
+      "observedAt": "2026-10-16T22:12:53.693Z"
+    },
+    {
+      "id": "gpt-image-2.5-sunburst",
+      "path": "/v1/images/generations",
+      "status": "transport_error",
+      "seconds": 0,
+      "observedAt": "2026-10-16T22:12:53.695Z"
+    },
+    {
+      "id": "gemini-3.1-flash-image",
+      "path": "/v1/images/generations",
+      "status": "transport_error",
+      "seconds": 0,
+      "observedAt": "2026-10-16T22:12:53.697Z"
+    },
+    {
+      "id": "grok-imagine-image",
+      "path": "/v1/images/generations",
+      "status": "transport_error",
+      "seconds": 0,
+      "observedAt": "2026-10-16T22:12:53.699Z"
+    },
+    {
+      "id": "grok-imagine-image-2.0",
+      "path": "/v1/images/generations",
+      "status": "transport_error",
+      "seconds": 0,
+      "observedAt": "2026-10-16T22:12:53.701Z"
+    },
+    {
+      "id": "grok-imagine-image-quality",
+      "path": "/v1/images/generations",
+      "status": "transport_error",
+      "seconds": 0,
+      "observedAt": "2026-10-16T22:12:53.702Z"
+    },
+    {
+      "id": "grok-tts",
+      "path": "/v1/audio/speech",
+      "status": "transport_error",
+      "seconds": 0,
+      "observedAt": "2026-10-16T22:12:53.704Z"
+    },
+    {
+      "id": "grok-voice-tts-1.0",
+      "path": "/v1/audio/speech",
+      "status": "transport_error",
+      "seconds": 0,
+      "observedAt": "2026-10-16T22:12:53.706Z"
+    },
+    {
+      "id": "grok-imagine-video",
+      "path": "/v1/videos/generations",
+      "status": "transport_error",
+      "seconds": 0,
+      "observedAt": "2026-10-16T22:12:53.708Z"
+    },
+    {
+      "id": "grok-imagine-video-1.5",
+      "path": "/v1/videos/generations",
+      "status": "transport_error",
+      "seconds": 0,
+      "observedAt": "2026-10-16T22:12:53.709Z"
+    },
+    {
+      "id": "grok-imagine-video-1.5-preview",
+      "path": "/v1/videos/generations",
+      "status": "transport_error",
+      "seconds": 0,
+      "observedAt": "2026-10-16T22:12:53.711Z"
+    }
+  ],
+  "finishedAt": "2026-10-16T22:12:53.711Z"
+}

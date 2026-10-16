@@ -1,0 +1,48 @@
+{
+  "observedDateShanghai": "2026-10-17",
+  "source": "Authenticated live requests in this audit; no production configuration changed",
+  "grokAccountCatalog": {
+    "endpoint": "https://cli-chat-proxy.grok.com/v1/models",
+    "httpStatus": 200,
+    "authentication": "Existing xAI OAuth credential resolved by NAS management API; no credential exported",
+    "clientVersionHeader": "1.0.46",
+    "olderClientCrossCheck": "1.0.13 returned the same four models and context_windows",
+    "models": [
+      {"id":"grok-4.7","defaultContext":256000,"contextWindows":[256000,500000],"reasoningEfforts":["low","medium","high","xhigh"]},
+      {"id":"grok-4.7-build-fast","defaultContext":256000,"contextWindows":[256000,500000],"reasoningEfforts":["low","medium","high","xhigh"]},
+      {"id":"grok-4.6","defaultContext":256000,"contextWindows":[256000,500000],"reasoningEfforts":["low","medium","high","xhigh"]},
+      {"id":"grok-4.5","defaultContext":256000,"contextWindows":[256000,500000],"reasoningEfforts":["low","medium","high"]}
+    ],
+    "maximumContextLoadTested":false,
+    "unlistedModelsAreNotAutomaticallyUnsupported":true
+  },
+  "naturalQuestionRecheck": [
+    {"id":"grok-4.7","httpStatus":200,"responseModel":"grok-4.7-build","question":"What is 2 plus 3? A short answer is enough.","output":"5.","serviceTier":"default"},
+    {"id":"grok-4.7-build-fast","httpStatus":200,"responseModel":"grok-4.7-build-fast","question":"What is 2 plus 3? A short answer is enough.","output":"5","serviceTier":"default"}
+  ],
+  "modelIdentityUnresolved": [
+    {"requested":"grok-3-mini","returned":"grok-4.3"},
+    {"requested":"grok-3-mini-fast","returned":"grok-4.3"},
+    {"requested":"grok-composer-2.5-fast","returned":"grok-4.5-build"}
+  ],
+  "confirmedRestrictions": [
+    {"id":"gpt-5.5","restriction":"Upstream rejected this model for the ChatGPT-account Codex channel; subsequent routing returned auth_unavailable"},
+    {"id":"claude-opus-5-5-tokyo","restriction":"Upstream rejects tool_choice tool/any; automatic tool choice and continuation passed"},
+    {"id":"claude-sonnet-5-5-tokyo","restriction":"Forced tool choice failed; automatic tool choice and continuation passed"},
+    {"id":"deepseek-flash","restriction":"Thinking mode rejects forced tool_choice; automatic tool choice and continuation passed"},
+    {"id":"deepseek-v4-pro","restriction":"Forced tool choice with reasoning failed; automatic tool choice and continuation passed"},
+    {"id":"grok-4.20-multi-agent-0309","restriction":"Custom function-tool requests failed with HTTP 400 in both forced and automatic selection; short text passed"}
+  ],
+  "publicMediaEntry": {
+    "status":"blocked_before_proxy",
+    "evidence":"Live /opt/yeutech-portal/Caddyfile line 218 excludes images, videos, and audio from @inference; all public media POST requests returned HTML 404 while NAS direct requests reached the providers",
+    "sourceRepair":"portal-model-media-20261017/Caddyfile",
+    "syntaxValidated":true,
+    "published":false
+  },
+  "discardedTransportAttempt": {
+    "report":"2026-10-17-media-nas-direct.json",
+    "reason":"Temporary SSH local forwarding was administratively prohibited; these failures are not model availability evidence. The diagnostic tunnel was closed; NAS-side probes then used existing authorized SSH commands."
+  },
+  "untested": ["full context-window load", "actual Fast speed grant", "paid-credit source attribution", "all consumer UIs and saved task continuation", "video file playback", "speech listening quality"]
+}

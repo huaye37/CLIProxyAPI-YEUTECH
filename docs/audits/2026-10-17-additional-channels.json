@@ -1,0 +1,43 @@
+{
+  "observedAt": "2026-10-16T22:21:47.524Z",
+  "results": [
+    {
+      "id": "grok-imagine-video",
+      "scope": "video_poll",
+      "httpStatus": 200,
+      "upstreamStatus": "done",
+      "hasVideoUrl": true,
+      "requestId": "b3886de9-3840-9eda-9926-0d197aa79de1"
+    },
+    {
+      "id": "grok-imagine-video-1.5",
+      "scope": "video_poll",
+      "httpStatus": 200,
+      "upstreamStatus": "done",
+      "hasVideoUrl": true,
+      "requestId": "08244cf0-e463-97ef-9144-43c9c16d7150"
+    },
+    {
+      "id": "grok-imagine-video-1.5-preview",
+      "scope": "video_poll",
+      "httpStatus": 200,
+      "upstreamStatus": "done",
+      "hasVideoUrl": true,
+      "requestId": "ae01ef4f-e35c-9a71-a5c2-a82a1cdf0c9d"
+    },
+    {
+      "id": "gemini-3.1-flash-image",
+      "scope": "business_image_plugin",
+      "httpStatus": 200,
+      "contractVersion": "yeutech-plugin-http-v1",
+      "result": {
+        "id": "img_3139f4c0a749409c85fb97cc49edbe8b",
+        "model": "gemini-3.1-flash-image",
+        "mimeType": "image/jpeg",
+        "width": 1408,
+        "height": 768,
+        "sha256": "fb2b53a65ded4da894eb8bb56da4c8803e529c28f38bbaff21264c817e50efc5"
+      }
+    }
+  ]
+}

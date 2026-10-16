@@ -1,0 +1,2683 @@
+{
+  "observedDateShanghai": "2026-10-17",
+  "scope": "Every model registered by the live YEUTECH proxy, not just the local desktop",
+  "productionChanged": false,
+  "consumerPoliciesChanged": false,
+  "installableCandidatePrepared": false,
+  "sourceRepairs": [
+    "Provider-scoped metadata enrichment shared by standard and Codex model catalogs",
+    "No GPT template context substituted for unknown or media models",
+    "Opt-in schema=2 for image/video/speech without fictional token windows; strict capability-v1 remains compatible",
+    "Management consumer runtime carries applicability and evidence boundaries",
+    "BFF accepts v2 without placing media in text-agent selection",
+    "Public media path matcher prepared without changing management exposure, upstream selection, credentials or tunnels"
+  ],
+  "remaining": [
+    "Merge source deltas into the authoritative manager tree while preserving its existing unresolved UI merge",
+    "Build and check exact paired NAS/Tokyo/manager artifacts before user installation",
+    "Browser acceptance and save/read/send verification across actual consumer UIs",
+    "Independent image plugin still filters out xai; its workload-specific settings and business-route adapter need implementation before enabling Grok images there",
+    "Requested model identity remains unresolved for Grok 3 Mini variants and Composer",
+    "Grok Multi-Agent custom function-tool contract is not accepted",
+    "Maximum-window load, streaming recovery, media editing, video playback and quota attribution were not tested"
+  ],
+  "consumers": {
+    "ai-workbench": {
+      "enabled": true,
+      "allowedModelIds": [
+        "claude-haiku-4-5-20251001-tokyo",
+        "claude-haiku-5-5-tokyo",
+        "claude-opus-4-5-20251101-tokyo",
+        "claude-opus-4-6-tokyo",
+        "claude-opus-4-7-tokyo",
+        "claude-opus-4-8-tokyo",
+        "claude-opus-5-5-high",
+        "claude-opus-5-5-tokyo",
+        "claude-opus-5-tokyo",
+        "claude-sonnet-4-6-tokyo",
+        "claude-sonnet-5-5-tokyo",
+        "claude-sonnet-5-tokyo",
+        "deepseek-flash",
+        "gemini-3.8-flash-high",
+        "gemini-4-argon-high",
+        "gpt-6-luna",
+        "gpt-6-sol",
+        "gpt-6.1-sol"
+      ]
+    },
+    "novel-platform": {
+      "enabled": true,
+      "allowedModelIds": [
+        "claude-opus-5-5-high",
+        "claude-sonnet-5-5-high",
+        "deepseek-flash",
+        "deepseek-v4-pro",
+        "gemini-3.8-flash-high",
+        "gemini-4-argon-high",
+        "gpt-6-luna",
+        "gpt-6-sol",
+        "gpt-6.1-sol"
+      ]
+    },
+    "codex-desktop": {
+      "enabled": true,
+      "allowedModelIds": [
+        "claude-opus-5-5-high",
+        "claude-opus-5-5-tokyo",
+        "claude-sonnet-5-5-high",
+        "claude-sonnet-5-5-tokyo",
+        "deepseek-flash",
+        "deepseek-v4-pro",
+        "gemini-3.8-flash-high",
+        "gemini-4-argon-high",
+        "gpt-5.6-sol",
+        "gpt-6-astra",
+        "gpt-6-luna",
+        "gpt-6-sol",
+        "gpt-6.1-sol",
+        "grok-4.7",
+        "grok-4.7-build-fast"
+      ]
+    },
+    "kaoyan-platform": {
+      "enabled": true,
+      "allowedModelIds": [
+        "gemini-3.8-flash-high",
+        "gpt-6-sol",
+        "gpt-6.1-sol"
+      ]
+    },
+    "creator-api": {
+      "enabled": true,
+      "allowedModelIds": [
+        "gemini-3.1-flash-image",
+        "gpt-image-1.5",
+        "gpt-image-2",
+        "gpt-image-2.5",
+        "gpt-image-2.5-flare",
+        "gpt-image-2.5-sunburst"
+      ]
+    },
+    "qinian": {
+      "enabled": true,
+      "allowedModelIds": [
+        "gpt-6-astra"
+      ]
+    },
+    "qinian-workers": {
+      "enabled": true,
+      "allowedModelIds": [
+        "claude-opus-5-5-high",
+        "deepseek-flash",
+        "deepseek-v4-pro",
+        "gemini-3.8-flash-high",
+        "gemini-4-argon-high",
+        "gpt-6-luna",
+        "gpt-6-sol",
+        "gpt-6.1-sol"
+      ]
+    }
+  },
+  "models": [
+    {
+      "id": "claude-haiku-4-5-20251001-tokyo",
+      "provider": "tokyo-claude",
+      "callChain": "consumer -> NAS proxy -> existing HK SSH relay -> Tokyo Claude",
+      "implementation": "internal/runtime/executor/openai_compat_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": false,
+      "context": 200000,
+      "outputLimit": 64000,
+      "metadataGaps": [],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "scope": "short_text_chat_completions",
+          "observedAt": "2026-10-16T22:05:43.081Z",
+          "httpStatus": 200,
+          "status": "passed",
+          "responseModel": "claude-haiku-4-5-20251001",
+          "seconds": 1.06,
+          "finishReason": "stop",
+          "usage": {
+            "prompt_tokens": 20,
+            "completion_tokens": 9,
+            "total_tokens": 29,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "cached_creation_tokens": 0,
+              "cache_write_tokens": 0
+            }
+          },
+          "serviceTier": null,
+          "outputMatched": true
+        },
+        "tools": {
+          "id": "claude-haiku-4-5-20251001-tokyo",
+          "status": "passed_tool_roundtrip",
+          "httpStatus": 200,
+          "responseModel": "claude-haiku-4-5-20251001",
+          "continuationStatus": 200,
+          "serviceTier": null,
+          "outputContainsResult": true,
+          "seconds": 2.23
+        },
+        "media": null,
+        "additional": null
+      },
+      "conclusion": "基础文本/工具已验证；不代表最大窗口、速度授权或全消费者验收"
+    },
+    {
+      "id": "claude-haiku-5-5-tokyo",
+      "provider": "tokyo-claude",
+      "callChain": "consumer -> NAS proxy -> existing HK SSH relay -> Tokyo Claude",
+      "implementation": "internal/runtime/executor/openai_compat_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": false,
+      "context": 1000000,
+      "outputLimit": 128000,
+      "metadataGaps": [],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "scope": "short_text_chat_completions",
+          "observedAt": "2026-10-16T22:05:44.698Z",
+          "httpStatus": 200,
+          "status": "passed",
+          "responseModel": "claude-haiku-5-5",
+          "seconds": 1.62,
+          "finishReason": "stop",
+          "usage": {
+            "prompt_tokens": 30,
+            "completion_tokens": 11,
+            "total_tokens": 41,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "cached_creation_tokens": 0,
+              "cache_write_tokens": 0
+            }
+          },
+          "serviceTier": null,
+          "outputMatched": true
+        },
+        "tools": {
+          "id": "claude-haiku-5-5-tokyo",
+          "status": "passed_tool_roundtrip",
+          "httpStatus": 200,
+          "responseModel": "claude-haiku-5-5",
+          "continuationStatus": 200,
+          "serviceTier": null,
+          "outputContainsResult": true,
+          "seconds": 2.26
+        },
+        "media": null,
+        "additional": null
+      },
+      "conclusion": "基础文本/工具已验证；不代表最大窗口、速度授权或全消费者验收"
+    },
+    {
+      "id": "claude-opus-4-5-20251101-tokyo",
+      "provider": "tokyo-claude",
+      "callChain": "consumer -> NAS proxy -> existing HK SSH relay -> Tokyo Claude",
+      "implementation": "internal/runtime/executor/openai_compat_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": false,
+      "context": 200000,
+      "outputLimit": 64000,
+      "metadataGaps": [],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "scope": "short_text_chat_completions",
+          "observedAt": "2026-10-16T22:05:46.328Z",
+          "httpStatus": 200,
+          "status": "passed",
+          "responseModel": "claude-opus-4-5-20251101",
+          "seconds": 1.63,
+          "finishReason": "stop",
+          "usage": {
+            "prompt_tokens": 20,
+            "completion_tokens": 9,
+            "total_tokens": 29,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "cached_creation_tokens": 0,
+              "cache_write_tokens": 0
+            }
+          },
+          "serviceTier": null,
+          "outputMatched": true
+        },
+        "tools": {
+          "id": "claude-opus-4-5-20251101-tokyo",
+          "status": "passed_tool_roundtrip",
+          "httpStatus": 200,
+          "responseModel": "claude-opus-4-5-20251101",
+          "continuationStatus": 200,
+          "serviceTier": null,
+          "outputContainsResult": true,
+          "seconds": 3.28
+        },
+        "media": null,
+        "additional": null
+      },
+      "conclusion": "基础文本/工具已验证；不代表最大窗口、速度授权或全消费者验收"
+    },
+    {
+      "id": "claude-opus-4-6-tokyo",
+      "provider": "tokyo-claude",
+      "callChain": "consumer -> NAS proxy -> existing HK SSH relay -> Tokyo Claude",
+      "implementation": "internal/runtime/executor/openai_compat_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": false,
+      "context": 1000000,
+      "outputLimit": 128000,
+      "metadataGaps": [],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "scope": "short_text_chat_completions",
+          "observedAt": "2026-10-16T22:05:47.620Z",
+          "httpStatus": 200,
+          "status": "passed",
+          "responseModel": "claude-opus-4-6",
+          "seconds": 1.29,
+          "finishReason": "stop",
+          "usage": {
+            "prompt_tokens": 20,
+            "completion_tokens": 9,
+            "total_tokens": 29,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "cached_creation_tokens": 0,
+              "cache_write_tokens": 0
+            }
+          },
+          "serviceTier": null,
+          "outputMatched": true
+        },
+        "tools": {
+          "id": "claude-opus-4-6-tokyo",
+          "status": "passed_tool_roundtrip",
+          "httpStatus": 200,
+          "responseModel": "claude-opus-4-6",
+          "continuationStatus": 200,
+          "serviceTier": null,
+          "outputContainsResult": true,
+          "seconds": 3.21
+        },
+        "media": null,
+        "additional": null
+      },
+      "conclusion": "基础文本/工具已验证；不代表最大窗口、速度授权或全消费者验收"
+    },
+    {
+      "id": "claude-opus-4-7-tokyo",
+      "provider": "tokyo-claude",
+      "callChain": "consumer -> NAS proxy -> existing HK SSH relay -> Tokyo Claude",
+      "implementation": "internal/runtime/executor/openai_compat_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": false,
+      "context": 1000000,
+      "outputLimit": 128000,
+      "metadataGaps": [],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "scope": "short_text_chat_completions",
+          "observedAt": "2026-10-16T22:05:48.776Z",
+          "httpStatus": 200,
+          "status": "passed",
+          "responseModel": "claude-opus-4-7",
+          "seconds": 1.16,
+          "finishReason": "stop",
+          "usage": {
+            "prompt_tokens": 33,
+            "completion_tokens": 13,
+            "total_tokens": 46,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "cached_creation_tokens": 0,
+              "cache_write_tokens": 0
+            }
+          },
+          "serviceTier": null,
+          "outputMatched": true
+        },
+        "tools": {
+          "id": "claude-opus-4-7-tokyo",
+          "status": "passed_tool_roundtrip",
+          "httpStatus": 200,
+          "responseModel": "claude-opus-4-7",
+          "continuationStatus": 200,
+          "serviceTier": null,
+          "outputContainsResult": true,
+          "seconds": 2.57
+        },
+        "media": null,
+        "additional": null
+      },
+      "conclusion": "基础文本/工具已验证；不代表最大窗口、速度授权或全消费者验收"
+    },
+    {
+      "id": "claude-opus-4-8-tokyo",
+      "provider": "tokyo-claude",
+      "callChain": "consumer -> NAS proxy -> existing HK SSH relay -> Tokyo Claude",
+      "implementation": "internal/runtime/executor/openai_compat_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": false,
+      "context": 1000000,
+      "outputLimit": 128000,
+      "metadataGaps": [],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "scope": "short_text_chat_completions",
+          "observedAt": "2026-10-16T22:05:53.132Z",
+          "httpStatus": 200,
+          "status": "passed",
+          "responseModel": "claude-opus-4-8",
+          "seconds": 4.36,
+          "finishReason": "stop",
+          "usage": {
+            "prompt_tokens": 28,
+            "completion_tokens": 11,
+            "total_tokens": 39,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "cached_creation_tokens": 0,
+              "cache_write_tokens": 0
+            }
+          },
+          "serviceTier": null,
+          "outputMatched": true
+        },
+        "tools": {
+          "id": "claude-opus-4-8-tokyo",
+          "status": "passed_tool_roundtrip",
+          "httpStatus": 200,
+          "responseModel": "claude-opus-4-8",
+          "continuationStatus": 200,
+          "serviceTier": null,
+          "outputContainsResult": true,
+          "seconds": 2.88
+        },
+        "media": null,
+        "additional": null
+      },
+      "conclusion": "基础文本/工具已验证；不代表最大窗口、速度授权或全消费者验收"
+    },
+    {
+      "id": "claude-opus-5-5-high",
+      "provider": "antigravity",
+      "callChain": "consumer -> NAS proxy -> antigravity",
+      "implementation": "internal/runtime/executor/antigravity_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": false,
+      "context": 1000000,
+      "outputLimit": 128000,
+      "metadataGaps": [],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "scope": "short_text_chat_completions",
+          "observedAt": "2026-10-16T22:05:54.685Z",
+          "httpStatus": 200,
+          "status": "passed",
+          "responseModel": "claude-opus-5-5-high",
+          "seconds": 1.55,
+          "finishReason": "stop",
+          "usage": {
+            "completion_tokens": 11,
+            "total_tokens": 41,
+            "prompt_tokens": 30
+          },
+          "serviceTier": null,
+          "outputMatched": true
+        },
+        "tools": {
+          "id": "claude-opus-5-5-high",
+          "status": "passed_tool_roundtrip",
+          "httpStatus": 200,
+          "responseModel": "claude-opus-5-5-high",
+          "continuationStatus": 200,
+          "serviceTier": null,
+          "outputContainsResult": true,
+          "seconds": 3.72
+        },
+        "media": null,
+        "additional": null
+      },
+      "conclusion": "基础文本/工具已验证；不代表最大窗口、速度授权或全消费者验收"
+    },
+    {
+      "id": "claude-opus-5-5-tokyo",
+      "provider": "tokyo-claude",
+      "callChain": "consumer -> NAS proxy -> existing HK SSH relay -> Tokyo Claude",
+      "implementation": "internal/runtime/executor/openai_compat_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": false,
+      "context": 1000000,
+      "outputLimit": 128000,
+      "metadataGaps": [],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "scope": "short_text_chat_completions",
+          "observedAt": "2026-10-16T22:05:56.453Z",
+          "httpStatus": 200,
+          "status": "passed",
+          "responseModel": "claude-opus-5-5",
+          "seconds": 1.77,
+          "finishReason": "stop",
+          "usage": {
+            "prompt_tokens": 30,
+            "completion_tokens": 11,
+            "total_tokens": 41,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "cached_creation_tokens": 0,
+              "cache_write_tokens": 0
+            }
+          },
+          "serviceTier": null,
+          "outputMatched": true
+        },
+        "tools": {
+          "id": "claude-opus-5-5-tokyo",
+          "status": "passed_tool_roundtrip",
+          "httpStatus": 200,
+          "responseModel": "claude-opus-5-5",
+          "continuationStatus": 200,
+          "serviceTier": null,
+          "outputContainsResult": true,
+          "toolChoiceMode": "auto",
+          "seconds": 4.1
+        },
+        "media": null,
+        "additional": null
+      },
+      "conclusion": "基础文本/工具已验证；不代表最大窗口、速度授权或全消费者验收"
+    },
+    {
+      "id": "claude-opus-5-tokyo",
+      "provider": "tokyo-claude",
+      "callChain": "consumer -> NAS proxy -> existing HK SSH relay -> Tokyo Claude",
+      "implementation": "internal/runtime/executor/openai_compat_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": false,
+      "context": 1000000,
+      "outputLimit": 128000,
+      "metadataGaps": [],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "scope": "short_text_chat_completions",
+          "observedAt": "2026-10-16T22:05:58.238Z",
+          "httpStatus": 200,
+          "status": "passed",
+          "responseModel": "claude-opus-5",
+          "seconds": 1.78,
+          "finishReason": "stop",
+          "usage": {
+            "prompt_tokens": 28,
+            "completion_tokens": 11,
+            "total_tokens": 39,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "cached_creation_tokens": 0,
+              "cache_write_tokens": 0
+            }
+          },
+          "serviceTier": null,
+          "outputMatched": true
+        },
+        "tools": {
+          "id": "claude-opus-5-tokyo",
+          "status": "passed_tool_roundtrip",
+          "httpStatus": 200,
+          "responseModel": "claude-opus-5",
+          "continuationStatus": 200,
+          "serviceTier": null,
+          "outputContainsResult": true,
+          "seconds": 2.58
+        },
+        "media": null,
+        "additional": null
+      },
+      "conclusion": "基础文本/工具已验证；不代表最大窗口、速度授权或全消费者验收"
+    },
+    {
+      "id": "claude-sonnet-4-6-tokyo",
+      "provider": "tokyo-claude",
+      "callChain": "consumer -> NAS proxy -> existing HK SSH relay -> Tokyo Claude",
+      "implementation": "internal/runtime/executor/openai_compat_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": false,
+      "context": 200000,
+      "outputLimit": 64000,
+      "metadataGaps": [],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "scope": "short_text_chat_completions",
+          "observedAt": "2026-10-16T22:05:59.341Z",
+          "httpStatus": 200,
+          "status": "passed",
+          "responseModel": "claude-sonnet-4-6",
+          "seconds": 1.1,
+          "finishReason": "stop",
+          "usage": {
+            "prompt_tokens": 20,
+            "completion_tokens": 9,
+            "total_tokens": 29,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "cached_creation_tokens": 0,
+              "cache_write_tokens": 0
+            }
+          },
+          "serviceTier": null,
+          "outputMatched": true
+        },
+        "tools": {
+          "id": "claude-sonnet-4-6-tokyo",
+          "status": "passed_tool_roundtrip",
+          "httpStatus": 200,
+          "responseModel": "claude-sonnet-4-6",
+          "continuationStatus": 200,
+          "serviceTier": null,
+          "outputContainsResult": true,
+          "seconds": 2.54
+        },
+        "media": null,
+        "additional": null
+      },
+      "conclusion": "基础文本/工具已验证；不代表最大窗口、速度授权或全消费者验收"
+    },
+    {
+      "id": "claude-sonnet-5-5-high",
+      "provider": "antigravity",
+      "callChain": "consumer -> NAS proxy -> antigravity",
+      "implementation": "internal/runtime/executor/antigravity_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": false,
+      "context": 1000000,
+      "outputLimit": 128000,
+      "metadataGaps": [],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "scope": "short_text_chat_completions",
+          "observedAt": "2026-10-16T22:06:01.393Z",
+          "httpStatus": 200,
+          "status": "passed",
+          "responseModel": "claude-sonnet-5-5-high",
+          "seconds": 2.05,
+          "finishReason": "stop",
+          "usage": {
+            "completion_tokens": 11,
+            "total_tokens": 41,
+            "prompt_tokens": 30
+          },
+          "serviceTier": null,
+          "outputMatched": true
+        },
+        "tools": {
+          "id": "claude-sonnet-5-5-high",
+          "status": "passed_tool_roundtrip",
+          "httpStatus": 200,
+          "responseModel": "claude-sonnet-5-5-high",
+          "continuationStatus": 200,
+          "serviceTier": null,
+          "outputContainsResult": true,
+          "seconds": 3.17
+        },
+        "media": null,
+        "additional": null
+      },
+      "conclusion": "基础文本/工具已验证；不代表最大窗口、速度授权或全消费者验收"
+    },
+    {
+      "id": "claude-sonnet-5-5-tokyo",
+      "provider": "tokyo-claude",
+      "callChain": "consumer -> NAS proxy -> existing HK SSH relay -> Tokyo Claude",
+      "implementation": "internal/runtime/executor/openai_compat_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": false,
+      "context": 1000000,
+      "outputLimit": 128000,
+      "metadataGaps": [],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "scope": "short_text_chat_completions",
+          "observedAt": "2026-10-16T22:06:03.155Z",
+          "httpStatus": 200,
+          "status": "passed",
+          "responseModel": "claude-sonnet-5-5",
+          "seconds": 1.76,
+          "finishReason": "stop",
+          "usage": {
+            "prompt_tokens": 30,
+            "completion_tokens": 11,
+            "total_tokens": 41,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "cached_creation_tokens": 0,
+              "cache_write_tokens": 0
+            }
+          },
+          "serviceTier": null,
+          "outputMatched": true
+        },
+        "tools": {
+          "id": "claude-sonnet-5-5-tokyo",
+          "status": "passed_tool_roundtrip",
+          "httpStatus": 200,
+          "responseModel": "claude-sonnet-5-5",
+          "continuationStatus": 200,
+          "serviceTier": null,
+          "outputContainsResult": true,
+          "toolChoiceMode": "auto",
+          "seconds": 2.78
+        },
+        "media": null,
+        "additional": null
+      },
+      "conclusion": "基础文本/工具已验证；不代表最大窗口、速度授权或全消费者验收"
+    },
+    {
+      "id": "claude-sonnet-5-tokyo",
+      "provider": "tokyo-claude",
+      "callChain": "consumer -> NAS proxy -> existing HK SSH relay -> Tokyo Claude",
+      "implementation": "internal/runtime/executor/openai_compat_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": false,
+      "context": 1000000,
+      "outputLimit": 128000,
+      "metadataGaps": [],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "scope": "short_text_chat_completions",
+          "observedAt": "2026-10-16T22:06:05.163Z",
+          "httpStatus": 200,
+          "status": "passed",
+          "responseModel": "claude-sonnet-5",
+          "seconds": 2.01,
+          "finishReason": "stop",
+          "usage": {
+            "prompt_tokens": 28,
+            "completion_tokens": 11,
+            "total_tokens": 39,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "cached_creation_tokens": 0,
+              "cache_write_tokens": 0
+            }
+          },
+          "serviceTier": null,
+          "outputMatched": true
+        },
+        "tools": {
+          "id": "claude-sonnet-5-tokyo",
+          "status": "passed_tool_roundtrip",
+          "httpStatus": 200,
+          "responseModel": "claude-sonnet-5",
+          "continuationStatus": 200,
+          "serviceTier": null,
+          "outputContainsResult": true,
+          "seconds": 3.48
+        },
+        "media": null,
+        "additional": null
+      },
+      "conclusion": "基础文本/工具已验证；不代表最大窗口、速度授权或全消费者验收"
+    },
+    {
+      "id": "codex-auto-review",
+      "provider": "openai",
+      "callChain": "consumer -> NAS proxy -> openai",
+      "implementation": "internal/runtime/executor/codex_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": false,
+      "context": 272000,
+      "outputLimit": 128000,
+      "metadataGaps": [],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "scope": "short_text_chat_completions",
+          "observedAt": "2026-10-16T22:06:06.773Z",
+          "httpStatus": 200,
+          "status": "passed",
+          "responseModel": "codex-auto-review",
+          "seconds": 1.61,
+          "finishReason": "stop",
+          "usage": {
+            "completion_tokens": 8,
+            "total_tokens": 321,
+            "prompt_tokens": 313,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "cache_write_tokens": 0,
+              "cached_creation_tokens": 0
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0
+            }
+          },
+          "serviceTier": "default",
+          "outputMatched": true
+        },
+        "tools": {
+          "status": "not_tested"
+        },
+        "media": null,
+        "additional": null
+      },
+      "conclusion": "基础文本/工具已验证；不代表最大窗口、速度授权或全消费者验收"
+    },
+    {
+      "id": "deepseek-flash",
+      "provider": "Deepseek",
+      "callChain": "consumer -> NAS proxy -> Deepseek",
+      "implementation": "internal/runtime/executor/openai_compat_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": false,
+      "context": 1048576,
+      "outputLimit": 393216,
+      "metadataGaps": [
+        "client_context_mismatch"
+      ],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "scope": "short_text_chat_completions",
+          "observedAt": "2026-10-16T22:06:07.632Z",
+          "httpStatus": 200,
+          "status": "passed",
+          "responseModel": "deepseek-flash",
+          "seconds": 0.86,
+          "finishReason": "stop",
+          "usage": {
+            "prompt_tokens": 41,
+            "completion_tokens": 22,
+            "total_tokens": 63,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 17
+            },
+            "prompt_cache_hit_tokens": 0,
+            "prompt_cache_miss_tokens": 41
+          },
+          "serviceTier": null,
+          "outputMatched": true
+        },
+        "tools": {
+          "id": "deepseek-flash",
+          "status": "passed_tool_roundtrip",
+          "httpStatus": 200,
+          "responseModel": "deepseek-flash",
+          "continuationStatus": 200,
+          "serviceTier": null,
+          "outputContainsResult": true,
+          "toolChoiceMode": "auto",
+          "seconds": 1.5
+        },
+        "media": null,
+        "additional": null
+      },
+      "conclusion": "基础文本/工具已验证；不代表最大窗口、速度授权或全消费者验收"
+    },
+    {
+      "id": "deepseek-v4-pro",
+      "provider": "Deepseek",
+      "callChain": "consumer -> NAS proxy -> Deepseek",
+      "implementation": "internal/runtime/executor/openai_compat_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": false,
+      "context": 1048576,
+      "outputLimit": 393216,
+      "metadataGaps": [
+        "client_context_mismatch"
+      ],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "scope": "short_text_chat_completions",
+          "observedAt": "2026-10-16T22:06:13.480Z",
+          "httpStatus": 200,
+          "status": "passed",
+          "responseModel": "deepseek-v4-pro",
+          "seconds": 5.85,
+          "finishReason": "stop",
+          "usage": {
+            "prompt_tokens": 15,
+            "completion_tokens": 17,
+            "total_tokens": 32,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 12
+            },
+            "prompt_cache_hit_tokens": 0,
+            "prompt_cache_miss_tokens": 15
+          },
+          "serviceTier": null,
+          "outputMatched": true
+        },
+        "tools": {
+          "id": "deepseek-v4-pro",
+          "status": "passed_tool_roundtrip",
+          "httpStatus": 200,
+          "responseModel": "deepseek-v4-pro",
+          "continuationStatus": 200,
+          "serviceTier": null,
+          "outputContainsResult": true,
+          "toolChoiceMode": "auto",
+          "seconds": 2.29
+        },
+        "media": null,
+        "additional": null
+      },
+      "conclusion": "基础文本/工具已验证；不代表最大窗口、速度授权或全消费者验收"
+    },
+    {
+      "id": "gemini-3-flash",
+      "provider": "antigravity",
+      "callChain": "consumer -> NAS proxy -> antigravity",
+      "implementation": "internal/runtime/executor/antigravity_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": false,
+      "context": 1048576,
+      "outputLimit": 65536,
+      "metadataGaps": [],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "scope": "short_text_chat_completions",
+          "observedAt": "2026-10-16T22:06:15.069Z",
+          "httpStatus": 200,
+          "status": "passed",
+          "responseModel": "gemini-3-flash",
+          "seconds": 1.59,
+          "finishReason": "stop",
+          "usage": {
+            "completion_tokens": 64,
+            "total_tokens": 77,
+            "prompt_tokens": 13,
+            "completion_tokens_details": {
+              "reasoning_tokens": 59
+            }
+          },
+          "serviceTier": null,
+          "outputMatched": true
+        },
+        "tools": {
+          "id": "gemini-3-flash",
+          "status": "passed_tool_roundtrip",
+          "httpStatus": 200,
+          "responseModel": "gemini-3-flash",
+          "continuationStatus": 200,
+          "serviceTier": null,
+          "outputContainsResult": true,
+          "seconds": 2.44
+        },
+        "media": null,
+        "additional": null
+      },
+      "conclusion": "基础文本/工具已验证；不代表最大窗口、速度授权或全消费者验收"
+    },
+    {
+      "id": "gemini-3.1-flash-image",
+      "provider": "antigravity",
+      "callChain": "consumer -> NAS proxy -> antigravity",
+      "implementation": "internal/runtime/executor/antigravity_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": true,
+      "context": 1048576,
+      "outputLimit": 65536,
+      "metadataGaps": [],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "status": "not_tested",
+          "scope": "none",
+          "reason": "non_text_or_incomplete_metadata"
+        },
+        "tools": {
+          "status": "not_tested"
+        },
+        "media": {
+          "id": "gemini-3.1-flash-image",
+          "path": "/v1/images/generations",
+          "scope": "nas-direct",
+          "httpStatus": 400,
+          "status": "not_supported",
+          "seconds": 0.002
+        },
+        "additional": {
+          "id": "gemini-3.1-flash-image",
+          "scope": "business_image_plugin",
+          "httpStatus": 200,
+          "contractVersion": "yeutech-plugin-http-v1",
+          "result": {
+            "id": "img_3139f4c0a749409c85fb97cc49edbe8b",
+            "model": "gemini-3.1-flash-image",
+            "mimeType": "image/jpeg",
+            "width": 1408,
+            "height": 768,
+            "sha256": "fb2b53a65ded4da894eb8bb56da4c8803e529c28f38bbaff21264c817e50efc5"
+          }
+        }
+      },
+      "conclusion": "待完成：内网能力已验证或已取得完成回执，公网和消费者发布未完成"
+    },
+    {
+      "id": "gemini-3.1-flash-lite",
+      "provider": "antigravity",
+      "callChain": "consumer -> NAS proxy -> antigravity",
+      "implementation": "internal/runtime/executor/antigravity_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": false,
+      "context": 1048576,
+      "outputLimit": 65536,
+      "metadataGaps": [],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "scope": "short_text_chat_completions",
+          "observedAt": "2026-10-16T22:06:16.790Z",
+          "httpStatus": 200,
+          "status": "passed",
+          "responseModel": "gemini-3.1-flash-lite",
+          "seconds": 1.72,
+          "finishReason": "stop",
+          "usage": {
+            "completion_tokens": 66,
+            "total_tokens": 79,
+            "prompt_tokens": 13,
+            "completion_tokens_details": {
+              "reasoning_tokens": 61
+            }
+          },
+          "serviceTier": null,
+          "outputMatched": true
+        },
+        "tools": {
+          "id": "gemini-3.1-flash-lite",
+          "status": "passed_tool_roundtrip",
+          "httpStatus": 200,
+          "responseModel": "gemini-3.1-flash-lite",
+          "continuationStatus": 200,
+          "serviceTier": null,
+          "outputContainsResult": true,
+          "seconds": 2.22
+        },
+        "media": null,
+        "additional": null
+      },
+      "conclusion": "基础文本/工具已验证；不代表最大窗口、速度授权或全消费者验收"
+    },
+    {
+      "id": "gemini-3.5-flash-lite",
+      "provider": "antigravity",
+      "callChain": "consumer -> NAS proxy -> antigravity",
+      "implementation": "internal/runtime/executor/antigravity_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": false,
+      "context": 1048576,
+      "outputLimit": 65536,
+      "metadataGaps": [],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "scope": "short_text_chat_completions",
+          "observedAt": "2026-10-16T22:06:17.840Z",
+          "httpStatus": 200,
+          "status": "passed",
+          "responseModel": "gemini-3.5-flash-lite",
+          "seconds": 1.05,
+          "finishReason": "stop",
+          "usage": {
+            "completion_tokens": 62,
+            "total_tokens": 75,
+            "prompt_tokens": 13,
+            "completion_tokens_details": {
+              "reasoning_tokens": 57
+            }
+          },
+          "serviceTier": null,
+          "outputMatched": true
+        },
+        "tools": {
+          "id": "gemini-3.5-flash-lite",
+          "status": "passed_tool_roundtrip",
+          "httpStatus": 200,
+          "responseModel": "gemini-3.5-flash-lite",
+          "continuationStatus": 200,
+          "serviceTier": null,
+          "outputContainsResult": true,
+          "seconds": 1.98
+        },
+        "media": null,
+        "additional": null
+      },
+      "conclusion": "基础文本/工具已验证；不代表最大窗口、速度授权或全消费者验收"
+    },
+    {
+      "id": "gemini-3.8-flash-high",
+      "provider": "antigravity",
+      "callChain": "consumer -> NAS proxy -> antigravity",
+      "implementation": "internal/runtime/executor/antigravity_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": false,
+      "context": 1048576,
+      "outputLimit": 65536,
+      "metadataGaps": [],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "scope": "short_text_chat_completions",
+          "observedAt": "2026-10-16T22:06:20.235Z",
+          "httpStatus": 200,
+          "status": "passed",
+          "responseModel": "gemini-3.8-flash",
+          "seconds": 2.39,
+          "finishReason": "stop",
+          "usage": {
+            "completion_tokens": 5,
+            "total_tokens": 18,
+            "prompt_tokens": 13
+          },
+          "serviceTier": null,
+          "outputMatched": true
+        },
+        "tools": {
+          "id": "gemini-3.8-flash-high",
+          "status": "passed_tool_roundtrip",
+          "httpStatus": 200,
+          "responseModel": "gemini-3.8-flash",
+          "continuationStatus": 200,
+          "serviceTier": null,
+          "outputContainsResult": true,
+          "seconds": 2.79
+        },
+        "media": null,
+        "additional": null
+      },
+      "conclusion": "基础文本/工具已验证；不代表最大窗口、速度授权或全消费者验收"
+    },
+    {
+      "id": "gemini-4-argon-high",
+      "provider": "antigravity",
+      "callChain": "consumer -> NAS proxy -> antigravity",
+      "implementation": "internal/runtime/executor/antigravity_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": false,
+      "context": 1048576,
+      "outputLimit": 10000,
+      "metadataGaps": [],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "scope": "short_text_chat_completions",
+          "observedAt": "2026-10-16T22:06:23.982Z",
+          "httpStatus": 200,
+          "status": "passed",
+          "responseModel": "gemini-4-argon",
+          "seconds": 3.75,
+          "finishReason": "stop",
+          "usage": {
+            "completion_tokens": 9,
+            "total_tokens": 22,
+            "prompt_tokens": 13
+          },
+          "serviceTier": null,
+          "outputMatched": true
+        },
+        "tools": {
+          "id": "gemini-4-argon-high",
+          "status": "passed_tool_roundtrip",
+          "httpStatus": 200,
+          "responseModel": "gemini-4-argon",
+          "continuationStatus": 200,
+          "serviceTier": null,
+          "outputContainsResult": true,
+          "seconds": 8.88
+        },
+        "media": null,
+        "additional": null
+      },
+      "conclusion": "基础文本/工具已验证；不代表最大窗口、速度授权或全消费者验收"
+    },
+    {
+      "id": "gpt-5.5",
+      "provider": "openai",
+      "callChain": "consumer -> NAS proxy -> openai",
+      "implementation": "internal/runtime/executor/codex_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": false,
+      "context": 272000,
+      "outputLimit": 128000,
+      "metadataGaps": [],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "scope": "short_text_chat_completions",
+          "observedAt": "2026-10-16T22:06:24.450Z",
+          "httpStatus": 400,
+          "status": "request_rejected",
+          "responseModel": null,
+          "seconds": 0.47,
+          "finishReason": null,
+          "usage": null,
+          "serviceTier": null,
+          "outputMatched": false
+        },
+        "tools": {
+          "status": "not_tested"
+        },
+        "media": null,
+        "additional": null
+      },
+      "conclusion": "不适用：当前ChatGPT账户通道明确不支持；保留历史模型身份"
+    },
+    {
+      "id": "gpt-5.6-luna",
+      "provider": "openai",
+      "callChain": "consumer -> NAS proxy -> openai",
+      "implementation": "internal/runtime/executor/codex_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": false,
+      "context": 500000,
+      "outputLimit": 128000,
+      "metadataGaps": [],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "scope": "short_text_chat_completions",
+          "observedAt": "2026-10-16T22:06:25.872Z",
+          "httpStatus": 200,
+          "status": "passed",
+          "responseModel": "gpt-5.6-luna",
+          "seconds": 1.42,
+          "finishReason": "stop",
+          "usage": {
+            "completion_tokens": 8,
+            "total_tokens": 321,
+            "prompt_tokens": 313,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "cache_write_tokens": 0,
+              "cached_creation_tokens": 0
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0
+            }
+          },
+          "serviceTier": "default",
+          "outputMatched": true
+        },
+        "tools": {
+          "id": "gpt-5.6-luna",
+          "status": "passed_tool_roundtrip",
+          "httpStatus": 200,
+          "responseModel": "gpt-5.6-luna",
+          "continuationStatus": 200,
+          "serviceTier": "default",
+          "outputContainsResult": true,
+          "seconds": 3.34
+        },
+        "media": null,
+        "additional": null
+      },
+      "conclusion": "基础文本/工具已验证；不代表最大窗口、速度授权或全消费者验收"
+    },
+    {
+      "id": "gpt-5.6-sol",
+      "provider": "openai",
+      "callChain": "consumer -> NAS proxy -> openai",
+      "implementation": "internal/runtime/executor/codex_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": false,
+      "context": 500000,
+      "outputLimit": 128000,
+      "metadataGaps": [],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "scope": "short_text_chat_completions",
+          "observedAt": "2026-10-16T22:06:27.593Z",
+          "httpStatus": 200,
+          "status": "passed",
+          "responseModel": "gpt-5.6-sol",
+          "seconds": 1.72,
+          "finishReason": "stop",
+          "usage": {
+            "completion_tokens": 8,
+            "total_tokens": 321,
+            "prompt_tokens": 313,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "cache_write_tokens": 0,
+              "cached_creation_tokens": 0
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0
+            }
+          },
+          "serviceTier": "default",
+          "outputMatched": true
+        },
+        "tools": {
+          "id": "gpt-5.6-sol",
+          "status": "passed_tool_roundtrip",
+          "httpStatus": 200,
+          "responseModel": "gpt-5.6-sol",
+          "continuationStatus": 200,
+          "serviceTier": "default",
+          "outputContainsResult": true,
+          "seconds": 3.98
+        },
+        "media": null,
+        "additional": null
+      },
+      "conclusion": "基础文本/工具已验证；不代表最大窗口、速度授权或全消费者验收"
+    },
+    {
+      "id": "gpt-5.6-terra",
+      "provider": "openai",
+      "callChain": "consumer -> NAS proxy -> openai",
+      "implementation": "internal/runtime/executor/codex_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": false,
+      "context": 500000,
+      "outputLimit": 128000,
+      "metadataGaps": [],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "scope": "short_text_chat_completions",
+          "observedAt": "2026-10-16T22:06:31.248Z",
+          "httpStatus": 200,
+          "status": "passed",
+          "responseModel": "gpt-5.6-terra",
+          "seconds": 3.65,
+          "finishReason": "stop",
+          "usage": {
+            "completion_tokens": 8,
+            "total_tokens": 321,
+            "prompt_tokens": 313,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "cache_write_tokens": 0,
+              "cached_creation_tokens": 0
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0
+            }
+          },
+          "serviceTier": "default",
+          "outputMatched": true
+        },
+        "tools": {
+          "id": "gpt-5.6-terra",
+          "status": "passed_tool_roundtrip",
+          "httpStatus": 200,
+          "responseModel": "gpt-5.6-terra",
+          "continuationStatus": 200,
+          "serviceTier": "default",
+          "outputContainsResult": true,
+          "seconds": 3.88
+        },
+        "media": null,
+        "additional": null
+      },
+      "conclusion": "基础文本/工具已验证；不代表最大窗口、速度授权或全消费者验收"
+    },
+    {
+      "id": "gpt-6-astra",
+      "provider": "openai",
+      "callChain": "consumer -> NAS proxy -> openai",
+      "implementation": "internal/runtime/executor/codex_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": false,
+      "context": 500000,
+      "outputLimit": 128000,
+      "metadataGaps": [],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "scope": "short_text_chat_completions",
+          "observedAt": "2026-10-16T22:06:33.388Z",
+          "httpStatus": 200,
+          "status": "passed",
+          "responseModel": "gpt-6-astra",
+          "seconds": 2.14,
+          "finishReason": "stop",
+          "usage": {
+            "completion_tokens": 8,
+            "total_tokens": 321,
+            "prompt_tokens": 313,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "cache_write_tokens": 0,
+              "cached_creation_tokens": 0
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0
+            }
+          },
+          "serviceTier": "default",
+          "outputMatched": true
+        },
+        "tools": {
+          "id": "gpt-6-astra",
+          "status": "passed_tool_roundtrip",
+          "httpStatus": 200,
+          "responseModel": "gpt-6-astra",
+          "continuationStatus": 200,
+          "serviceTier": "default",
+          "outputContainsResult": true,
+          "seconds": 4.05
+        },
+        "media": null,
+        "additional": null
+      },
+      "conclusion": "基础文本/工具已验证；不代表最大窗口、速度授权或全消费者验收"
+    },
+    {
+      "id": "gpt-6-luna",
+      "provider": "openai",
+      "callChain": "consumer -> NAS proxy -> openai",
+      "implementation": "internal/runtime/executor/codex_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": false,
+      "context": 500000,
+      "outputLimit": 128000,
+      "metadataGaps": [],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "scope": "short_text_chat_completions",
+          "observedAt": "2026-10-16T22:06:34.899Z",
+          "httpStatus": 200,
+          "status": "passed",
+          "responseModel": "gpt-6-luna",
+          "seconds": 1.51,
+          "finishReason": "stop",
+          "usage": {
+            "completion_tokens": 8,
+            "total_tokens": 321,
+            "prompt_tokens": 313,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "cache_write_tokens": 0,
+              "cached_creation_tokens": 0
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0
+            }
+          },
+          "serviceTier": "default",
+          "outputMatched": true
+        },
+        "tools": {
+          "id": "gpt-6-luna",
+          "status": "passed_tool_roundtrip",
+          "httpStatus": 200,
+          "responseModel": "gpt-6-luna",
+          "continuationStatus": 200,
+          "serviceTier": "default",
+          "outputContainsResult": true,
+          "seconds": 3.87
+        },
+        "media": null,
+        "additional": null
+      },
+      "conclusion": "基础文本/工具已验证；不代表最大窗口、速度授权或全消费者验收"
+    },
+    {
+      "id": "gpt-6-sol",
+      "provider": "openai",
+      "callChain": "consumer -> NAS proxy -> openai",
+      "implementation": "internal/runtime/executor/codex_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": false,
+      "context": 500000,
+      "outputLimit": 128000,
+      "metadataGaps": [],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "scope": "short_text_chat_completions",
+          "observedAt": "2026-10-16T22:06:36.483Z",
+          "httpStatus": 200,
+          "status": "passed",
+          "responseModel": "gpt-6-sol",
+          "seconds": 1.58,
+          "finishReason": "stop",
+          "usage": {
+            "completion_tokens": 8,
+            "total_tokens": 321,
+            "prompt_tokens": 313,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "cache_write_tokens": 0,
+              "cached_creation_tokens": 0
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0
+            }
+          },
+          "serviceTier": "default",
+          "outputMatched": true
+        },
+        "tools": {
+          "id": "gpt-6-sol",
+          "status": "passed_tool_roundtrip",
+          "httpStatus": 200,
+          "responseModel": "gpt-6-sol",
+          "continuationStatus": 200,
+          "serviceTier": "default",
+          "outputContainsResult": true,
+          "seconds": 3.35
+        },
+        "media": null,
+        "additional": null
+      },
+      "conclusion": "基础文本/工具已验证；不代表最大窗口、速度授权或全消费者验收"
+    },
+    {
+      "id": "gpt-6.1-sol",
+      "provider": "openai",
+      "callChain": "consumer -> NAS proxy -> openai",
+      "implementation": "internal/runtime/executor/codex_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": false,
+      "context": 500000,
+      "outputLimit": 128000,
+      "metadataGaps": [],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "scope": "short_text_chat_completions",
+          "observedAt": "2026-10-16T22:06:38.364Z",
+          "httpStatus": 200,
+          "status": "passed",
+          "responseModel": "gpt-6.1-sol",
+          "seconds": 1.88,
+          "finishReason": "stop",
+          "usage": {
+            "completion_tokens": 8,
+            "total_tokens": 321,
+            "prompt_tokens": 313,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "cache_write_tokens": 0,
+              "cached_creation_tokens": 0
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0
+            }
+          },
+          "serviceTier": "default",
+          "outputMatched": true
+        },
+        "tools": {
+          "id": "gpt-6.1-sol",
+          "status": "passed_tool_roundtrip",
+          "httpStatus": 200,
+          "responseModel": "gpt-6.1-sol",
+          "continuationStatus": 200,
+          "serviceTier": "default",
+          "outputContainsResult": true,
+          "seconds": 4.22
+        },
+        "media": null,
+        "additional": null
+      },
+      "conclusion": "基础文本/工具已验证；不代表最大窗口、速度授权或全消费者验收"
+    },
+    {
+      "id": "gpt-image-1.5",
+      "provider": "openai",
+      "callChain": "consumer -> NAS proxy -> openai",
+      "implementation": "internal/runtime/executor/codex_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": true,
+      "context": 32768,
+      "outputLimit": 8192,
+      "metadataGaps": [],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "status": "not_tested",
+          "scope": "none",
+          "reason": "non_text_or_incomplete_metadata"
+        },
+        "tools": {
+          "status": "not_tested"
+        },
+        "media": {
+          "id": "gpt-image-1.5",
+          "path": "/v1/images/generations",
+          "scope": "nas-direct",
+          "httpStatus": 200,
+          "contentType": "application/json",
+          "status": "passed_image_bytes",
+          "imageBytes": [
+            1002770
+          ],
+          "seconds": 12.861
+        },
+        "additional": null
+      },
+      "conclusion": "待完成：内网能力已验证或已取得完成回执，公网和消费者发布未完成"
+    },
+    {
+      "id": "gpt-image-2",
+      "provider": "openai",
+      "callChain": "consumer -> NAS proxy -> openai",
+      "implementation": "internal/runtime/executor/codex_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": true,
+      "context": 32768,
+      "outputLimit": 8192,
+      "metadataGaps": [],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "status": "not_tested",
+          "scope": "none",
+          "reason": "non_text_or_incomplete_metadata"
+        },
+        "tools": {
+          "status": "not_tested"
+        },
+        "media": {
+          "id": "gpt-image-2",
+          "path": "/v1/images/generations",
+          "scope": "nas-direct",
+          "httpStatus": 200,
+          "contentType": "application/json",
+          "status": "passed_image_bytes",
+          "imageBytes": [
+            1022590
+          ],
+          "seconds": 11.587
+        },
+        "additional": null
+      },
+      "conclusion": "待完成：内网能力已验证或已取得完成回执，公网和消费者发布未完成"
+    },
+    {
+      "id": "gpt-image-2.5",
+      "provider": "openai",
+      "callChain": "consumer -> NAS proxy -> openai",
+      "implementation": "internal/runtime/executor/codex_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": true,
+      "context": 32768,
+      "outputLimit": 8192,
+      "metadataGaps": [],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "status": "not_tested",
+          "scope": "none",
+          "reason": "non_text_or_incomplete_metadata"
+        },
+        "tools": {
+          "status": "not_tested"
+        },
+        "media": {
+          "id": "gpt-image-2.5",
+          "path": "/v1/images/generations",
+          "scope": "nas-direct",
+          "httpStatus": 200,
+          "contentType": "application/json",
+          "status": "passed_image_bytes",
+          "imageBytes": [
+            1030835
+          ],
+          "seconds": 11.831
+        },
+        "additional": null
+      },
+      "conclusion": "待完成：内网能力已验证或已取得完成回执，公网和消费者发布未完成"
+    },
+    {
+      "id": "gpt-image-2.5-flare",
+      "provider": "openai",
+      "callChain": "consumer -> NAS proxy -> openai",
+      "implementation": "internal/runtime/executor/codex_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": true,
+      "context": 32768,
+      "outputLimit": 8192,
+      "metadataGaps": [],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "status": "not_tested",
+          "scope": "none",
+          "reason": "non_text_or_incomplete_metadata"
+        },
+        "tools": {
+          "status": "not_tested"
+        },
+        "media": {
+          "id": "gpt-image-2.5-flare",
+          "path": "/v1/images/generations",
+          "scope": "nas-direct",
+          "httpStatus": 200,
+          "contentType": "application/json",
+          "status": "passed_image_bytes",
+          "imageBytes": [
+            1011043
+          ],
+          "seconds": 12.348
+        },
+        "additional": null
+      },
+      "conclusion": "待完成：内网能力已验证或已取得完成回执，公网和消费者发布未完成"
+    },
+    {
+      "id": "gpt-image-2.5-sunburst",
+      "provider": "openai",
+      "callChain": "consumer -> NAS proxy -> openai",
+      "implementation": "internal/runtime/executor/codex_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": true,
+      "context": 32768,
+      "outputLimit": 8192,
+      "metadataGaps": [],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "status": "not_tested",
+          "scope": "none",
+          "reason": "non_text_or_incomplete_metadata"
+        },
+        "tools": {
+          "status": "not_tested"
+        },
+        "media": {
+          "id": "gpt-image-2.5-sunburst",
+          "path": "/v1/images/generations",
+          "scope": "nas-direct",
+          "httpStatus": 200,
+          "contentType": "application/json",
+          "status": "passed_image_bytes",
+          "imageBytes": [
+            1016946
+          ],
+          "seconds": 11.811
+        },
+        "additional": null
+      },
+      "conclusion": "待完成：内网能力已验证或已取得完成回执，公网和消费者发布未完成"
+    },
+    {
+      "id": "gpt-oss-120b-medium",
+      "provider": "antigravity",
+      "callChain": "consumer -> NAS proxy -> antigravity",
+      "implementation": "internal/runtime/executor/antigravity_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": false,
+      "context": 114000,
+      "outputLimit": 32768,
+      "metadataGaps": [],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "scope": "short_text_chat_completions",
+          "observedAt": "2026-10-16T22:06:39.762Z",
+          "httpStatus": 200,
+          "status": "passed",
+          "responseModel": "gpt-oss-120b-medium",
+          "seconds": 1.4,
+          "finishReason": "stop",
+          "usage": {
+            "completion_tokens": 74,
+            "total_tokens": 152,
+            "prompt_tokens": 78,
+            "prompt_tokens_details": {
+              "cached_tokens": 64
+            }
+          },
+          "serviceTier": null,
+          "outputMatched": true
+        },
+        "tools": {
+          "id": "gpt-oss-120b-medium",
+          "status": "passed_tool_roundtrip",
+          "httpStatus": 200,
+          "responseModel": "gpt-oss-120b-medium",
+          "continuationStatus": 200,
+          "serviceTier": null,
+          "outputContainsResult": true,
+          "seconds": 2.58
+        },
+        "media": null,
+        "additional": null
+      },
+      "conclusion": "基础文本/工具已验证；不代表最大窗口、速度授权或全消费者验收"
+    },
+    {
+      "id": "grok-3-mini",
+      "provider": "xai",
+      "callChain": "consumer -> NAS proxy -> xai",
+      "implementation": "internal/runtime/executor/xai_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": true,
+      "context": 131072,
+      "outputLimit": 32768,
+      "metadataGaps": [],
+      "identityMismatch": {
+        "requested": "grok-3-mini",
+        "returned": "grok-4.3"
+      },
+      "verification": {
+        "text": {
+          "scope": "short_text_chat_completions",
+          "observedAt": "2026-10-16T22:06:42.056Z",
+          "httpStatus": 200,
+          "status": "passed",
+          "responseModel": "grok-4.3",
+          "seconds": 2.29,
+          "finishReason": "stop",
+          "usage": {
+            "completion_tokens": 106,
+            "total_tokens": 309,
+            "prompt_tokens": 203,
+            "prompt_tokens_details": {
+              "cached_tokens": 128
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 102
+            }
+          },
+          "serviceTier": "default",
+          "outputMatched": true
+        },
+        "tools": {
+          "status": "not_tested"
+        },
+        "media": null,
+        "additional": null
+      },
+      "conclusion": "待完成：回执型号与请求型号不一致"
+    },
+    {
+      "id": "grok-3-mini-fast",
+      "provider": "xai",
+      "callChain": "consumer -> NAS proxy -> xai",
+      "implementation": "internal/runtime/executor/xai_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": true,
+      "context": 131072,
+      "outputLimit": 32768,
+      "metadataGaps": [],
+      "identityMismatch": {
+        "requested": "grok-3-mini-fast",
+        "returned": "grok-4.3"
+      },
+      "verification": {
+        "text": {
+          "scope": "short_text_chat_completions",
+          "observedAt": "2026-10-16T22:06:44.650Z",
+          "httpStatus": 200,
+          "status": "passed",
+          "responseModel": "grok-4.3",
+          "seconds": 2.59,
+          "finishReason": "stop",
+          "usage": {
+            "completion_tokens": 123,
+            "total_tokens": 326,
+            "prompt_tokens": 203,
+            "prompt_tokens_details": {
+              "cached_tokens": 128
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 119
+            }
+          },
+          "serviceTier": "default",
+          "outputMatched": true
+        },
+        "tools": {
+          "status": "not_tested"
+        },
+        "media": null,
+        "additional": null
+      },
+      "conclusion": "待完成：回执型号与请求型号不一致"
+    },
+    {
+      "id": "grok-4.20-0309-non-reasoning",
+      "provider": "xai",
+      "callChain": "consumer -> NAS proxy -> xai",
+      "implementation": "internal/runtime/executor/xai_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": false,
+      "context": 2000000,
+      "outputLimit": 65536,
+      "metadataGaps": [],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "scope": "short_text_chat_completions",
+          "observedAt": "2026-10-16T22:06:45.704Z",
+          "httpStatus": 200,
+          "status": "passed",
+          "responseModel": "grok-4.20-0309-non-reasoning",
+          "seconds": 1.05,
+          "finishReason": "stop",
+          "usage": {
+            "completion_tokens": 4,
+            "total_tokens": 199,
+            "prompt_tokens": 195,
+            "prompt_tokens_details": {
+              "cached_tokens": 128
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0
+            }
+          },
+          "serviceTier": "default",
+          "outputMatched": true
+        },
+        "tools": {
+          "id": "grok-4.20-0309-non-reasoning",
+          "status": "passed_tool_roundtrip",
+          "httpStatus": 200,
+          "responseModel": "grok-4.20-0309-non-reasoning",
+          "continuationStatus": 200,
+          "serviceTier": "default",
+          "outputContainsResult": true,
+          "seconds": 4.77
+        },
+        "media": null,
+        "additional": null
+      },
+      "conclusion": "基础文本/工具已验证；不代表最大窗口、速度授权或全消费者验收"
+    },
+    {
+      "id": "grok-4.20-0309-reasoning",
+      "provider": "xai",
+      "callChain": "consumer -> NAS proxy -> xai",
+      "implementation": "internal/runtime/executor/xai_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": false,
+      "context": 2000000,
+      "outputLimit": 65536,
+      "metadataGaps": [],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "scope": "short_text_chat_completions",
+          "observedAt": "2026-10-16T22:06:48.175Z",
+          "httpStatus": 200,
+          "status": "passed",
+          "responseModel": "grok-4.20-0309-reasoning",
+          "seconds": 2.47,
+          "finishReason": "stop",
+          "usage": {
+            "completion_tokens": 186,
+            "total_tokens": 383,
+            "prompt_tokens": 197,
+            "prompt_tokens_details": {
+              "cached_tokens": 128
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 182
+            }
+          },
+          "serviceTier": "default",
+          "outputMatched": true
+        },
+        "tools": {
+          "id": "grok-4.20-0309-reasoning",
+          "status": "passed_tool_roundtrip",
+          "httpStatus": 200,
+          "responseModel": "grok-4.20-0309-reasoning",
+          "continuationStatus": 200,
+          "serviceTier": "default",
+          "outputContainsResult": true,
+          "seconds": 4.95
+        },
+        "media": null,
+        "additional": null
+      },
+      "conclusion": "基础文本/工具已验证；不代表最大窗口、速度授权或全消费者验收"
+    },
+    {
+      "id": "grok-4.20-multi-agent-0309",
+      "provider": "xai",
+      "callChain": "consumer -> NAS proxy -> xai",
+      "implementation": "internal/runtime/executor/xai_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": false,
+      "context": 2000000,
+      "outputLimit": 65536,
+      "metadataGaps": [],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "scope": "short_text_chat_completions",
+          "observedAt": "2026-10-16T22:06:51.499Z",
+          "httpStatus": 200,
+          "status": "passed",
+          "responseModel": "grok-4.20-multi-agent-0309",
+          "seconds": 3.32,
+          "finishReason": "stop",
+          "usage": {
+            "completion_tokens": 1160,
+            "total_tokens": 3843,
+            "prompt_tokens": 2683,
+            "prompt_tokens_details": {
+              "cached_tokens": 2560
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 1156
+            }
+          },
+          "serviceTier": "default",
+          "outputMatched": true
+        },
+        "tools": {
+          "id": "grok-4.20-multi-agent-0309",
+          "status": "request_rejected",
+          "httpStatus": 400,
+          "responseModel": null,
+          "seconds": 0.59
+        },
+        "media": null,
+        "additional": null
+      },
+      "conclusion": "待完成：短文本成功，自定义工具未通过"
+    },
+    {
+      "id": "grok-4.3",
+      "provider": "xai",
+      "callChain": "consumer -> NAS proxy -> xai",
+      "implementation": "internal/runtime/executor/xai_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": false,
+      "context": 1000000,
+      "outputLimit": 65536,
+      "metadataGaps": [],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "scope": "short_text_chat_completions",
+          "observedAt": "2026-10-16T22:06:54.074Z",
+          "httpStatus": 200,
+          "status": "passed",
+          "responseModel": "grok-4.3",
+          "seconds": 2.57,
+          "finishReason": "stop",
+          "usage": {
+            "completion_tokens": 153,
+            "total_tokens": 356,
+            "prompt_tokens": 203,
+            "prompt_tokens_details": {
+              "cached_tokens": 128
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 149
+            }
+          },
+          "serviceTier": "default",
+          "outputMatched": true
+        },
+        "tools": {
+          "id": "grok-4.3",
+          "status": "passed_tool_roundtrip",
+          "httpStatus": 200,
+          "responseModel": "grok-4.3",
+          "continuationStatus": 200,
+          "serviceTier": "default",
+          "outputContainsResult": true,
+          "seconds": 6.72
+        },
+        "media": null,
+        "additional": null
+      },
+      "conclusion": "基础文本/工具已验证；不代表最大窗口、速度授权或全消费者验收"
+    },
+    {
+      "id": "grok-4.5",
+      "provider": "xai",
+      "callChain": "consumer -> NAS proxy -> xai",
+      "implementation": "internal/runtime/executor/xai_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": false,
+      "context": 500000,
+      "outputLimit": 65536,
+      "metadataGaps": [],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "scope": "short_text_chat_completions",
+          "observedAt": "2026-10-16T22:06:55.933Z",
+          "httpStatus": 200,
+          "status": "passed",
+          "responseModel": "grok-4.5-build",
+          "seconds": 1.86,
+          "finishReason": "stop",
+          "usage": {
+            "completion_tokens": 56,
+            "total_tokens": 274,
+            "prompt_tokens": 218,
+            "prompt_tokens_details": {
+              "cached_tokens": 128
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 51
+            }
+          },
+          "serviceTier": "default",
+          "outputMatched": true
+        },
+        "tools": {
+          "id": "grok-4.5",
+          "status": "passed_tool_roundtrip",
+          "httpStatus": 200,
+          "responseModel": "grok-4.5-build",
+          "continuationStatus": 200,
+          "serviceTier": "default",
+          "outputContainsResult": true,
+          "seconds": 3.93
+        },
+        "media": null,
+        "additional": null
+      },
+      "conclusion": "基础文本/工具已验证；不代表最大窗口、速度授权或全消费者验收"
+    },
+    {
+      "id": "grok-4.6",
+      "provider": "xai",
+      "callChain": "consumer -> NAS proxy -> xai",
+      "implementation": "internal/runtime/executor/xai_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": false,
+      "context": 500000,
+      "outputLimit": 65536,
+      "metadataGaps": [],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "scope": "short_text_chat_completions",
+          "observedAt": "2026-10-16T22:06:57.894Z",
+          "httpStatus": 200,
+          "status": "passed",
+          "responseModel": "grok-4.6-build",
+          "seconds": 1.96,
+          "finishReason": "stop",
+          "usage": {
+            "completion_tokens": 75,
+            "total_tokens": 293,
+            "prompt_tokens": 218,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 70
+            }
+          },
+          "serviceTier": "default",
+          "outputMatched": true
+        },
+        "tools": {
+          "id": "grok-4.6",
+          "status": "passed_tool_roundtrip",
+          "httpStatus": 200,
+          "responseModel": "grok-4.6-build",
+          "continuationStatus": 200,
+          "serviceTier": "default",
+          "outputContainsResult": true,
+          "seconds": 4.19
+        },
+        "media": null,
+        "additional": null
+      },
+      "conclusion": "基础文本/工具已验证；不代表最大窗口、速度授权或全消费者验收"
+    },
+    {
+      "id": "grok-4.7",
+      "provider": "xai",
+      "callChain": "consumer -> NAS proxy -> xai",
+      "implementation": "internal/runtime/executor/xai_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": false,
+      "context": 500000,
+      "outputLimit": 10000,
+      "metadataGaps": [],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "status": "passed_natural_question",
+          "id": "grok-4.7",
+          "httpStatus": 200,
+          "responseModel": "grok-4.7-build",
+          "question": "What is 2 plus 3? A short answer is enough.",
+          "output": "5.",
+          "serviceTier": "default"
+        },
+        "tools": {
+          "id": "grok-4.7",
+          "status": "passed_tool_roundtrip",
+          "httpStatus": 200,
+          "responseModel": "grok-4.7-build",
+          "continuationStatus": 200,
+          "serviceTier": "default",
+          "outputContainsResult": true,
+          "seconds": 3.61
+        },
+        "media": null,
+        "additional": null
+      },
+      "conclusion": "基础文本/工具已验证；不代表最大窗口、速度授权或全消费者验收"
+    },
+    {
+      "id": "grok-4.7-build-fast",
+      "provider": "xai",
+      "callChain": "consumer -> NAS proxy -> xai",
+      "implementation": "internal/runtime/executor/xai_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": false,
+      "context": 500000,
+      "outputLimit": 10000,
+      "metadataGaps": [],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "status": "passed_natural_question",
+          "id": "grok-4.7-build-fast",
+          "httpStatus": 200,
+          "responseModel": "grok-4.7-build-fast",
+          "question": "What is 2 plus 3? A short answer is enough.",
+          "output": "5",
+          "serviceTier": "default"
+        },
+        "tools": {
+          "id": "grok-4.7-build-fast",
+          "status": "passed_tool_roundtrip",
+          "httpStatus": 200,
+          "responseModel": "grok-4.7-build-fast",
+          "continuationStatus": 200,
+          "serviceTier": "default",
+          "outputContainsResult": true,
+          "seconds": 3.09
+        },
+        "media": null,
+        "additional": null
+      },
+      "conclusion": "基础文本/工具已验证；不代表最大窗口、速度授权或全消费者验收"
+    },
+    {
+      "id": "grok-build-0.1",
+      "provider": "xai",
+      "callChain": "consumer -> NAS proxy -> xai",
+      "implementation": "internal/runtime/executor/xai_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": false,
+      "context": 256000,
+      "outputLimit": 10000,
+      "metadataGaps": [],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "scope": "short_text_chat_completions",
+          "observedAt": "2026-10-16T22:07:08.845Z",
+          "httpStatus": 200,
+          "status": "passed",
+          "responseModel": "grok-build-0.1",
+          "seconds": 2.13,
+          "finishReason": "stop",
+          "usage": {
+            "completion_tokens": 195,
+            "total_tokens": 392,
+            "prompt_tokens": 197,
+            "prompt_tokens_details": {
+              "cached_tokens": 128
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 191
+            }
+          },
+          "serviceTier": "default",
+          "outputMatched": true
+        },
+        "tools": {
+          "id": "grok-build-0.1",
+          "status": "passed_tool_roundtrip",
+          "httpStatus": 200,
+          "responseModel": "grok-build-0.1",
+          "continuationStatus": 200,
+          "serviceTier": "default",
+          "outputContainsResult": true,
+          "seconds": 6.11
+        },
+        "media": null,
+        "additional": null
+      },
+      "conclusion": "基础文本/工具已验证；不代表最大窗口、速度授权或全消费者验收"
+    },
+    {
+      "id": "grok-composer-2.5-fast",
+      "provider": "xai",
+      "callChain": "consumer -> NAS proxy -> xai",
+      "implementation": "internal/runtime/executor/xai_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": true,
+      "context": 200000,
+      "outputLimit": 32768,
+      "metadataGaps": [
+        "supported_input_modalities",
+        "supported_output_modalities",
+        "supported_workloads"
+      ],
+      "identityMismatch": {
+        "requested": "grok-composer-2.5-fast",
+        "returned": "grok-4.5-build"
+      },
+      "verification": {
+        "text": {
+          "scope": "short_text_chat_completions",
+          "observedAt": "2026-10-16T22:09:19.332Z",
+          "httpStatus": 200,
+          "status": "passed",
+          "responseModel": "grok-4.5-build",
+          "seconds": 3.41,
+          "finishReason": "stop",
+          "usage": {
+            "completion_tokens": 130,
+            "total_tokens": 348,
+            "prompt_tokens": 218,
+            "prompt_tokens_details": {
+              "cached_tokens": 128
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 125
+            }
+          },
+          "serviceTier": "default",
+          "outputMatched": true,
+          "syntheticOutput": "YEUTECH_OK"
+        },
+        "tools": {
+          "status": "not_tested"
+        },
+        "media": null,
+        "additional": null
+      },
+      "conclusion": "待完成：回执型号与请求型号不一致"
+    },
+    {
+      "id": "grok-imagine-image",
+      "provider": "xai",
+      "callChain": "consumer -> NAS proxy -> xai",
+      "implementation": "internal/runtime/executor/xai_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": true,
+      "context": 0,
+      "outputLimit": 0,
+      "metadataGaps": [
+        "supported_input_modalities",
+        "supported_output_modalities",
+        "supported_workloads",
+        "context_length",
+        "max_output_tokens"
+      ],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "status": "not_tested",
+          "scope": "none",
+          "reason": "non_text_or_incomplete_metadata"
+        },
+        "tools": {
+          "status": "not_tested"
+        },
+        "media": {
+          "id": "grok-imagine-image",
+          "path": "/v1/images/generations",
+          "scope": "nas-direct",
+          "httpStatus": 200,
+          "contentType": "application/json",
+          "status": "passed_image_bytes",
+          "imageBytes": [
+            98758
+          ],
+          "seconds": 6.415
+        },
+        "additional": null
+      },
+      "conclusion": "待完成：内网能力已验证或已取得完成回执，公网和消费者发布未完成"
+    },
+    {
+      "id": "grok-imagine-image-2.0",
+      "provider": "xai",
+      "callChain": "consumer -> NAS proxy -> xai",
+      "implementation": "internal/runtime/executor/xai_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": true,
+      "context": 0,
+      "outputLimit": 0,
+      "metadataGaps": [
+        "supported_input_modalities",
+        "supported_output_modalities",
+        "supported_workloads",
+        "context_length",
+        "max_output_tokens"
+      ],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "status": "not_tested",
+          "scope": "none",
+          "reason": "non_text_or_incomplete_metadata"
+        },
+        "tools": {
+          "status": "not_tested"
+        },
+        "media": {
+          "id": "grok-imagine-image-2.0",
+          "path": "/v1/images/generations",
+          "scope": "nas-direct",
+          "httpStatus": 200,
+          "contentType": "application/json",
+          "status": "passed_image_bytes",
+          "imageBytes": [
+            75949
+          ],
+          "seconds": 7.715
+        },
+        "additional": null
+      },
+      "conclusion": "待完成：内网能力已验证或已取得完成回执，公网和消费者发布未完成"
+    },
+    {
+      "id": "grok-imagine-image-quality",
+      "provider": "xai",
+      "callChain": "consumer -> NAS proxy -> xai",
+      "implementation": "internal/runtime/executor/xai_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": true,
+      "context": 0,
+      "outputLimit": 0,
+      "metadataGaps": [
+        "supported_input_modalities",
+        "supported_output_modalities",
+        "supported_workloads",
+        "context_length",
+        "max_output_tokens"
+      ],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "status": "not_tested",
+          "scope": "none",
+          "reason": "non_text_or_incomplete_metadata"
+        },
+        "tools": {
+          "status": "not_tested"
+        },
+        "media": {
+          "id": "grok-imagine-image-quality",
+          "path": "/v1/images/generations",
+          "scope": "nas-direct",
+          "httpStatus": 200,
+          "contentType": "application/json",
+          "status": "passed_image_bytes",
+          "imageBytes": [
+            70034
+          ],
+          "seconds": 3.958
+        },
+        "additional": null
+      },
+      "conclusion": "待完成：内网能力已验证或已取得完成回执，公网和消费者发布未完成"
+    },
+    {
+      "id": "grok-imagine-video",
+      "provider": "xai",
+      "callChain": "consumer -> NAS proxy -> xai",
+      "implementation": "internal/runtime/executor/xai_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": true,
+      "context": 0,
+      "outputLimit": 0,
+      "metadataGaps": [
+        "supported_input_modalities",
+        "supported_output_modalities",
+        "supported_workloads",
+        "context_length",
+        "max_output_tokens"
+      ],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "status": "not_tested",
+          "scope": "none",
+          "reason": "non_text_or_incomplete_metadata"
+        },
+        "tools": {
+          "status": "not_tested"
+        },
+        "media": {
+          "id": "grok-imagine-video",
+          "path": "/v1/videos/generations",
+          "scope": "nas-direct",
+          "httpStatus": 200,
+          "contentType": "application/json",
+          "status": "video_job_accepted_not_completed",
+          "requestId": "b3886de9-3840-9eda-9926-0d197aa79de1",
+          "seconds": 0.702
+        },
+        "additional": {
+          "id": "grok-imagine-video",
+          "scope": "video_poll",
+          "httpStatus": 200,
+          "upstreamStatus": "done",
+          "hasVideoUrl": true,
+          "requestId": "b3886de9-3840-9eda-9926-0d197aa79de1"
+        }
+      },
+      "conclusion": "待完成：内网能力已验证或已取得完成回执，公网和消费者发布未完成"
+    },
+    {
+      "id": "grok-imagine-video-1.5",
+      "provider": "xai",
+      "callChain": "consumer -> NAS proxy -> xai",
+      "implementation": "internal/runtime/executor/xai_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": true,
+      "context": 0,
+      "outputLimit": 0,
+      "metadataGaps": [
+        "supported_input_modalities",
+        "supported_output_modalities",
+        "supported_workloads",
+        "context_length",
+        "max_output_tokens"
+      ],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "status": "not_tested",
+          "scope": "none",
+          "reason": "non_text_or_incomplete_metadata"
+        },
+        "tools": {
+          "status": "not_tested"
+        },
+        "media": {
+          "id": "grok-imagine-video-1.5",
+          "path": "/v1/videos/generations",
+          "scope": "nas-direct",
+          "httpStatus": 200,
+          "contentType": "application/json",
+          "status": "video_job_accepted_not_completed",
+          "requestId": "08244cf0-e463-97ef-9144-43c9c16d7150",
+          "seconds": 1.035
+        },
+        "additional": {
+          "id": "grok-imagine-video-1.5",
+          "scope": "video_poll",
+          "httpStatus": 200,
+          "upstreamStatus": "done",
+          "hasVideoUrl": true,
+          "requestId": "08244cf0-e463-97ef-9144-43c9c16d7150"
+        }
+      },
+      "conclusion": "待完成：内网能力已验证或已取得完成回执，公网和消费者发布未完成"
+    },
+    {
+      "id": "grok-imagine-video-1.5-preview",
+      "provider": "xai",
+      "callChain": "consumer -> NAS proxy -> xai",
+      "implementation": "internal/runtime/executor/xai_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": true,
+      "context": 0,
+      "outputLimit": 0,
+      "metadataGaps": [
+        "supported_input_modalities",
+        "supported_output_modalities",
+        "supported_workloads",
+        "context_length",
+        "max_output_tokens"
+      ],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "status": "not_tested",
+          "scope": "none",
+          "reason": "non_text_or_incomplete_metadata"
+        },
+        "tools": {
+          "status": "not_tested"
+        },
+        "media": {
+          "id": "grok-imagine-video-1.5-preview",
+          "path": "/v1/videos/generations",
+          "scope": "nas-direct",
+          "httpStatus": 200,
+          "contentType": "application/json",
+          "status": "video_job_accepted_not_completed",
+          "requestId": "ae01ef4f-e35c-9a71-a5c2-a82a1cdf0c9d",
+          "seconds": 0.984
+        },
+        "additional": {
+          "id": "grok-imagine-video-1.5-preview",
+          "scope": "video_poll",
+          "httpStatus": 200,
+          "upstreamStatus": "done",
+          "hasVideoUrl": true,
+          "requestId": "ae01ef4f-e35c-9a71-a5c2-a82a1cdf0c9d"
+        }
+      },
+      "conclusion": "待完成：内网能力已验证或已取得完成回执，公网和消费者发布未完成"
+    },
+    {
+      "id": "grok-tts",
+      "provider": "xai",
+      "callChain": "consumer -> NAS proxy -> xai",
+      "implementation": "internal/runtime/executor/xai_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": true,
+      "context": 0,
+      "outputLimit": 0,
+      "metadataGaps": [
+        "supported_input_modalities",
+        "supported_output_modalities",
+        "supported_workloads",
+        "context_length",
+        "max_output_tokens"
+      ],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "status": "not_tested",
+          "scope": "none",
+          "reason": "non_text_or_incomplete_metadata"
+        },
+        "tools": {
+          "status": "not_tested"
+        },
+        "media": {
+          "id": "grok-tts",
+          "path": "/v1/audio/speech",
+          "scope": "nas-direct",
+          "httpStatus": 200,
+          "contentType": "audio/mpeg",
+          "status": "passed_audio_response",
+          "bytes": 16128,
+          "seconds": 1.709
+        },
+        "additional": null
+      },
+      "conclusion": "待完成：内网能力已验证或已取得完成回执，公网和消费者发布未完成"
+    },
+    {
+      "id": "grok-voice-tts-1.0",
+      "provider": "xai",
+      "callChain": "consumer -> NAS proxy -> xai",
+      "implementation": "internal/runtime/executor/xai_executor*.go",
+      "metadataImplementation": "internal/registry/capability_metadata.go; internal/api/server_model_capabilities.go",
+      "frontendNeeded": true,
+      "context": 0,
+      "outputLimit": 0,
+      "metadataGaps": [
+        "supported_input_modalities",
+        "supported_output_modalities",
+        "supported_workloads",
+        "context_length",
+        "max_output_tokens"
+      ],
+      "identityMismatch": null,
+      "verification": {
+        "text": {
+          "status": "not_tested",
+          "scope": "none",
+          "reason": "non_text_or_incomplete_metadata"
+        },
+        "tools": {
+          "status": "not_tested"
+        },
+        "media": {
+          "id": "grok-voice-tts-1.0",
+          "path": "/v1/audio/speech",
+          "scope": "nas-direct",
+          "httpStatus": 200,
+          "contentType": "audio/mpeg",
+          "status": "passed_audio_response",
+          "bytes": 16128,
+          "seconds": 0.424
+        },
+        "additional": null
+      },
+      "conclusion": "待完成：内网能力已验证或已取得完成回执，公网和消费者发布未完成"
+    }
+  ],
+  "summary": {
+    "registered": 56,
+    "identityMismatches": 3,
+    "toolRoundtripsPassed": 36,
+    "imageBytesValidated": 8,
+    "businessImageReceipts": 1,
+    "audioResponsesValidated": 2,
+    "videoCompletedReceipts": 3
+  }
+}

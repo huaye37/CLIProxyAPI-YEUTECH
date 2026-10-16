@@ -1,0 +1,162 @@
+{
+  "observedAt": "2026-10-16T22:15:05.300Z",
+  "scope": "nas-direct",
+  "publicEntryTest": "2026-10-17-media-availability.json",
+  "productionChanged": false,
+  "results": [
+    {
+      "id": "gpt-image-1.5",
+      "path": "/v1/images/generations",
+      "scope": "nas-direct",
+      "httpStatus": 200,
+      "contentType": "application/json",
+      "status": "passed_image_bytes",
+      "imageBytes": [
+        1002770
+      ],
+      "seconds": 12.861
+    },
+    {
+      "id": "gpt-image-2",
+      "path": "/v1/images/generations",
+      "scope": "nas-direct",
+      "httpStatus": 200,
+      "contentType": "application/json",
+      "status": "passed_image_bytes",
+      "imageBytes": [
+        1022590
+      ],
+      "seconds": 11.587
+    },
+    {
+      "id": "gpt-image-2.5",
+      "path": "/v1/images/generations",
+      "scope": "nas-direct",
+      "httpStatus": 200,
+      "contentType": "application/json",
+      "status": "passed_image_bytes",
+      "imageBytes": [
+        1030835
+      ],
+      "seconds": 11.831
+    },
+    {
+      "id": "gpt-image-2.5-flare",
+      "path": "/v1/images/generations",
+      "scope": "nas-direct",
+      "httpStatus": 200,
+      "contentType": "application/json",
+      "status": "passed_image_bytes",
+      "imageBytes": [
+        1011043
+      ],
+      "seconds": 12.348
+    },
+    {
+      "id": "gpt-image-2.5-sunburst",
+      "path": "/v1/images/generations",
+      "scope": "nas-direct",
+      "httpStatus": 200,
+      "contentType": "application/json",
+      "status": "passed_image_bytes",
+      "imageBytes": [
+        1016946
+      ],
+      "seconds": 11.811
+    },
+    {
+      "id": "gemini-3.1-flash-image",
+      "path": "/v1/images/generations",
+      "scope": "nas-direct",
+      "httpStatus": 400,
+      "status": "not_supported",
+      "seconds": 0.002
+    },
+    {
+      "id": "grok-imagine-image",
+      "path": "/v1/images/generations",
+      "scope": "nas-direct",
+      "httpStatus": 200,
+      "contentType": "application/json",
+      "status": "passed_image_bytes",
+      "imageBytes": [
+        98758
+      ],
+      "seconds": 6.415
+    },
+    {
+      "id": "grok-imagine-image-2.0",
+      "path": "/v1/images/generations",
+      "scope": "nas-direct",
+      "httpStatus": 200,
+      "contentType": "application/json",
+      "status": "passed_image_bytes",
+      "imageBytes": [
+        75949
+      ],
+      "seconds": 7.715
+    },
+    {
+      "id": "grok-imagine-image-quality",
+      "path": "/v1/images/generations",
+      "scope": "nas-direct",
+      "httpStatus": 200,
+      "contentType": "application/json",
+      "status": "passed_image_bytes",
+      "imageBytes": [
+        70034
+      ],
+      "seconds": 3.958
+    },
+    {
+      "id": "grok-tts",
+      "path": "/v1/audio/speech",
+      "scope": "nas-direct",
+      "httpStatus": 200,
+      "contentType": "audio/mpeg",
+      "status": "passed_audio_response",
+      "bytes": 16128,
+      "seconds": 1.709
+    },
+    {
+      "id": "grok-voice-tts-1.0",
+      "path": "/v1/audio/speech",
+      "scope": "nas-direct",
+      "httpStatus": 200,
+      "contentType": "audio/mpeg",
+      "status": "passed_audio_response",
+      "bytes": 16128,
+      "seconds": 0.424
+    },
+    {
+      "id": "grok-imagine-video",
+      "path": "/v1/videos/generations",
+      "scope": "nas-direct",
+      "httpStatus": 200,
+      "contentType": "application/json",
+      "status": "video_job_accepted_not_completed",
+      "requestId": "b3886de9-3840-9eda-9926-0d197aa79de1",
+      "seconds": 0.702
+    },
+    {
+      "id": "grok-imagine-video-1.5",
+      "path": "/v1/videos/generations",
+      "scope": "nas-direct",
+      "httpStatus": 200,
+      "contentType": "application/json",
+      "status": "video_job_accepted_not_completed",
+      "requestId": "08244cf0-e463-97ef-9144-43c9c16d7150",
+      "seconds": 1.035
+    },
+    {
+      "id": "grok-imagine-video-1.5-preview",
+      "path": "/v1/videos/generations",
+      "scope": "nas-direct",
+      "httpStatus": 200,
+      "contentType": "application/json",
+      "status": "video_job_accepted_not_completed",
+      "requestId": "ae01ef4f-e35c-9a71-a5c2-a82a1cdf0c9d",
+      "seconds": 0.984
+    }
+  ]
+}

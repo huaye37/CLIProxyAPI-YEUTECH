@@ -1,0 +1,11 @@
+import {readFileSync,writeFileSync} from 'node:fs';
+import {execFileSync,spawn} from 'node:child_process';
+const key=execFileSync('security',['find-generic-password','-a','codex','-s','cn.yeutech.llm-api','-w'],{encoding:'utf8'}).trim();
+const previous=JSON.parse(readFileSync('docs/audits/2026-10-17-media-availability.json'));
+const entries=previous.results.map(m=>({model:m.id,path:m.path,body:m.path.includes('/images/')?{model:m.id,prompt:'A blue circle on white background.',n:1,response_format:'b64_json'}:m.path.includes('/audio/')?{model:m.id,input:'Hello.',voice:'ara',response_format:'mp3'}:{model:m.id,prompt:'A blue circle moving slowly.',duration:1}}));
+const code=readFileSync('scripts/audit-media-nas.py','utf8');
+const p=spawn('ssh',['-o','BatchMode=yes','-o','ConnectTimeout=5','yeutech-nas',"python3 -c '"+code.replaceAll("'","'\\''")+"'"],{stdio:['pipe','pipe','pipe']});
+const report={observedAt:new Date().toISOString(),scope:'nas-direct',publicEntryTest:'2026-10-17-media-availability.json',productionChanged:false,results:[]};
+let buffer='';p.stdout.on('data',chunk=>{buffer+=chunk;let i;while((i=buffer.indexOf('\n'))>=0){const line=buffer.slice(0,i);buffer=buffer.slice(i+1);try{const row=JSON.parse(line);report.results.push(row);writeFileSync('docs/audits/2026-10-17-media-nas-execution.json',JSON.stringify(report,null,2)+'\n',{mode:0o600});console.log(JSON.stringify(row));}catch{}}});
+p.stderr.on('data',()=>{});p.stdin.end(key+'\n'+JSON.stringify(entries)+'\n');
+p.on('exit',code=>{console.log(JSON.stringify({sshExitCode:code,examined:report.results.length}));process.exitCode=code||0});
