@@ -67,6 +67,12 @@ func EnrichCapabilityInfo(runtimeInfo *ModelInfo) *ModelInfo {
 		switch merged.ID {
 		case xaiBuiltinImageModelID, xaiBuiltinImageQualityModelID, xaiBuiltinImage20ModelID:
 			input, output, workloads = []string{"text", "image"}, []string{"image"}, []string{ModelWorkloadImageGeneration}
+			if len(merged.SupportedParameters) == 0 {
+				merged.SupportedParameters = []string{"aspect_ratio", "resolution", "response_format", "n"}
+				if merged.ID == xaiBuiltinImage20ModelID {
+					merged.SupportedParameters = append(merged.SupportedParameters, "quality")
+				}
+			}
 		case xaiBuiltinVideoModelID, xaiBuiltinVideo15ModelID, xaiBuiltinVideo15PreviewID:
 			input, output, workloads = []string{"text", "image", "video"}, []string{"video"}, []string{ModelWorkloadVideoGeneration}
 		case xaiBuiltinSpeechModelID, xaiBuiltinSpeechVoiceModelID:
@@ -85,6 +91,28 @@ func EnrichCapabilityInfo(runtimeInfo *ModelInfo) *ModelInfo {
 		if len(merged.SupportedWorkloads) == 0 {
 			merged.SupportedWorkloads = workloads
 		}
+		// The authenticated 2026-10-17 probe accepts conversation but rejects
+		// custom function tools in both auto and forced modes. Do not advertise
+		// this provider-managed multi-agent model as a client tool executor.
+		if merged.ID == "grok-4.20-multi-agent-0309" {
+			merged.SupportedWorkloads = []string{ModelWorkloadConversation}
+		}
 	}
 	return merged
+}
+
+// CapabilitySelectionIssue preserves historical IDs and direct routes, but keeps
+// unresolved model identities out of new consumer selections. Revisit using the
+// authenticated evidence in docs/audits/2026-10-17-followup-observations.json.
+func CapabilitySelectionIssue(info *ModelInfo) string {
+	if info == nil || (!strings.EqualFold(info.Type, "xai") && !strings.EqualFold(info.OwnedBy, "xai")) {
+		return ""
+	}
+	switch info.ID {
+	case "grok-3-mini", "grok-3-mini-fast":
+		return "上游实际返回 Grok 4.3，原型号身份尚未确认，请选择已验证的 Grok 型号"
+	case "grok-composer-2.5-fast":
+		return "上游实际返回 Grok 4.5 Build，Composer 身份尚未确认，请选择已验证的 Grok 型号"
+	}
+	return ""
 }

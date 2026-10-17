@@ -109,11 +109,12 @@ func (s *Server) modelCapabilitiesHandler(c *gin.Context) {
 		}
 
 		routeAvailable, unavailableReason := modelRouteAvailability(info.ID, credentials, now)
+		selectionIssue := registry.CapabilitySelectionIssue(info)
 		model := map[string]any{
 			"id":                          info.ID,
 			"object":                      "model_capability",
 			"available":                   routeAvailable,
-			"selectable":                  complete && routeAvailable,
+			"selectable":                  complete && routeAvailable && selectionIssue == "",
 			"capability_status":           status,
 			"owned_by":                    info.OwnedBy,
 			"type":                        info.Type,
@@ -128,6 +129,9 @@ func (s *Server) modelCapabilitiesHandler(c *gin.Context) {
 			model["token_limits_applicable"] = tokenLimitsApplicable
 			model["availability_basis"] = "registered_route_state"
 			model["verification_status"] = "not_verified_by_catalog"
+			if selectionIssue != "" {
+				model["selectable_reason"] = selectionIssue
+			}
 		}
 		if !routeAvailable {
 			model["unavailable_reason"] = unavailableReason

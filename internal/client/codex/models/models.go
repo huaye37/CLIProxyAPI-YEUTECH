@@ -4,6 +4,7 @@ package models
 import (
 	"bytes"
 	"encoding/json"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -753,7 +754,9 @@ func codexClientThinkingSupport(model map[string]any) *registry.ThinkingSupport 
 }
 
 func applyCodexClientVisibilityOverride(entry map[string]any, id string) {
-	if isCodexClientImageOrVideoModel(id) {
+	info := registry.EnrichCapabilityInfo(registry.LookupModelInfo(id))
+	conversationOnly := info != nil && len(info.SupportedWorkloads) > 0 && !slices.Contains(info.SupportedWorkloads, registry.ModelWorkloadAgent)
+	if isCodexClientImageOrVideoModel(id) || registry.CapabilitySelectionIssue(info) != "" || conversationOnly {
 		entry["visibility"] = "hide"
 	}
 }

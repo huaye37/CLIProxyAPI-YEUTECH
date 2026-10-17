@@ -32,6 +32,23 @@ func TestMediaCapabilitiesDoNotRequireInventedTokenLimits(t *testing.T) {
 	}
 }
 
+func TestAuditedIdentityRemainsVisibleButNotSelectable(t *testing.T) {
+	s := newTestServer(t)
+	const client = "test-audited-identity"
+	registerCapabilityTestModel(t, client, "xai", "grok-composer-2.5-fast")
+	registerCapabilityTestAuth(t, s, &coreauth.Auth{ID: client, Provider: "xai", Status: coreauth.StatusActive})
+	for _, schema := range []string{"1", "2"} {
+		m := requestModelCapabilityFromServer(t, s, "grok-composer-2.5-fast", schema)
+		if m["available"] != true || m["selectable"] != false {
+			t.Fatalf("identity restriction must not fabricate route failure: %#v", m)
+		}
+		_, hasReason := m["selectable_reason"]
+		if hasReason != (schema == "2") {
+			t.Fatalf("selection reason violates schema compatibility: %#v", m)
+		}
+	}
+}
+
 func TestModelCapabilitiesHandlerUsesSafeCatalogBudget(t *testing.T) {
 	modelRegistry := registry.GetGlobalRegistry()
 	clientID := "test-model-capabilities-budget"

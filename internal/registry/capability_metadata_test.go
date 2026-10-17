@@ -1,6 +1,30 @@
 package registry
 
-import "testing"
+import (
+	"slices"
+	"testing"
+)
+
+func TestAuditedXAISelectionAndToolRestrictions(t *testing.T) {
+	for _, id := range []string{"grok-3-mini", "grok-3-mini-fast", "grok-composer-2.5-fast"} {
+		if CapabilitySelectionIssue(&ModelInfo{ID: id, Type: "xai"}) == "" {
+			t.Fatalf("missing identity restriction for %s", id)
+		}
+		if CapabilitySelectionIssue(&ModelInfo{ID: id, Type: "openai"}) != "" {
+			t.Fatal("restriction leaked to another provider")
+		}
+	}
+	got := EnrichCapabilityInfo(&ModelInfo{ID: "grok-4.20-multi-agent-0309", Type: "xai", SupportedWorkloads: []string{ModelWorkloadAgent}})
+	if !slices.Equal(got.SupportedWorkloads, []string{ModelWorkloadConversation}) {
+		t.Fatal("multi-agent must not advertise client function tools")
+	}
+	for _, id := range []string{xaiBuiltinImageModelID, xaiBuiltinImageQualityModelID, xaiBuiltinImage20ModelID} {
+		got := EnrichCapabilityInfo(&ModelInfo{ID: id, Type: "xai"})
+		if slices.Contains(got.SupportedParameters, "quality") != (id == xaiBuiltinImage20ModelID) {
+			t.Fatalf("incorrect quality support for %s", id)
+		}
+	}
+}
 
 func TestEnrichCapabilityInfoPreservesProviderAndOverrides(t *testing.T) {
 	input := &ModelInfo{ID: "deepseek-flash", OwnedBy: "Deepseek", MaxContextLength: 128000, ExplicitInputModalities: true, ExplicitThinking: true}
