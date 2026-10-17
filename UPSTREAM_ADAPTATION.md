@@ -167,3 +167,38 @@ before exposing Grok images to the novel/workbench consumers. Preserve existing
 selections, history and the relay; do not publish a partial or falsely verified
 catalog. Reconcile these failures and consumer acceptance, then stage from the
 authoritative manager tree and leave proxy/paired installation to the user.
+
+### 2026-10-17 continuation: consumer corrections and stable v8.0.32
+
+The preceding hold is historical. The isolated manager combines authoritative
+280d8e4 with verified live UI 72a2e6b; the original dirty authority tree remains
+untouched. The Agent candidate retains official v1.19.0 ancestry, the installed
+fd6dc0a2d interface and live maintenance guards. Container hashes (not the stale
+NAS source directory) establish that baseline.
+
+| Commit / feature | Current provider and call chain | Implementation / frontend | Evidence and conclusion |
+| --- | --- | --- | --- |
+| fa68946a config ETags | All providers; manager -> v8 config | manager server.mjs/app.js If-Match and reread | Adapted. Isolated desktop save conflict disables saving; reread permits save with readback. |
+| 7a511e4d validated stream body | Tokyo Claude -> Responses | executor / translator; no new UI | Merged; Go regression gate. Candidate long-stream acceptance untested. |
+| 202b8b8c tool arguments | Tokyo Claude tool/result chain | Claude executor/schema cleanup; no new UI | Merged; historical auto-tool probes remain historical, not candidate proof. |
+| 7604d3df session date retention | Tokyo Claude; OAuth stays in Tokyo | Claude executor/config; upstream default retained | Merged; natural credential-switch continuity not yet observed. |
+| 911f49cb preserved thinking | Tokyo Claude thinking/tools | Claude executor; no additional setting | Merged; source/regression evidence only until candidate use. |
+| 088e4457 terminal disconnect | Existing streaming providers | Meta executor tests; no frontend | Upstream regression retained. |
+| b946d54e Devin quota | No registered Devin account | Auth conductor / Devin executor | Not applicable to current routes; no supplier enabled. |
+| 355fd10e plugin shadow copies | Optional dynamic providers | pluginhost / extension loader | Retained; no new plugin installed. |
+| e7003d2a relay documentation | No configured relay | Upstream README | Not applicable; no relay account/routing added. |
+| xAI image business adapter | xAI -> shared image plugin -> business consumers | Agent image-generation-plugin.mjs; aspect ratio at 1k, declared quality only | Local HTTP/BFF tests cover policy-safe default, invalid-quality recovery, actual dimensions, idempotent replay. Earlier NAS image bytes are real-provider evidence; new adapter not yet paid-tested. |
+| Identity and tool corrections | xAI -> shared catalogs -> consumers | capability_metadata.go; capability v1/v2; Codex visibility | Mini/Mini Fast/Composer stay in history but are not offered for new selection until identity is resolved. Multi-Agent is conversation-only after both custom-tool probes failed. |
+
+Official xAI image documentation was read on October 17: aspect_ratio, resolution,
+response_format; quality low/medium/auto is declared only for image-2.0. No exact
+pixel guarantee, text reasoning/speed parameter, resolution upgrade, paid-route
+switch or consumer allowlist widening was invented.
+
+Local real-browser checks cover manager media details, context save conflict and
+readback, and desktop/390x844 Agent failed-send recovery and preference persistence.
+These use isolated fixture upstreams with no paid model calls. Draft recovery was
+ported into the split UI modules rather than lost in the presentation merge.
+All-business production UI acceptance, maximum context, Fast grant and public HK
+media routing are separate pending gates. No production process was restarted.
+Final candidate identities must be recorded separately after staging.
