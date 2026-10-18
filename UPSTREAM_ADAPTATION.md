@@ -213,3 +213,17 @@ Final candidate identities must be recorded separately after staging.
 | Other consumers and budgets | Local client, workbench, novel text/image, Kaoyan assistant/explanation/scoring and media consumers | Existing shared contracts unchanged | No context/compression/model policy, Fast/Ultrafast, quota, history or media parameter change. NAS limit remains unchanged. Shared binary candidates require normal paired staging after this source commit; installs remain manual. |
 
 Runtime backup and exact boundaries are documented in `deploy/claude-edge/README.md`.
+# 2026-10-18 Codex Grok hosted-search compaction compatibility
+
+| Upstream behavior / feature | Provider and consumer path | Implementation / UI | Evidence and conclusion |
+| --- | --- | --- | --- |
+| xAI hosted tools report cumulative input over all reasoning steps; Codex 0.163.0-alpha.10.2 uses last response total for active-context limits | Grok 4.7 Fast -> xAI Responses -> Codex desktop | No usage rewriting; native standalone search feature separates search from inference; no new UI | Incident rollout 01a14e14-e6ab-7d41-896c-4880f9661b2e recorded input 1,128,483, then a compaction with input 43,035, then search input 1,015,785. Root cause reproduced with installed engine and current catalog. |
+| Codex standalone search selects a Codex credential, not a Grok inference model | Codex web.run -> local bridge -> gateway /v1/alpha/search -> existing Codex search subscription | scripts/codex-yeutech-search.mjs; bridge and installer; features.standalone_web_search=true on client | Live search with Grok model returned 503, missing model returned 400, verified search model gpt-6.1-sol returned 200 with non-empty results. Route selection is search-only; Grok inference and real usage unchanged. |
+| Regression boundaries | Local Codex client; all its models use standalone search when enabled | scripts/test-codex-standalone-search.mjs; existing auth/error tests | 19 tests passed, including actual installed engine: old hosted-search cumulative usage causes 1 compaction; independent search makes 1 search and 2 inference calls with 0 compactions; genuine oversized context still causes 1 compaction. 500K window and 400K threshold unchanged. OAuth replacement, Live, Fast payload and 429 display preserved. Go build passed. |
+| Other consumers and native X search | Workbench, novel, study and arbitrary third-party clients | No changes in this client-specific fix | Not claimed fixed or tested here. They retain their existing native tool routing and billing. Standalone Codex search is not xAI-native X search. Production proxy/Tokyo/manager installation is not authorized by this local repair. |
+
+Official behavior checked against xAI `developers/tools/tool-usage-details` and
+the installed Codex engine plus OpenAI's core/session/context_window.rs and
+core/context_manager/history.rs. Live end-to-end and activation evidence must
+be recorded separately from these deterministic tests; do not resume the user's
+interrupted thread as a test. See deploy/MAINTENANCE_CN.md for rollout boundaries.

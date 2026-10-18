@@ -65,3 +65,42 @@ NAS 主代理的 Opus 短流式调用首段 1.380 秒。长会话推理耗时须
 长期边界。发现上游实现与上述约束冲突时，先语义合并与验证，不通过覆盖生产
 配置来消除差异。网络路径变化或出现大请求异常时，使用 `transport_probe.py`
 做小规模无模型传输复验；短模型请求和真实长会话验收分别记录。
+
+## 2026-10-18 Codex / Grok 搜索与上下文统计隔离
+
+Grok 托管搜索的 `usage.input_tokens` 是服务端多步推理的累计用量，不能当成
+当前对话的上下文长度。现场已出现刚压缩后约 19K 的客户端估算，接一次搜索就
+返回 1,015,785 输入 token 并再次压缩；19K 不是包含全部工具声明的上游精确值。
+禁止靠抬高窗口、关闭压缩或改小真实 usage 掩盖问题。
+
+本机 Codex 使用已有的独立搜索功能：`[features] standalone_web_search = true`，
+provider 保留 `supports_standalone_web_search = true`。这样搜索是 `web.run`
+客户端工具，经 `/v1/alpha/search` 单独请求，不再随 Grok 的整段对话托管执行。
+此开关作用于本机 Codex 的所有模型，不更改其他消费者的搜索能力或代理目录。
+
+独立搜索使用现有 Codex 订阅搜索服务，**不是 Grok 原生 X 搜索**；Grok 推理仍
+使用原 Grok 账户。必须明确区分搜索与推理的额度来源，不声称搜索消耗 SuperGrok
+额度或新增 Grok 原生能力。当前实测的独立搜索服务型号为 `gpt-6.1-sol`；桥接
+只在明确 Codex 的 `/v1/alpha/search` 中把非 GPT 型号改为该搜索服务型号。
+`/v1/responses`、压缩、Live、历史、推理模型、请求参数及响应 usage 全部原样。
+可通过 `YEUTECH_CODEX_SEARCH_MODEL` 指定另一个经过实测的 Codex 搜索型号，
+不得仅因模型目录有名称就改路由；搜索失败显式返回，不自动退回托管搜索。
+
+安装时三个模块必须成套复制：`codex-yeutech-auth-bridge.mjs`、
+`codex-yeutech-errors.mjs`、`codex-yeutech-search.mjs`。先备份当前配置与模块，
+核对 `/_yeutech/health` 空闲，再对桥接进程发送 SIGTERM 平滑结束，等待现有
+LaunchAgent 自动拉起；不得使用强制 kickstart 或打断已有请求。
+配置对新加载的会话生效；不得恢复用户已停止的会话或篡改旧 token 记录。
+旧会话保留的累计计数可能让它在下次继续时先压缩一次，这不等于再次搜索误触发。
+
+回归命令：
+
+```sh
+CODEX_TEST_BIN=<installed-codex-engine> CODEX_TEST_CATALOG=<current-catalog.json> \
+  node --test --test-concurrency=1 scripts/test-codex-standalone-search.mjs \
+  scripts/test-codex-yeutech-auth-bridge.mjs
+```
+
+引擎测试只使用回环模拟服务和临时会话：复现旧累计计数触发压缩、验证独立搜索
+无误压缩，并验证真实超阈值仍压缩。真实调用和本机生效回执另行记录，不能用此
+模拟测试宣称整个生产链路已经验收。代理、东京及配套管理站仍由用户触发安装。

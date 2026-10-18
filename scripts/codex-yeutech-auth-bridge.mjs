@@ -5,6 +5,7 @@ import http from "node:http";
 import https from "node:https";
 import { randomUUID } from "node:crypto";
 import { isCodexStreamingResponse, rateLimitDisplay } from "./codex-yeutech-errors.mjs";
+import { isCodexStandaloneSearch, readSearchBody, routeStandaloneSearch } from "./codex-yeutech-search.mjs";
 
 const listenHost = process.env.YEUTECH_CODEX_BRIDGE_HOST || "127.0.0.1";
 const listenPort = Number(process.env.YEUTECH_CODEX_BRIDGE_PORT || "18401");
@@ -122,10 +123,10 @@ function forwardResponse(request, response, upstreamResponse) {
   upstreamResponse.on("error", (error) => response.destroy(error));
 }
 
-const server = http.createServer((request, response) => {
+const server = http.createServer(async (request, response) => {
   if (request.method === "GET" && request.url === "/_yeutech/health") {
     response.writeHead(200, { "content-type": "application/json" });
-    response.end(JSON.stringify({ ok: true, version: "20261016-rate-limit-display-v1", activeRequests, upstream: upstreamBase.origin, liveUpstream: liveBase.origin }));
+    response.end(JSON.stringify({ ok: true, version: "20261018-standalone-search-v1", activeRequests, upstream: upstreamBase.origin, liveUpstream: liveBase.origin }));
     return;
   }
 
@@ -138,6 +139,24 @@ const server = http.createServer((request, response) => {
   response.once("finish", finishRequest);
   response.once("close", finishRequest);
 
+  let searchBody;
+  if (isCodexStandaloneSearch(request)) {
+    try {
+      if (request.headers["content-encoding"] && request.headers["content-encoding"] !== "identity") {
+        throw Object.assign(new Error("Compressed standalone search is unsupported"), { statusCode: 415 });
+      }
+      searchBody = routeStandaloneSearch(await readSearchBody(request), process.env.YEUTECH_CODEX_SEARCH_MODEL);
+    } catch (error) {
+      if (!response.destroyed) {
+        response.writeHead(error.statusCode || 400, { "content-type": "application/json" });
+        response.end(JSON.stringify({ error: { message: "Invalid or oversized standalone search request", type: "bridge_search_error" } }));
+      }
+      request.resume();
+      return;
+    }
+    if (request.aborted || response.destroyed) return;
+  }
+
   const live = isLiveRequest(request.url);
   const target = live ? liveBase : upstreamBase;
   const transport = live ? liveTransport : upstreamTransport;
@@ -145,6 +164,7 @@ const server = http.createServer((request, response) => {
   let headers;
   try {
     headers = requestHeaders(request.headers, target, live);
+    if (searchBody) headers["content-length"] = String(searchBody.length);
   } catch (error) {
     response.writeHead(503, { "content-type": "application/json" });
     response.end(JSON.stringify({ error: { message: error.message, type: "bridge_auth_error" } }));
@@ -175,7 +195,8 @@ const server = http.createServer((request, response) => {
   response.on("close", () => {
     if (!response.writableEnded) upstreamRequest.destroy();
   });
-  request.pipe(upstreamRequest);
+  if (searchBody) upstreamRequest.end(searchBody);
+  else request.pipe(upstreamRequest);
 });
 
 server.listen(listenPort, listenHost, () => {
