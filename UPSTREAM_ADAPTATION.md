@@ -221,6 +221,17 @@ Runtime backup and exact boundaries are documented in `deploy/claude-edge/README
 | Codex standalone search selects a Codex credential, not a Grok inference model | Codex web.run -> local bridge -> gateway /v1/alpha/search -> existing Codex search subscription | scripts/codex-yeutech-search.mjs; bridge and installer; features.standalone_web_search=true on client | Live search with Grok model returned 503, missing model returned 400, verified search model gpt-6.1-sol returned 200 with non-empty results. Route selection is search-only; Grok inference and real usage unchanged. |
 | Regression boundaries | Local Codex client; all its models use standalone search when enabled | scripts/test-codex-standalone-search.mjs; existing auth/error tests | 19 tests passed, including actual installed engine: old hosted-search cumulative usage causes 1 compaction; independent search makes 1 search and 2 inference calls with 0 compactions; genuine oversized context still causes 1 compaction. 500K window and 400K threshold unchanged. OAuth replacement, Live, Fast payload and 429 display preserved. Go build passed. |
 | Other consumers and native X search | Workbench, novel, study and arbitrary third-party clients | No changes in this client-specific fix | Not claimed fixed or tested here. They retain their existing native tool routing and billing. Standalone Codex search is not xAI-native X search. Production proxy/Tokyo/manager installation is not authorized by this local repair. |
+| xAI custom code-mode tool payload mismatch | Real installed Codex -> Grok -> functions.exec | scripts/refresh-yeutech-model-catalog selects direct ordinary tools for actual xai provider metadata | Two isolated real probes stopped at their validation deadlines with incompatible exec payloads; they were failures, not successful search acceptance. Ordinary-tool mode then completed one standalone search and the final Grok response, engine exit 0. |
+| Actual local client activation | Existing provider IDs and OAuth loopback bridge; existing Grok account for inference and Codex subscription for independent search | Three bridge modules plus catalog generator installed; existing LaunchAgent drained at activeRequests=0, SIGTERM only | Health version 20261018-standalone-search-v1. Config adds standalone_web_search=true. Deep comparison confirms only two Grok tool_mode fields changed in the 15-model catalog; all windows, 80% thresholds, other model data, Fast fields and history unchanged. Backup: ~/.codex/backups/grok-search-20261018-1725. |
+
+The successful minimal live probe used Grok 4.7 Fast with low effort in a new,
+ephemeral, isolated CLI session. One web_search began and completed, followed by
+the final answer and turn.completed. Reported real turn usage was input 414652,
+cached input 2304, output 134, reasoning output 92. This is cumulative turn
+usage, not a claim that the final context occupied 414652 tokens, nor evidence
+of a granted Fast service tier. The interrupted user conversation was not resumed.
+The direct-tool catalog was additionally run through the same installed-engine
+regressions (5/5 passed); unchanged bridge/auth regression suite passed 14/14.
 
 Official behavior checked against xAI `developers/tools/tool-usage-details` and
 the installed Codex engine plus OpenAI's core/session/context_window.rs and

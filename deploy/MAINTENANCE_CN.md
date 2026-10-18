@@ -78,6 +78,13 @@ provider 保留 `supports_standalone_web_search = true`。这样搜索是 `web.r
 客户端工具，经 `/v1/alpha/search` 单独请求，不再随 Grok 的整段对话托管执行。
 此开关作用于本机 Codex 的所有模型，不更改其他消费者的搜索能力或代理目录。
 
+真实 Codex 回合还发现 xAI 将 `custom` 的 code-mode `exec` 转成 `function_call`
+却不还原，客户端报 `tool exec invoked with incompatible payload`。因此目录生成器
+按真实供应商 `.type/.owned_by == xai` 将本机模型 `tool_mode` 设置为 `direct`，
+使用普通函数工具；不得继续用 `code_mode_only` 假装该自定义协议已打通。此次
+只改变两个 Grok 条目的工具模式，其他 13 个条目、窗口、速度、推理档位均未变。
+更新 `refresh-yeutech-model-catalog` 的运行副本，避免定时刷新把错误模式恢复。
+
 独立搜索使用现有 Codex 订阅搜索服务，**不是 Grok 原生 X 搜索**；Grok 推理仍
 使用原 Grok 账户。必须明确区分搜索与推理的额度来源，不声称搜索消耗 SuperGrok
 额度或新增 Grok 原生能力。当前实测的独立搜索服务型号为 `gpt-6.1-sol`；桥接

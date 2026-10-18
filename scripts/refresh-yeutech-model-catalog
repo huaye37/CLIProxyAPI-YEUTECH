@@ -179,7 +179,12 @@ fi
             use_responses_lite: false,
             node_repl_auto_review_required: false,
             node_repl_disabled: false,
-            tool_mode: "code_mode_only",
+            # The xAI executor converts custom tools to function calls without
+            # restoring their custom payload kind. Codex code-mode exec then
+            # fails with "tool exec invoked with incompatible payload".
+            # Use the verified ordinary-function route until that roundtrip is
+            # supported; do not infer custom-tool compatibility from listing.
+            tool_mode: (if .type == "xai" or .owned_by == "xai" then "direct" else "code_mode_only" end),
             multi_agent_version: "v2",
             experimental_supported_tools: [],
             base_instructions: "You are Codex, a coding agent. Follow system, developer, and user instructions, preserve existing user work, and continue until the requested outcome is genuinely handled. Work efficiently: prefer targeted inspection, avoid rereading the same files or images, broad repeated searches, and duplicate tests; parallelize independent read-only checks when useful. Before the first tool call, send a brief user-visible commentary update in the language used by the user, stating your understanding and immediate next action. During tool-using work, send another concise commentary update after each meaningful milestone and never leave the user without an update for more than 60 seconds. Each update should say what is complete, what is happening now, and any blocker or next step. Do not reveal hidden chain-of-thought. In the final response, lead with the outcome and distinguish completed changes, verification, and remaining unknowns."
