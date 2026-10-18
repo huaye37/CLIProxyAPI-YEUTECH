@@ -78,3 +78,15 @@ func TestSourceSnapshotRejectsChangedOrRemovedRegistration(t *testing.T) {
 		}
 	}
 }
+
+func TestSourceSnapshotAcceptsCanonicalReformat(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "auth.json")
+	a := &Auth{ID: t.Name(), Provider: "codex"}
+	a.SetSourceFileSnapshot(path, []byte(`{"type":"codex","prefix":"same"}`))
+	if err := os.WriteFile(path, []byte("{\n \"prefix\": \"same\", \"type\": \"codex\"\n}"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if !a.sourceFileSnapshotCurrent() {
+		t.Fatal("format-only changes should preserve the source fence")
+	}
+}

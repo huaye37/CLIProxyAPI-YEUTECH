@@ -384,3 +384,16 @@ func TestGetDevinModelsFallback(t *testing.T) {
 		t.Errorf("info.DisplayName = %q, want SWE-2", info.DisplayName)
 	}
 }
+
+func TestXAILiteRegistration(t *testing.T) {
+	for _, m := range WithXAIBuiltins(nil) {
+		if m.ID == "grok-imagine-video-1.5-lite" {
+			info := EnrichCapabilityInfo(m)
+			if len(info.SupportedWorkloads) != 1 || info.SupportedWorkloads[0] != ModelWorkloadVideoGeneration {
+				t.Fatal("Lite must expose video generation only")
+			}
+			return
+		}
+	}
+	t.Fatal("Lite model is missing")
+}

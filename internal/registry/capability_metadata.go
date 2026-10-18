@@ -73,7 +73,7 @@ func EnrichCapabilityInfo(runtimeInfo *ModelInfo) *ModelInfo {
 					merged.SupportedParameters = append(merged.SupportedParameters, "quality")
 				}
 			}
-		case xaiBuiltinVideoModelID, xaiBuiltinVideo15ModelID, xaiBuiltinVideo15PreviewID:
+		case xaiBuiltinVideoModelID, xaiBuiltinVideo15ModelID, xaiBuiltinVideo15LiteID, xaiBuiltinVideo15PreviewID:
 			input, output, workloads = []string{"text", "image", "video"}, []string{"video"}, []string{ModelWorkloadVideoGeneration}
 		case xaiBuiltinSpeechModelID, xaiBuiltinSpeechVoiceModelID:
 			input, output, workloads = []string{"text"}, []string{"audio"}, []string{ModelWorkloadSpeechGeneration}
