@@ -202,3 +202,14 @@ ported into the split UI modules rather than lost in the presentation merge.
 All-business production UI acceptance, maximum context, Fast grant and public HK
 media routing are separate pending gates. No production process was restarted.
 Final candidate identities must be recorded separately after staging.
+
+## 2026-10-18: Tokyo 413 transport-limit correction
+
+| Feature / source | Provider and call chain | Implementation / frontend | Evidence and conclusion |
+| --- | --- | --- | --- |
+| 64 MiB edge rejection of an existing 97,919,776-byte request | Codex -> unchanged local bridge -> NAS -> existing HK SSH relay -> Tokyo Claude | `deploy/claude-edge/config.example.yaml` sets 128 MiB; `set_body_limit.py` performs guarded, backed-up hot reload; no new frontend or parameter | Applied to the existing c91552e2 Tokyo runtime, not a new binary. Same image/start time and zero restarts. Config changed only the body limit, gate restored. |
+| Memory and protocol safety | Exact Tokyo image, isolated on NAS, synthetic Claude provider only | `deploy/claude-edge/large_body_probe.py` exercises actual Chat/Responses translation and existing admission | Original-size plus 128 MiB requests passed; concurrent large request 503, oversized 413; peak 1,734,488,064 bytes, no OOM, no paid inference. Test-harness startup/stream fixtures corrected before production. |
+| Existing private transport | NAS -> HK -> Tokyo | Full 97,919,776-byte invalid JSON through existing tunnel | 400 after body admission, 9.672 seconds. No tunnel, gateway or credential change and no paid call. Original conversation retry is still user acceptance, not established by this probe. |
+| Other consumers and budgets | Local client, workbench, novel text/image, Kaoyan assistant/explanation/scoring and media consumers | Existing shared contracts unchanged | No context/compression/model policy, Fast/Ultrafast, quota, history or media parameter change. NAS limit remains unchanged. Shared binary candidates require normal paired staging after this source commit; installs remain manual. |
+
+Runtime backup and exact boundaries are documented in `deploy/claude-edge/README.md`.

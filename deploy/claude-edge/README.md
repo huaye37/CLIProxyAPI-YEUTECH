@@ -13,8 +13,11 @@ No credentials belong in this directory or in Git.
 - Publish container ports only on `127.0.0.1`. NAS uses port 18340.
 - `YEUTECH_MEMORY_MAX_REQUESTS=2` reduces the core admission limit to two. It
   cannot raise the original ceiling. The server limits decoded requests to
-  64 MiB, and the existing memory guard reserves compressed/chunked bodies
+  128 MiB, and the existing memory guard reserves compressed/chunked bodies
   conservatively before reading. No extra HTTP proxy or stream deadline is added.
+- This edge limit is intentionally below the shared 256 MiB NAS ceiling. Keep
+  the 3 GiB container, 2 GiB Go soft budget, two requests and one large-request
+  admission rule together. Do not equate transport bytes with model tokens.
 - Request logging and the management panel are disabled. Application logs rotate.
 - The server does not rewrite caller system prompts as a different application.
 - `YEUTECH_STRIP_CLIENT_METADATA=1` is enabled only on this isolated edge. The
@@ -280,3 +283,35 @@ run Docker Compose `up -d --no-deps tunnel` and recheck health/inference.
 That restores the old direct path, whose throughput was poor at diagnosis time.
 The new route adds a Hong Kong availability dependency; automatic failover and
 long-running workload acceptance have not been claimed as tested.
+
+### 2026-10-18: request-body limit hot reload
+
+At 15:18 Shanghai, a 97,919,776-byte Codex request forwarded to the Tokyo
+chat-completions endpoint was rejected by the old 64 MiB limit. NAS and Tokyo
+had no OOM or container restart. The template and live Tokyo setting now use
+128 MiB; model context, history, credentials, catalog, tunnels and concurrency
+are unchanged.
+
+`large_body_probe.py` tests the exact runtime image on a separate host with a
+synthetic Claude provider and no production credentials. The original size and
+128 MiB Chat Completions/Responses requests completed, a second large request
+returned retryable 503, and 128 MiB plus one byte returned 413. Peak cgroup
+memory was 1,734,488,064 bytes under the unchanged 3 GiB container limit. Early
+test harness attempts changed the file before its watcher was ready and used
+an incomplete streaming fixture; the final probe explicitly waits for watcher
+startup and implements both Claude response shapes. No paid calls were made.
+
+The guarded `set_body_limit.py` checks expected config SHA256, exact image,
+operation/prepare locks, node jobs and idle state; closes the existing gate,
+backs up configuration with mode 0600, preserves the watched config inode,
+and restores the original gate. A deliberately truncated invalid request
+proves admission without invoking a model. On October 18 at 15:39 Shanghai,
+the image and start time stayed unchanged and restart count remained zero.
+Backup: `/opt/yeutech-claude-edge/backups/body-limit-128m-20261018T073900Z`.
+
+A separate full-size invalid-JSON probe through the existing NAS-HK-Tokyo
+tunnel returned the expected 400 in 9.672 seconds after admitting all
+97,919,776 bytes. This verifies transport admission, not successful completion
+of the user's original long conversation; the user must retry that turn.
+No NAS/edge binary upgrade was installed. Future ordinary deployments must
+preserve the runtime config and must not copy an older 64 MiB template over it.
