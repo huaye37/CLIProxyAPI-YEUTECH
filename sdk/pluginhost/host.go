@@ -323,6 +323,7 @@ func thinkingSupportToPlugin(thinking *internalregistry.ThinkingSupport) *Thinki
 		Max:            thinking.Max,
 		ZeroAllowed:    thinking.ZeroAllowed,
 		DynamicAllowed: thinking.DynamicAllowed,
+		DisableType:    thinking.DisableType,
 		Levels:         cloneStringSlice(thinking.Levels),
 	}
 }
