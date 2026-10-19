@@ -188,6 +188,10 @@ func TestVideosModelValidationAllowsXAIVideoModel(t *testing.T) {
 		"xai/grok-imagine-video-1.5-preview",
 		"x-ai/grok-imagine-video-1.5-preview",
 		"grok/grok-imagine-video-1.5-preview",
+		"grok-imagine-video-1.5-lite",
+		"xai/grok-imagine-video-1.5-lite",
+		"x-ai/grok-imagine-video-1.5-lite",
+		"grok/grok-imagine-video-1.5-lite",
 	} {
 		if !isSupportedVideosModel(model) {
 			t.Fatalf("expected %s to be supported", model)
@@ -207,6 +211,82 @@ func TestVideosModelValidationAllowsXAIVideoModel(t *testing.T) {
 	}
 	if isSupportedVideosModel("codex/grok-imagine-video-1.5-preview") {
 		t.Fatal("expected codex/grok-imagine-video-1.5-preview to be rejected")
+	}
+}
+
+func TestVideosLiteRetainsModelAcrossCreateAndRetrieve(t *testing.T) {
+	const lite = "grok-imagine-video-1.5-lite"
+	for _, prefix := range []string{"", "xai/", "x-ai/", "grok/"} {
+		for _, endpoint := range []string{xaiVideosGenerationsAPI, xaiVideosEditsAPI, xaiVideosExtensionsAPI, openAIVideosPath} {
+			t.Run(prefix+endpoint, func(t *testing.T) {
+				resetVideoAuthBindingsForTest(t)
+				executor := &videoAuthCaptureExecutor{requestID: "video-lite-bound"}
+				manager := coreauth.NewManager(nil, &coreauth.RoundRobinSelector{}, nil)
+				manager.RegisterExecutor(executor)
+				for _, model := range []string{defaultXAIVideosModel, xaiVideos15Model, lite} {
+					authID := "auth-" + model
+					auth := &coreauth.Auth{ID: authID, Provider: "xai", Status: coreauth.StatusActive}
+					if _, err := manager.Register(context.Background(), auth); err != nil {
+						t.Fatal(err)
+					}
+					registry.GetGlobalRegistry().RegisterClient(authID, auth.Provider, []*registry.ModelInfo{{ID: model}})
+					manager.RefreshSchedulerEntry(authID)
+					t.Cleanup(func() { registry.GetGlobalRegistry().UnregisterClient(authID) })
+				}
+				handler := NewOpenAIAPIHandler(apihandlers.NewBaseAPIHandlers(&sdkconfig.SDKConfig{}, manager))
+				createHandler := handler.XAIVideosGenerations
+				switch endpoint {
+				case xaiVideosEditsAPI:
+					createHandler = handler.XAIVideosEdits
+				case xaiVideosExtensionsAPI:
+					createHandler = handler.XAIVideosExtensions
+				case openAIVideosPath:
+					createHandler = handler.VideosCreate
+				}
+				body := `{"model":` + strconv.Quote(prefix+lite) + `,"prompt":"make a video","duration":1,"resolution":"480p","aspect_ratio":"16:9","generate_audio":false}`
+				create := performVideosEndpointRequest(t, http.MethodPost, endpoint, "application/json", strings.NewReader(body), createHandler)
+				if create.Code != http.StatusOK {
+					t.Fatalf("create status = %d: %s", create.Code, create.Body.String())
+				}
+				route, requestPath := videosPath+"/:request_id", videosPath+"/"+executor.requestID
+				retrieveHandler := handler.XAIVideosRetrieve
+				if endpoint == openAIVideosPath {
+					route, requestPath = openAIVideosPath+"/:video_id", openAIVideosPath+"/"+executor.requestID
+					retrieveHandler = handler.VideosRetrieve
+					if got := gjson.GetBytes(create.Body.Bytes(), "model").String(); got != lite {
+						t.Fatalf("response model = %q, want %s", got, lite)
+					}
+				}
+				retrieve := performVideosRouteRequest(t, http.MethodGet, route, requestPath, "", nil, retrieveHandler)
+				if retrieve.Code != http.StatusOK {
+					t.Fatalf("retrieve status = %d: %s", retrieve.Code, retrieve.Body.String())
+				}
+				if endpoint == openAIVideosPath {
+					if got := gjson.GetBytes(retrieve.Body.Bytes(), "model").String(); got != lite {
+						t.Fatalf("retrieve model = %q, want %s", got, lite)
+					}
+				}
+				authIDs, models, payloadModels := executor.AuthIDs(), executor.Models(), executor.PayloadModels()
+				if len(authIDs) != 2 || authIDs[0] != "auth-"+lite || authIDs[1] != authIDs[0] {
+					t.Fatalf("authIDs = %v, want Lite auth for both calls", authIDs)
+				}
+				if len(models) != 2 || models[0] != lite || models[1] != lite {
+					t.Fatalf("models = %v, want Lite for both calls", models)
+				}
+				if len(payloadModels) != 2 || payloadModels[0] != lite {
+					t.Fatalf("payload models = %v, want Lite create payload", payloadModels)
+				}
+				binding, ok := videoAuthBindings.getBinding(executor.requestID)
+				if !ok || binding.authID != "auth-"+lite || binding.model != lite {
+					t.Fatalf("unexpected binding: %+v, exists=%v", binding, ok)
+				}
+			})
+		}
+	}
+	for _, model := range []string{"codex/" + lite, lite + "-unknown"} {
+		if isSupportedVideosModel(model) {
+			t.Fatalf("expected %s to be rejected", model)
+		}
 	}
 }
 
