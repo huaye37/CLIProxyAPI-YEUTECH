@@ -148,3 +148,18 @@ enable_request_compression = false
 保留 `openai-http` 与 `yeutech` 配置供历史会话使用。最终 Dot 侧栏和新会话实际
 调用由客户端重启后的用户验收确认。源码测试、隔离真实调用、本机安装、Dot
 可见性及 NAS/东京发布必须分别报告。
+
+## 2026-10-24 v8.0.41 单仓发布身份
+
+唯一维护源码为 `yeutech/apps/model`，配套管理站为 `yeutech/apps/api`。
+旧 `CLIProxyAPI-YEUTECH/yeutech-capability-v15` 只保留兼容发布镜像分支，
+其完整树必须与单仓 `apps/model` 完全一致，不形成第二套编辑入口。
+官方 `v8.0.41` 的真实 tag 提交必须是该发布分支及单仓发布提交的祖先；
+单仓映射记录放在代理子树之外，分别记录代理发布 SHA、单仓 SHA 与 tree。
+候选 manifest、GitHub compare 检查与二进制版本须使用同一代理发布身份。
+
+该版本 `go.mod` 要求 Go 1.26.10，不能降低声明迁就旧本机 Go。旧 CI workflow
+因无 workflow scope 保持原字节，实际本地/候选构建仍必须使用满足要求的工具链。
+上游新增 SIWC、Vertex OpenAPI、Home 遥测/迁移和搜索缓存均为可选；不因合并
+自动绑定账号、开启供应商、改变东京网络/隐私边界或启用额外缓存。
+逐项适配、发现并修复的测试失败及未实测边界见同日 UPSTREAM_ADAPTATION.md。

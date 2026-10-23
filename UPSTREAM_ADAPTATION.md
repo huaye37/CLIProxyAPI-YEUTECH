@@ -257,3 +257,64 @@ https://learn.chatgpt.com/docs/config-file/config-advanced . Keep the existing
 the application bundle, feature gates, account, context limits or conversation
 history to restore the sidebar entry. NAS/Tokyo/manager candidate readiness is a
 separate manifest/image gate and is not implied by this local bridge result.
+
+## 2026-10-24: official v8.0.41 semantic integration
+
+The official tag is `8289ec4c71ad914d0612c2776352b76ba3d355a6`, 112 commits
+(100 non-merge commits) after v8.0.33. The release is merged as a real Git parent,
+not copied files with an invented ancestry marker. The legacy compatibility
+branch is a publication mirror; `huaye37/yeutech/apps/model` remains the only
+maintenance authority. The parent workflow must verify exact model-tree equality
+and record both mirror and monorepo identities before paired staging.
+
+The starting mirror `5e764e547001e076f24a3f0840a5ce5d45f69ec2` already contains
+Lite video routing and `c91552e2` diagnostics. The verified monorepo HTTP fallback,
+draining installer, three bridge modules and passive preview checker were carried
+forward before the merge. No production credentials, provider settings, gateway,
+Tokyo network profile, client config or running process are changed by this tree.
+
+| Upstream commits / function | Current provider and call chain / implementation | Frontend / consumers | Evidence and conclusion |
+| --- | --- | --- | --- |
+| `d5816d5e`, `7484a521`, `5fe203d5`, `57a12996`, `d69962e4`, `8bd17955`: snapshot, file-read and edit fencing | Existing NAS/Tokyo providers; management -> file watcher -> auth manager; `internal/watcher`, `sdk/cliproxy/auth/conductor_lifecycle.go`, `internal/api/handlers/management` | Existing account/config forms; no new generation setting | Semantic merge retains local source digest, upstream runtime cooldown watermark and pending provider reloads. `ClearFileSnapshot` clears both observation representations for explicit persisted login handover; stale observations remain rejected. Real-file Vertex fixture replaces a nonexistent hardcoded path. Full tests and focused repeated race checks are the gate; no credential rotation is performed. |
+| `feb63984`, `4138edb1`, `904ec710`, `2f6f2924`: refresh, request-scoped 401, credits recovery and guardian affinity | Existing Codex/Antigravity and shared auth selector; `conductor_refresh`, `conductor_cooldown`, `selector`, `session_cache` | Existing quota/retry and agent flows, no new control | Upstream regression tests retained. A request-only 401 does not disable a credential; parent affinity remains same-provider eligible. No real refresh/credits exhaustion or cross-account claim is inferred. |
+| `d50a1995`, `6bbd2cb7`, `bb2d8f82`, `88041f0c`, `ae3ee3be`, `06fd5b8b`, `d946c4fb`: SIWC bind/status and Codex exclusion | Codex credential manager and `/v8/management/oauth/siwc/*`; `codex_siwc_bind.go`, management SIWC files, Codex auth builder | Optional new binding UI is not enabled; normal Codex clients remain original non-SIWC credentials | Retained v8-only endpoints, symlink/account replacement fences and tests. Existing accounts are not rebound. New SIWC UI is not required for the scoped existing routes and is not claimed available. |
+| `0db19025`, `e7d4c731`, `b9bb031d`, `9e79552f`: search identity, history and WebSocket authorization | Local Codex -> loopback bridge -> alpha search / Responses; Codex executor/search, response steering and WebSocket handlers | Existing search and agent tools, no new UI | Original OAuth search selection and per-turn authorization preserved. HTTP fallback stays local; 429 failure semantics and token isolation retained. Installed-engine loopback tests cover both wire encodings; no repeated paid call. |
+| `8df4e42a`, `99d1698f`, `009f8d7a`, `376015c3`: direct tools, explicit parallel=false, standalone effort and commentary | All non-Codex catalog routes / Claude and Codex translators; `internal/client/codex/models`, thinking and translator packages | Existing local model picker and saved independent effort/speed settings | Non-Codex catalog correctly advertises direct tool mode and disables Responses-lite. Tests verify required nullable keys, explicit parallel=false and effort translation. GPT 500k and 80% compression policy unchanged. |
+| `c449529e`, `aadb34f9`, `c2dfec28`, `d495e24c`, `43f27e3a`: Claude stop, refusal, overflow and pause | Tokyo Claude -> Chat/Responses translator -> all text consumers; Claude executor and translator stop-reason tests | Existing error/retry UI; no new setting | Regression fixtures retain tool_use, length/incomplete and explicit context_length_exceeded. No fabricated success or extra compaction retries. Real full-window/long-conversation acceptance is not claimed. |
+| `9d453bc0`, `ab9c06b4`, `cddc9bb8`, `df860eb9`: Claude search-result restore/cache | Claude Responses session cache; `internal/cache`, Claude web-search helpers/translators | Optional operator `client.codex.web-search-result-cache`; disabled by default, no automatic UI toggle | Session/credential isolation and deferred tool-output tests retained. Existing independent Codex search continues unchanged. Home KV integration is inapplicable while Home is not configured. |
+| `084b9ca7`, `20c9095c`, `d2e61d19`, `df07b1e5`, `e1fb2521`: Claude cloak/header, empty text and empty object tools | Tokyo OAuth and Claude API-key paths; Claude request, fingerprint and tool schema code | No newly enabled cloak or identity control | Existing Tokyo Linux/x64, Asia/Tokyo optional metadata filter and private routing stay unchanged. Tests cover default/passthrough headers and exact tool arguments; no regional/account safety claim. |
+| `a4660260`, `88ac14f3`, `772df04b`, `38706390`, `e5434f65`, `7a0b7563`, `674dbe8f`, `cc5682c5`, `be9fbd94`, `a68c7d8e`: reasoning signature replay | Existing Gemini/Antigravity/Codex/xAI and generic Responses translation; `internal/signature`, `internal/translator` | Tool/result continuation for all text consumers; no new UI | Cross-family rejection, ordered thought/function signatures and private RouterSuffix stripping tests retained. Meta-specific replay supported in code, no Meta account enabled. |
+| `c558d320`, `154d5144`, `29150a22`: schema references and sibling constraints | Gemini/Antigravity tools -> `internal/util/gemini_schema.go` -> upstream | Existing tools; no frontend parameter | Ref sibling/literal preservation and readOnly/writeOnly cleanup regressions retained; schemas are not relaxed to conceal errors. |
+| `80aa2b1d`, `02e9e852`, `45501610`, `b12db8c3`, `3f5d3a16`, `83cb1b95`: Gemini/Antigravity replay, Hub, finish and limits | NAS Antigravity/Gemini executor and catalog; provider caches and Gemini translation | Existing model catalogs and error paths across consumers | Cache version invalidation, mixed tools, blocked prompt and terminal usage tests. No provider added or account/region changed. Token-limit metadata is not a full-window invocation proof. |
+| `d9451cb6`, `d44f8682`, `88732ad5`: Vertex partner/OpenAPI routing | Optional Vertex executor/config/OAuth model settings | No configured Vertex supplier in scoped deployment; no UI activation | New settings and regional endpoints retained and tested. Not applicable to active routes; no API key or paid partner model enabled. |
+| `45ccd9c3`, `8a3e7622`, `5026f365`: xAI aliases and outbound User-Agent | Existing xAI image/video/speech and text paths; image handler and xAI executor | Independent media clients; no text effort imposed on media | Prefix/vendor alias fixtures and existing Lite video create/edit/extend/polling tests preserved. Caller metadata filter remains effective on Tokyo. No paid video/image generation or playback performed. |
+| `07b5a7a1`, `b90190db`, `e198f3cd`, `7db0935a`, `8289ec4c`, `f434192a`, `9d463e39`: usage, service tier and TTFT | Shared usage reporters -> consumer usage displays; Claude/Codex/xAI/OpenAI-compatible and Interactions routes | Existing usage/speed controls, no tier authorization change | Upstream records effective outbound tier after payload rules and provider speed signals; request/default is not asserted to be a granted Fast/Ultrafast tier. Input/usage not rewritten to hide compaction. Token/TTFT fixtures retained. |
+| `344e0ef9`: Kimi/Meta remote compaction v2 | Optional Kimi/Meta Responses executors | No such active supplier enabled | Code and tests retained; not applicable to currently enabled routes. No automatic context policy change. |
+| `4846a289`, `13874f1f`, `1ad175b6`, `50cfd238`, `a014ba0e`: plugin body, model callbacks and scheduler | Existing pluginhost / management model definition reads; plugin SDK | Existing configured plugins only, no new plugin installed | Decoded body slots, per-credential model lookup, scheduler lock and race fixtures retained. Optional host API addition does not itself provide a consumer feature. |
+| `befcba23`, `e45f9426`, `888f2382`, `4d34502f`, `07feedf7`: Home rebalance, latency, RESP bounds and model errors | Optional Home control path; `internal/home`, API Home routes | No configured Home cluster; no UI activation | Local fixture caught blocking RPC cancellation through redis pool Close; direct owned-socket cancellation restores all four heartbeat expiry tests without touching dispatch sockets. RESP bounds, telemetry and catalog tests retained. No Home server rollout. |
+| `5de9de9a`, `030d17ed`, `77af3795`, `80d04e19`, `83189e5f`, `c0e619d5`, `95e15777`, `3b153145`, `f4a2d040`, `74e7ff60`, `ac3cd66f`, `ad09c779`: translator allocation/cache improvements | All existing translated text/tool streams; corresponding translator/util packages | No UI change | Upstream correctness and allocation tests retained, including race-specific allocation exclusion. No benchmark or latency promise from compilation. |
+| `633a294f`: Go/dependency update; `4337f1f0`: log path escaping | Build toolchain, Git-backed store and access logger | No UI change | Use actual Go 1.26.10, never lower go.mod to installed 1.26.4. New go-git packhandle missing-file error classified narrowly; corruption fixture reopens unlinked pack handles. Missing auth/config and permission errors remain failures. Log escaping regression retained. |
+| `ceb045a1`: release workflow; `d232ee10`, `ce07d189`, `3f0cef01`: sponsors/docs | CI and documentation only | None | Upstream release workflow edit intentionally not carried to mirror because workflow scope is unavailable; workflow bytes equal old mirror. Local builds still use required Go 1.26.10. Sponsor docs are not runtime capability or endorsement. |
+
+Two textual conflicts were resolved explicitly: `Watcher` has one
+`configApplyMu` plus upstream `pendingProviderReloadAuths`; OpenAI-compatible
+`wire-api: responses` retains `/responses`, no Chat `stream_options`, and counts
+effective reasoning/tier only after final payload rules. Additional all-suite
+failures were repaired, not skipped: blocked Home RPC cancellation, go-git missing
+pack classification/fixture handle freshness, dual snapshot-clear semantics and
+a Vertex synthesis fixture with an actual on-disk source.
+
+All consumer categories remain in scope: local clients, AI workbench, novel text,
+independent image/video/speech, Kaoyan assistant/explanation/scoring and other
+policy-controlled clients. These transparent protocol fixes require no new model
+parameter or broadened allowlist; saved choices, history, existing model IDs,
+context policy, independent speed/effort fields and quota attribution stay intact.
+New optional SIWC, Vertex, Home and cache controls are not silently enabled.
+This source ledger does not assert all-consumer browser acceptance, real refresh,
+full-window/long-stream stability, paid media playback or upstream Fast grants.
+
+Final validation evidence is recorded outside the immutable source tree by the
+parent release workflow: full Go test/build, repeated targeted race checks,
+29 Node tests with the installed Codex engine and no skipped tests, exact tag
+ancestry and workflow equality. NAS, paired manager and Tokyo manifests/images,
+idle-window installation and post-cutover health are separate parent gates.

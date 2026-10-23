@@ -1552,7 +1552,17 @@ func rollbackRecoveredGitDirectory(gitDir, backupGitDir string) error {
 }
 
 func isRepositoryCorruptionError(err error) bool {
-	return errors.Is(err, dotgit.ErrPackfileNotFound) || errors.Is(err, plumbing.ErrObjectNotFound)
+	if errors.Is(err, dotgit.ErrPackfileNotFound) || errors.Is(err, plumbing.ErrObjectNotFound) {
+		return true
+	}
+	// go-git v6 pack handles report missing packs as wrapped filesystem errors.
+	// Only absent Git packs qualify; missing auth/config files must fail closed.
+	var pathErr *fs.PathError
+	if !errors.As(err, &pathErr) || !errors.Is(err, fs.ErrNotExist) {
+		return false
+	}
+	path := filepath.ToSlash(filepath.Clean(pathErr.Path))
+	return (strings.HasPrefix(path, "objects/pack/") || strings.Contains(path, "/objects/pack/")) && strings.HasSuffix(path, ".pack")
 }
 
 func verifyRepositoryHead(repo *git.Repository) error {

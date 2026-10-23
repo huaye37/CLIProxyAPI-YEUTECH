@@ -23,6 +23,9 @@ func TestOpenAICompatResponsesWireProtocol(t *testing.T) {
 				if r.URL.Path != "/responses" {
 					t.Errorf("path=%s", r.URL.Path)
 				}
+				if gjson.GetBytes(body, "stream_options").Exists() {
+					t.Error("Responses request must not contain Chat Completions stream_options")
+				}
 				if !gjson.GetBytes(body, "input").Exists() || !strings.Contains(string(body), "call_echo") {
 					t.Errorf("lost tool transcript: %s", body)
 				}

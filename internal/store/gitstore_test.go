@@ -1830,6 +1830,15 @@ func corruptGitRepository(t *testing.T, repoDir string) {
 			t.Fatalf("remove packfile %s: %v", filepath.Base(packfile), errRemove)
 		}
 	}
+	// Reopen like EnsureRepository: v6 retains readable pack handles after unlink
+	// on Unix, so the pre-corruption handle is not a disk-integrity observation.
+	if errClose := repo.Close(); errClose != nil {
+		t.Fatalf("close pre-corruption repository: %v", errClose)
+	}
+	repo, errOpen = git.PlainOpen(repoDir)
+	if errOpen != nil {
+		t.Fatalf("reopen corrupted repository: %v", errOpen)
+	}
 	if errVerify := verifyRepositoryHead(repo); !isRepositoryCorruptionError(errVerify) {
 		t.Fatalf("verifyRepositoryHead error = %v, want repository corruption", errVerify)
 	}
