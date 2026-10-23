@@ -8,34 +8,68 @@ log_dir="/Users/fangjialiang/.codex/log"
 plist="/Users/fangjialiang/Library/LaunchAgents/cn.yeutech.codex-auth-bridge.plist"
 label="cn.yeutech.codex-auth-bridge"
 domain="gui/$(/usr/bin/id -u)"
+node_bin="/usr/local/bin/node"
+health_url="http://127.0.0.1:18401/_yeutech/health"
+running=0
+
+# Never replace a live bridge or force-stop requests. A registered service must
+# report idle before staging; SIGTERM then drains any request arriving meanwhile.
+if /bin/launchctl print "$domain/$label" >/dev/null 2>&1; then
+  running=1
+  health=$(/usr/bin/curl --silent --show-error --fail "$health_url")
+  print -rn -- "$health" | "$node_bin" --input-type=module -e '
+    let input=""; for await (const c of process.stdin) input+=c;
+    const h=JSON.parse(input);
+    if(h.ok!==true || h.activeRequests!==0) {
+      console.error("Bridge is busy or unhealthy; leave it unchanged and retry when idle.");
+      process.exit(1);
+    }
+  '
+elif /usr/bin/curl --silent --fail "$health_url" >/dev/null; then
+  print -u2 'An unmanaged bridge is listening; refusing to overwrite it.'
+  exit 1
+elif [[ -e "$plist" ]]; then
+  print -u2 'An inactive LaunchAgent already exists; inspect it before registering.'
+  exit 1
+fi
+
+"$node_bin" --check "$script_dir/codex-yeutech-auth-bridge.mjs"
+"$node_bin" --check "$script_dir/codex-yeutech-errors.mjs"
+"$node_bin" --check "$script_dir/codex-yeutech-search.mjs"
 
 /bin/mkdir -p "$target_dir" "$log_dir"
 /usr/bin/install -m 0700 "$script_dir/codex-yeutech-auth-bridge.mjs" "$target"
 /usr/bin/install -m 0600 "$script_dir/codex-yeutech-errors.mjs" "$target_dir/codex-yeutech-errors.mjs"
 /usr/bin/install -m 0600 "$script_dir/codex-yeutech-search.mjs" "$target_dir/codex-yeutech-search.mjs"
 
-/usr/bin/plutil -create xml1 "$plist"
-/usr/bin/plutil -insert Label -string "$label" "$plist"
-/usr/bin/plutil -insert ProgramArguments -json '["/usr/local/bin/node","/Users/fangjialiang/.codex/bin/codex-yeutech-auth-bridge.mjs"]' "$plist"
-/usr/bin/plutil -insert RunAtLoad -bool true "$plist"
-/usr/bin/plutil -insert KeepAlive -bool true "$plist"
-/usr/bin/plutil -insert ProcessType -string Interactive "$plist"
-/usr/bin/plutil -insert StandardOutPath -string "$log_dir/codex-auth-bridge.log" "$plist"
-/usr/bin/plutil -insert StandardErrorPath -string "$log_dir/codex-auth-bridge.error.log" "$plist"
-/bin/chmod 0600 "$plist"
-
-/bin/launchctl bootout "$domain" "$plist" 2>/dev/null || /bin/launchctl bootout "$domain/$label" 2>/dev/null || true
-for attempt in {1..50}; do
-  /bin/launchctl print "$domain/$label" >/dev/null 2>&1 || break
-  /bin/sleep 0.1
-done
-/bin/launchctl bootstrap "$domain" "$plist"
-/bin/launchctl kickstart -k "$domain/$label"
-for attempt in {1..50}; do
-  if /usr/bin/curl --silent --fail http://127.0.0.1:18401/_yeutech/health >/dev/null; then
+if (( ! running )); then
+  /usr/bin/plutil -create xml1 "$plist"
+  /usr/bin/plutil -insert Label -string "$label" "$plist"
+  /usr/bin/plutil -insert ProgramArguments -json '["/usr/local/bin/node","/Users/fangjialiang/.codex/bin/codex-yeutech-auth-bridge.mjs"]' "$plist"
+  /usr/bin/plutil -insert RunAtLoad -bool true "$plist"
+  /usr/bin/plutil -insert KeepAlive -bool true "$plist"
+  /usr/bin/plutil -insert ProcessType -string Interactive "$plist"
+  /usr/bin/plutil -insert StandardOutPath -string "$log_dir/codex-auth-bridge.log" "$plist"
+  /usr/bin/plutil -insert StandardErrorPath -string "$log_dir/codex-auth-bridge.error.log" "$plist"
+  /bin/chmod 0600 "$plist"
+  /bin/launchctl bootstrap "$domain" "$plist"
+else
+  /bin/launchctl kill SIGTERM "$domain/$label"
+fi
+verified=0
+for attempt in {1..100}; do
+  if /usr/bin/curl --silent --fail "$health_url" | "$node_bin" --input-type=module -e '
+    let input=""; for await (const c of process.stdin) input+=c;
+    try { const h=JSON.parse(input); process.exit(h.ok && h.version === "20261024-http-fallback-v1" ? 0 : 1); }
+    catch { process.exit(1); }
+  '; then
+    verified=1
+    printf 'Installed %s and verified the loopback health endpoint.\n' "$label"
     break
   fi
-  /bin/sleep 0.1
+  /bin/sleep 0.2
 done
-/usr/bin/curl --silent --show-error --fail http://127.0.0.1:18401/_yeutech/health >/dev/null
-printf 'Installed %s and verified the loopback health endpoint.\n' "$label"
+if (( ! verified )); then
+  print -u2 'Bridge has not reported the new version yet. Do not force-stop it; inspect drain/LaunchAgent state.'
+  exit 1
+fi

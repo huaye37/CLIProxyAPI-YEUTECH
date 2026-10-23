@@ -126,7 +126,7 @@ function forwardResponse(request, response, upstreamResponse) {
 const server = http.createServer(async (request, response) => {
   if (request.method === "GET" && request.url === "/_yeutech/health") {
     response.writeHead(200, { "content-type": "application/json" });
-    response.end(JSON.stringify({ ok: true, version: "20261018-standalone-search-v1", activeRequests, upstream: upstreamBase.origin, liveUpstream: liveBase.origin }));
+    response.end(JSON.stringify({ ok: true, version: "20261024-http-fallback-v1", activeRequests, upstream: upstreamBase.origin, liveUpstream: liveBase.origin }));
     return;
   }
 
@@ -197,6 +197,18 @@ const server = http.createServer(async (request, response) => {
   });
   if (searchBody) upstreamRequest.end(searchBody);
   else request.pipe(upstreamRequest);
+});
+
+// The built-in OpenAI provider probes Responses WebSocket before HTTP/SSE.
+// Without an upgrade listener, Node treats that handshake as an ordinary GET;
+// stripping Upgrade and forwarding it causes an upstream 400 (a fatal turn).
+// Codex recognizes 426 as an unsupported WebSocket transport and falls back to
+// POST/SSE. Reject locally, before acquiring or forwarding any credential.
+server.on("upgrade", (request, socket) => {
+  const responses = request.method === "GET"
+    && new URL(request.url || "/", "http://127.0.0.1").pathname === "/v1/responses";
+  socket.on("error", () => {});
+  socket.end(`HTTP/1.1 ${responses ? "426 Upgrade Required" : "404 Not Found"}\r\nContent-Length: 0\r\nConnection: close\r\n\r\n`);
 });
 
 server.listen(listenPort, listenHost, () => {

@@ -238,3 +238,22 @@ the installed Codex engine plus OpenAI's core/session/context_window.rs and
 core/context_manager/history.rs. Live end-to-end and activation evidence must
 be recorded separately from these deterministic tests; do not resume the user's
 interrupted thread as a test. See deploy/MAINTENANCE_CN.md for rollout boundaries.
+
+## 2026-10-24: built-in Codex provider HTTP fallback (candidate, not activated)
+
+| Feature / observed behavior | Provider and call chain | Implementation / frontend | Evidence and conclusion |
+| --- | --- | --- | --- |
+| Built-in `openai` probes Responses WebSocket; the previous bridge stripped Upgrade and forwarded an ordinary GET | Installed Codex -> loopback auth bridge -> existing YEUTECH gateway | `scripts/codex-yeutech-auth-bridge.mjs` locally returns HTTP/1.1 426 for Responses upgrades; no client UI patch | Reproduced upstream GET returning 400 and failed turn, including with request compression disabled. Native engine recognizes local 426 and falls back to POST/SSE. No model alias, body field or account identity rewrite is needed. |
+| OAuth isolation, streaming and cancellation | Existing local Codex provider IDs, Gemini/GPT/Claude/Grok/DeepSeek catalog | Same credential replacement, three-module installation, Live and search routing | New mock tests verify no handshake reaches upstream, exact zstd request bytes, unchanged 503 admission error, cancellation and SIGTERM drain. Installed engine completes with compression on/off against a loopback fixture; upstream receives exactly one POST and the gateway sentinel credential, never the OAuth token. |
+| Real built-in-provider acceptance | Ephemeral installed Codex -> isolated candidate bridge -> existing gateway -> Gemini 4 Argon | Process-only `model_provider="openai"`, `openai_base_url` pointing to the temporary port, `features.enable_request_compression=false` | Account type ChatGPT and requiresOpenaiAuth=true, rateLimits readable, five model families present. Minimal real response is OK and turn.completed. This is one short Gemini call, not all-model or full-window acceptance. |
+| Compressed requests and memory admission | Same public gateway with concurrent production requests | Existing `internal/api/memory_admission.go`, unchanged | zstd POST returns explicit 503/proxy_memory_busy: compressed bodies reserve the full decoded budget. This is separate from the GET/400 defect. Deployment profile disables wire compression, not context compaction; no memory ceiling, model window, retry semantics or usage is weakened. |
+| Safe local activation | Existing LaunchAgent and local provider history | Installer refuses busy/unhealthy/unmanaged bridges; existing service uses SIGTERM and KeepAlive, never bootout or forced kickstart | Shell syntax checked; active SSE drain test passes. Live bridge remained 20261018-standalone-search-v1 with active requests; no local runtime/default-provider or production proxy change made by this checkpoint. Dot visibility still requires desktop restart and user acceptance after activation. |
+
+Validation: the initial complete bridge/search/installed-engine suite passed 25
+tests with no skips; the added SIGTERM drain and cancellation checks passed
+separately. Official `openai_base_url` configuration support was verified at
+https://learn.chatgpt.com/docs/config-file/config-advanced . Keep the existing
+`openai-http` and `yeutech` provider entries for historical threads. Do not edit
+the application bundle, feature gates, account, context limits or conversation
+history to restore the sidebar entry. NAS/Tokyo/manager candidate readiness is a
+separate manifest/image gate and is not implied by this local bridge result.

@@ -111,3 +111,40 @@ CODEX_TEST_BIN=<installed-codex-engine> CODEX_TEST_CATALOG=<current-catalog.json
 引擎测试只使用回环模拟服务和临时会话：复现旧累计计数触发压缩、验证独立搜索
 无误压缩，并验证真实超阈值仍压缩。真实调用和本机生效回执另行记录，不能用此
 模拟测试宣称整个生产链路已经验收。代理、东京及配套管理站仍由用户触发安装。
+
+## 2026-10-24 内置 OpenAI 通道与本机桥接
+
+当前源码已迁入唯一单仓 `yeutech/apps/model`；配套管理站为 `yeutech/apps/api`。
+上文旧独立仓库路径和历史工作树仅作历史记录，不可据此覆盖单仓运行源码。
+
+旧桥接未处理 WebSocket upgrade，内置 OpenAI 通道的握手会被剥掉 Upgrade
+后作为普通 GET 转发，导致上游 HTTP 400。新桥接只在本机对 Responses 握手
+返回 HTTP/1.1 426，使实际 Codex 引擎回退到已有 POST/SSE；不修改模型、请求体、
+客户端功能开关、账号身份或历史 provider ID。
+
+隔离端口真实 Gemini 4 回合已返回 OK/turn.completed，账号和用量可读，模型列表
+保留五个家族。使用的进程级配置如下，尚未写入用户全局默认配置：
+
+```toml
+model_provider = "openai"
+openai_base_url = "http://127.0.0.1:18401/v1"
+
+[features]
+enable_request_compression = false
+```
+
+请求体压缩与上下文压缩是两回事。上述配置只关闭线上传输的 zstd，避免现有
+内存门禁对压缩请求按完整解压预算预留而返回 `503/proxy_memory_busy`。保留上下文
+窗口、80% 压缩阈值、实际 usage、模型偏好、Fast 和独立搜索。不能放宽服务器
+内存保护，也不能把这个 503 解释成账号封禁或之前的 GET/400。
+
+本机安装器现在先验证桥接健康且 `activeRequests=0`；忙碌时不复制文件、不发
+信号。已注册的 LaunchAgent 保留原配置，只发 SIGTERM 平滑排空并由 KeepAlive
+拉起，禁止 bootout 或 kickstart -k。新版本回读须为
+`20261024-http-fallback-v1`。三模块继续成套安装。不存在安全空闲窗口时保留
+候选；不得为完成安装强行停止会话。
+
+安装后再由主会话合并用户级配置中的上述字段（不是覆盖整个 `[features]`），
+保留 `openai-http` 与 `yeutech` 配置供历史会话使用。最终 Dot 侧栏和新会话实际
+调用由客户端重启后的用户验收确认。源码测试、隔离真实调用、本机安装、Dot
+可见性及 NAS/东京发布必须分别报告。
