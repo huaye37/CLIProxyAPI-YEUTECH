@@ -318,3 +318,44 @@ parent release workflow: full Go test/build, repeated targeted race checks,
 29 Node tests with the installed Codex engine and no skipped tests, exact tag
 ancestry and workflow equality. NAS, paired manager and Tokyo manifests/images,
 idle-window installation and post-cutover health are separate parent gates.
+
+## 2026-10-25: official v8.0.42 maintenance candidate
+
+Official release `v8.0.42` (`bc0643405a1d0adf77dd0f109972ac3313d66397`)
+contains eleven commits after v8.0.41. Maintenance remains in the canonical
+monorepo `apps/model`; the legacy branch is only an exact-tree publication
+mirror. This scheduled run prepares candidates only. NAS and Tokyo were both
+observed running v8.0.41 before preparation; no installation is authorized here.
+
+| Upstream commit / feature | Existing provider / actual consumer chain | Implementation and UI requirement | Evidence / conclusion |
+| --- | --- | --- | --- |
+| `0d3ca1d3`, `50147aec`: Git corruption and cancelable Redis RPC | Optional Git credential store and Home RPC; not a new supplier | `internal/store/gitstore.go`, `internal/home/client.go`, `cluster_balance.go`, `cluster_latency.go`; no UI | Semantically merged with the existing missing-pack fence and owned-socket cancellation. Add upstream missing-index classification but retain exact Git pack-path validation, so missing auth/config and permission failures still fail closed. New regression rejects a bare misleading packhandle message. Repeated race tests cover store and Home; no live credential reset or Home activation. |
+| `ab139b45`: shared K3.1 Pro thinking replay | Optional Kimi executor; no Kimi account enabled by this run | `internal/runtime/executor/kimi_thinking_replay.go`; no UI or catalog expansion | Upstream model-variant and replay fixtures pass. Not applicable to current configured routes; not advertised as a newly available model. |
+| `da21f1e5`: Antigravity signatures and streaming call indices | Existing Gemini/Antigravity -> Responses/Chat -> local Codex, workbench, novel text, study assistant/explanation/scoring and other policy-controlled clients | `antigravity_reasoning_replay.go`, `antigravity_executor_request.go`, Gemini and Antigravity Chat translators; no new parameter/control | Non-stream native response shape, preceding thought-signature association, caller-scoped replay and stable streaming tool index fixtures pass. Transparent protocol adaptation is implemented. No account/login/context/allowlist change; real long-conversation and all-consumer end-to-end acceptance are not claimed. |
+| `9d08f0d4`: cross-origin redirect credential filtering | Plugin HTTP bridge for existing operator-configured plugins | `internal/pluginhost/http_bridge.go`, `host_callbacks.go`; no frontend | Cross-origin redirect fixtures cover credential stripping and unchanged allowed same-origin behavior. Security fix implemented; no plugin installed or enabled. |
+| `44d1ddf5`: count_tokens response shape | Plugin executor count -> registered protocol translator -> consumer token counting | `adapters_executors.go`, `sdk/translator/registry.go`; no UI | Token-count fixtures verify counts remain counts rather than fabricated model completions. No rewrite of real inference usage or compaction thresholds. |
+| `35e834da`: Retry-After metadata | Plugin executor errors -> RPC/stream bridge -> existing error and retry handling | `sdk/pluginabi/types.go`, pluginhost `rpc_client.go`, `stream_bridge.go`; existing error UI | Upstream error-metadata and streaming fixtures pass. Preserve bounded 429 formatter and upstream timing; do not classify every rate limit as exhausted quota or invent reset times. |
+| `e42eee6e`, `c9af5290`: final payload and canonical thinking pipeline | Existing configured plugin executors -> model capability lookup -> thinking conversion -> final user payload rules | `adapters_executors.go`, `internal/thinking`, executor `helps/model_capabilities.go`; no new frontend field | Plugin model/suffix/native-format fixtures and payload-order tests pass. Final payload rules remain the last semantic mutation. Independent speed/effort and saved parameter contracts unchanged; no claim of upstream Fast authorization. |
+| `179d43dc`: request-log filename traversal | All enabled request logging -> local writer; Tokyo logging policy unchanged | `internal/logging/request_logger_writer.go`; no UI | Path traversal fixtures and repeated race tests pass; no runtime logs, permissions or auth files removed. |
+| `bc064340`: outdated third-party README entries | Documentation only | README translations; no frontend/runtime | Removed only the upstream-obsolete entries. Not a change to configured consumers or supplier availability. |
+
+The three merge conflicts were in Home cancellation and Git corruption handling,
+including the corruption fixture. The upstream fixture now closes the original
+repository before unlinking and reopens it for the observation; local strict
+classification is retained instead of accepting arbitrary missing-file messages.
+All regression tests are retained, including the new upstream tests.
+
+Validation before publication: actual Go 1.26.10 full tests/build; three repeated
+race runs for Home/store/pluginhost/thinking/logging; installed Codex engine
+loopback tests for standalone search, 429, OAuth replacement, HTTP fallback,
+both request encodings, cancellation and smooth drain; API tests, updater tests,
+source identity tests and static material-contract build. No paid inference or
+media request is required to repeat those deterministic protocol fixtures.
+
+Model catalogs, client bridge modules, installer, Fast/Ultrafast settings,
+GPT 500k/other-model capability limits, 80% compaction, provider IDs, history,
+consumer policy, Tokyo private ingress/profile and NAS-HK-Tokyo relay are unchanged.
+Independent image/video/speech remain separate workloads; no text reasoning
+control is added to media. NAS proxy, paired manager and Tokyo exact manifests,
+browser acceptance and any failure are recorded outside this frozen source tree.
+Source validation does not imply candidate readiness or production installation.

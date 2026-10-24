@@ -4,7 +4,18 @@ import (
 	"fmt"
 	"os"
 	"testing"
+
+	"github.com/go-git/go-git/v6/storage/filesystem/dotgit"
 )
+
+func TestRepositoryCorruptionRecognizesMissingIndex(t *testing.T) {
+	if !isRepositoryCorruptionError(fmt.Errorf("read pack index: %w", dotgit.ErrIdxNotFound)) {
+		t.Fatal("missing Git pack index must be classified as repository corruption")
+	}
+	if isRepositoryCorruptionError(fmt.Errorf("packhandle: unrelated missing file: %w", os.ErrNotExist)) {
+		t.Fatal("a packhandle message without a verified Git pack path must fail closed")
+	}
+}
 
 func TestRepositoryCorruptionClassifiesOnlyMissingGitPacks(t *testing.T) {
 	for _, tc := range []struct {
