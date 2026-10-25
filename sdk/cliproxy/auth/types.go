@@ -877,10 +877,25 @@ func headerValueFromHTTPHeader(headers http.Header, name string) string {
 	return ""
 }
 
+type codexClientSnapshotKey struct{}
+
+// snapshotCodexClientRequest freezes caller classification before asynchronous
+// stream accounting can outlive the handler and its pooled Gin context.
+func snapshotCodexClientRequest(ctx context.Context) context.Context {
+	if ctx == nil {
+		return nil
+	}
+	return context.WithValue(ctx, codexClientSnapshotKey{}, IsCodexClientRequest(ctx))
+}
+
 // IsCodexClientRequest reports whether the request originates from a Codex client.
 func IsCodexClientRequest(ctx context.Context, clientHeaders ...http.Header) bool {
 	if ctx != nil {
-		if ginCtx, ok := ctx.Value("gin").(*gin.Context); ok && ginCtx != nil && ginCtx.Request != nil {
+		if codex, snapshotted := ctx.Value(codexClientSnapshotKey{}).(bool); snapshotted {
+			if codex {
+				return true
+			}
+		} else if ginCtx, ok := ctx.Value("gin").(*gin.Context); ok && ginCtx != nil && ginCtx.Request != nil {
 			if IsCodexClientUserAgent(headerValueFromHTTPHeader(ginCtx.Request.Header, "User-Agent")) {
 				return true
 			}

@@ -359,3 +359,52 @@ Independent image/video/speech remain separate workloads; no text reasoning
 control is added to media. NAS proxy, paired manager and Tokyo exact manifests,
 browser acceptance and any failure are recorded outside this frozen source tree.
 Source validation does not imply candidate readiness or production installation.
+
+## 2026-10-26: official v8.0.43 maintenance candidate
+
+Official v8.0.43 is `307803510bce87f986fcf7b1a84190f105c7b4aa`, published
+2026-10-25T15:37:22Z, with eighteen commits after v8.0.42. The canonical
+monorepo subtree is merged with the real upstream tag; the legacy repository
+remains an exact-tree publication mirror, never a second development tree.
+Both live nodes were observed on v8.0.41 with v8.0.42 candidates before this run.
+This scheduled operation prepares a replacement candidate, not an installation.
+
+| Upstream commits / feature | Existing provider and consumer chain | Implementation / frontend | Verification and conclusion |
+| --- | --- | --- | --- |
+| `32dd2c86`, `21553509`: persisted snapshot and re-login recovery | Existing NAS/Tokyo OAuth -> management persistence -> watcher -> auth selector -> all enabled consumers | `internal/watcher/{dispatcher,clients,watcher}.go`, `sdk/cliproxy/auth/conductor_{lifecycle,refresh}.go`; existing login/status UI | Preserve file binding and persisted revision during scans, plus the local source-digest mutation fence. New credentials clear stale refresh failures without clearing real quota cooldown. Upstream snapshot and re-login regressions, full tests and repeated race gate; no live login or token rotation. |
+| `6340fe43`, `3e7a21e2`: duplex model/principal binding | Codex WebSocket clients -> interceptors -> per-turn authorization -> selected provider | `codex_websockets_duplex.go`, `handlers_interceptors.go`, `openai_responses_websocket.go`; no new UI | Preserve requested model authorization after routing rewrites, copy request context and enforce the bound principal. Upstream requested-model/principal tests and repeated race gate. Existing local HTTP/SSE fallback remains unchanged; not proof of live WebSocket availability for every provider. |
+| `0fe4cc2c`, `90fe5b23`: terminal stream errors and cancellation | Shared Chat/Responses streams -> local client, workbench, novel text, study assistant/explanation/grading and other policy-controlled consumers | `openai_responses_websocket_forward.go`, `handlers_stream.go`; existing error/retry UI | Buffered terminal errors survive data-channel closure; canceled streams remain failures. Upstream channel-order and cancellation fixtures; no fabricated completion, silent retry or usage rewrite. |
+| `b2fda98e`, `bdde391d`: Gemini schema and finish reasons | Existing Gemini/Antigravity tools and Gemini-compatible consumers -> schema/response translation | `internal/util/gemini_schema.go`, Codex/OpenAI-to-Gemini response translators; no new parameter | Resolve refs/allOf before inserting array placeholders; preserve finishReason. Upstream schema/stream fixtures; existing context, reasoning and independent speed contracts unchanged. |
+| `e48d780f`: caller-scoped Claude MCP replay | Existing Claude OAuth and operator-configured plugins -> host execution -> tool aliases | `pluginhost`, `sdk/pluginapi`, `claude_executor_request.go`; no UI | Opaque caller scope survives plugin replay without revealing downstream API keys; alias identity stays stable across credential refresh. Caller-isolation and replay tests plus race gate; no new plugin enabled. |
+| `0c61b12c`: xAI historical tool deduplication | Existing Grok -> Responses additional_tools -> xAI request and tool-result mapping | `xai_executor_{request,response}.go`; all current text-agent consumers, no new UI | Current top-level declarations win over historical duplicates; namespace counts and dispatch mappings use unique tools. Upstream duplicate/namespace/tool-result tests. Hosted-search usage and native-search quota attribution are not changed. |
+| `27f3abfb`: session-scoped OAuth proxy | Optional operator-selected per-account network route, not used by existing managed login flows | v8 POST `/oauth/auth-url`, `oauth_sessions.go`, provider OAuth/callback handlers; existing manager still omits proxy overrides | Upstream validation, session isolation, persistence and callback fixtures cover this optional backend capability. No new route field is exposed: existing NAS route and Tokyo-local credential/network boundaries are intentionally preserved. Not a claim of a configured per-account proxy or newly available user-facing control. |
+| `ce433b37`, merge `cf4fc4e7`: Home subscription backoff | Optional Home control plane, not configured by this maintenance | `service_home.go`, `service_home_retry.go`; no UI | Keep owned-socket cancellation and add bounded jittered reconnect backoff. Upstream deterministic retry tests; not applicable to deployed Home infrastructure because none is enabled here. |
+| `ba06ec58`: Vertex default global location | Optional Vertex credential/import path | `vertex_import.go`, Gemini/Vertex executor and helpers; no UI | Retain default-location fixtures; no Vertex supplier/account is newly enabled or region migrated. |
+| `3dae075d`: Devin lightning aggregation | Optional Devin catalog and UID selector | `devin_models.go`, `helps/devin_models.go`, standalone Devin catalog; no consumer allowlist expansion | Upstream aggregate-ID/routing tests retained. No new paid model or model preference registered. Shared pinned catalog remains byte-identical; a registry name is not entitlement evidence. |
+| `30780351`: AI Studio multi-frame relay | AI Studio WebSocket relay -> Gemini-compatible stream translation | `aistudio_executor.go`, `aistudio_multiframe_test.go`; no new UI | Every frame in a relay chunk passes model/usage/error translation; raw JSON and keepalives remain distinct. Synthetic multi-frame fixtures only, no browser-driver restart or new provider activation. |
+| `2bb6ac6f`, `84e83441`: lint and deterministic tests | Plugin/auth cancellation cleanup and executor WebSocket fixtures | Existing implementation/test files; no UI | Retain cancellation cleanup and race-safe fixture synchronization; full Go test/build and repeated race gate without weakening assertions. |
+
+The merge has no textual conflicts. Repeated race testing exposed a separate
+real lifetime race: asynchronous stream-result accounting read caller headers
+from a Gin context already returned to its pool (`TestIssue6332ReasoningReplayTwoTurns`).
+The candidate snapshots only Codex caller classification before spawning that
+accounting goroutine. It preserves explicit-header precedence, SIWC selection,
+parent cancellation and nil-context behavior; it does not rewrite tokens or
+delay handler completion. A deterministic concurrent Gin-reuse regression and
+the unchanged two-turn reasoning replay fixture cover the repair. The original
+failed race log is retained, not hidden by a test-only wait or skip.
+
+Review confirms that local source-digest
+checks, final payload rules, error bridge modules, installer, independent search,
+Tokyo 128 MiB limit, NAS-HK-Tokyo relay and pinned shared catalog remain intact.
+There is no local client/configuration refresh because those files are unchanged.
+GPT 500k, other-model capability limits, 80 percent compaction, Fast/Ultrafast
+entitlements, actual response tier semantics, histories, provider IDs, consumer
+policies and independent image/video/speech workloads are unchanged.
+
+Required gates: Go 1.26.10 full test/build, repeated watcher/auth/WebSocket/plugin
+race tests, installed-engine loopback bridge tests, API/updater/source-identity
+tests, material/static build, paired manifests and desktop/390x844 navigation.
+Exact results belong in the external maintenance receipt. These synthetic tests
+do not claim new paid model, long-context or all-consumer production acceptance.
+Only the user may install the NAS/Tokyo proxy and paired manager candidates.
