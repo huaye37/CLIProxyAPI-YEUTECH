@@ -545,6 +545,10 @@ func (e *OpenAICompatExecutor) executeStreamWithCredentials(ctx context.Context,
 			// Observe complete upstream frames before translation or downstream backpressure.
 			helps.ObserveChatTokenEvent(reporter, dataPayload)
 			streamLine := append([]byte("data: "), dataPayload...)
+			if to == sdktranslator.FormatOpenAIResponse && responseFormat == sdktranslator.FormatOpenAIResponse {
+				// Native passthrough must retain frame boundaries when bootstrap retries buffer control events.
+				streamLine = append(streamLine, '\n', '\n')
+			}
 			chunks := helps.TranslateStreamWithClaudeInputTokens(ctx, to, responseFormat, req.Model, helps.ApplyPatchOriginalRequest(req, opts), translated, streamLine, &param, claudeInputTokens)
 			helps.RecordApplyPatchStreamFailure(ctx, param, reporter, statusErr{code: http.StatusBadGateway, msg: helps.ApplyPatchUpstreamErrorMessage})
 			for i := range chunks {

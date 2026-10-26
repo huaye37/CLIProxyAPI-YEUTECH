@@ -466,3 +466,35 @@ Catalog, provider IDs, histories, GPT 500k/other-model limits, 80 percent contex
 compaction, Fast/Ultrafast entitlement, independent media parameters and Tokyo
 profile/relay remain unchanged. Paid or full-window inference is not claimed.
 Preparation is not installation; proxy/paired manager installation stays manual.
+
+## 2026-10-27: native Responses compaction through the Tokyo compatibility channel
+
+The failing Codex session sent a real compaction_trigger in a streaming Responses
+request. The NAS compatibility channel defaulted to Chat Completions, which cannot
+retain that trigger; the Tokyo backend consequently produced ordinary output (or
+rejected an assistant prefill), not a compaction item. The existing per-provider
+wire-api: responses setting preserves the trigger and sealed continuation.
+
+A configuration-only trial exposed a second defect: native Responses passthrough
+omitted SSE frame separators. With production bootstrap-retries=1 and pre-first-token
+keepalives enabled, buffered control events concatenated into an invalid frame and
+failed before the first payload. The executor now retains the double-newline frame
+boundary only for Responses-to-Responses passthrough. Cross-protocol translators,
+retry policy, cancellation, error handling, usage and model selection are unchanged.
+A red regression demonstrated five events collapsing into one invalid frame before
+the repair; it verifies independently parseable, unchanged compaction events after it.
+
+Validation includes focused repeated race tests, the full unified preparation gate
+and exact-image two-hop fake-upstream tests with production bootstrap settings:
+hot reload, exactly one compaction item, thirty Codex-identity repetitions, capsule
+replay, Chat JSON/stream compatibility, standalone compact and tool history. No UI
+or new model entitlement is required. Small real compaction/continuation and original
+session recovery are separate production gates, not implied by synthetic tests.
+
+Both failed configuration-only live probes were rolled back to the original config;
+diagnostic fixtures with bootstrap retries disabled are not acceptance evidence.
+The user separately authorized a verified NAS rolling release and its paired manager,
+then restoration of the specified original session. Do not update Tokyo, force-stop
+requests, alter the relay/client/history, disable global bootstrap retries, fabricate
+compaction output, or treat this one-time release authorization as a daily policy.
+Exact source, image, backup and live results belong in the external repair receipt.
