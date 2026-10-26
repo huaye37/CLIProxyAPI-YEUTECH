@@ -180,6 +180,7 @@ func (h *OpenAIResponsesAPIHandler) forwardResponsesWebsocket(
 					continue
 				}
 				if eventType == "response.created" {
+					opts.localInterrupt.begin()
 					responseStarted = true
 					completed = false
 					outputItemsByIndex = make(map[int64][]byte)
@@ -217,6 +218,10 @@ func (h *OpenAIResponsesAPIHandler) forwardResponsesWebsocket(
 					completed = true
 					completedOutput = responseCompletedOutputFromPayload(payloads[i], outputItemsByIndex, outputItemsFallback)
 					completedResponseID = responseCompletedIDFromPayload(payloads[i])
+					// Retire HTTP-fallback interruption before publishing the terminal
+					// event. The client may send another control frame immediately;
+					// waiting for deferred cleanup could acknowledge a phantom turn.
+					opts.localInterrupt.end()
 				}
 				markAPIResponseTimestamp(c)
 				if payloadErrMsg != nil {

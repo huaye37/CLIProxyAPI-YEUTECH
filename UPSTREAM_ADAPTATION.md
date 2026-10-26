@@ -408,3 +408,61 @@ tests, material/static build, paired manifests and desktop/390x844 navigation.
 Exact results belong in the external maintenance receipt. These synthetic tests
 do not claim new paid model, long-context or all-consumer production acceptance.
 Only the user may install the NAS/Tokyo proxy and paired manager candidates.
+
+## 2026-10-27: official v8.0.44 maintenance candidate
+
+Seventeen upstream commits after v8.0.43 are merged from the real stable tag.
+The canonical monorepo and exact-tree compatibility mirror remain distinct
+identities. Before preparation both nodes still ran v8.0.41; v8.0.43 artifacts
+existed, with NAS online GitHub ancestry verification unavailable. Do not reuse
+that older candidate's manifest for this source or bypass its installation gate.
+
+| Upstream commit / feature | Existing provider and consumer chain | Implementation / UI | Validation boundary and disposition |
+| --- | --- | --- | --- |
+| `712e4970` cancellation before first chunk | Shared text streaming -> local client/workbench/novel/study and other policy-controlled consumers | `handlers_stream.go`; existing error UI | Upstream first-chunk cancellation fixtures, no false success or automatic replay. |
+| `e5321f53` per-selection identity | Auth scheduler -> provider execution -> plugin and usage accounting | `conductor_selection`, `executor/types`, pluginhost/usage/redisqueue; no new UI | Shared selection-ID fixtures retain per-attempt attribution; not a new quota source or inferred entitlement. |
+| `064e008b` HTTP/WebSocket wire compression | Codex upstream plus negotiated downstream responses for existing clients | `response_compression.go`, Codex executors, response decoding and config v8 mapping; no model-generation setting | Upstream negotiation, streaming flush, decode, fallback and final-payload fixtures. Optional Codex upstream request compression stays disabled unless configured. Local client request compression remains disabled; memory/decompression admission limits are unchanged. This is not context compaction. |
+| `43f5386b` Claude reasoning usage | Tokyo/other Claude -> OpenAI Chat usage -> existing consumer usage panels | Claude/OpenAI response translator and usage helpers; no new UI | Token-mapping fixtures preserve actual thinking/output totals, without rewriting usage to suppress compaction. |
+| `531721bf` Codex commentary replay | Codex/Claude history translation -> existing tool/agent continuations | Codex/Claude request/response and internal signature sanitization; no UI | Cross-format commentary, signature and replay fixtures; markers are internal, no historical file migration or added paid turn. |
+| `058b803b` explicit Authorization CORS | Existing browser API clients -> proxy preflight | `server_middleware.go`; no frontend control | Preflight fixtures name Authorization and requested headers; allowed origins/credential policy are not widened. |
+| `6fe654bf` plugin schema-v7 body opt-out | Existing configured plugins -> request interceptor bridge | `rpc_schema`, interceptor adapters; no new plugin UI | Version/opt-out and legacy-body fixtures; existing plugins retain compatible delivery unless they explicitly opt out. |
+| `ede07caf`, `37bd18b0` Interactions framing/input | Existing Gemini/Antigravity protocol routes -> Interactions consumers | Interactions translators and structured-output helpers; no new frontend | Bare content-block list and terminal usage followed by DONE fixtures. No new provider or consumer is enabled. |
+| `1d45a5f3` Claude 5.5 tool choice | Existing Claude 5.5 -> protocol translator -> Claude execution; shared text-agent consumers | `helps/claude_tool_choice.go`, executor and signature sanitizer; no new UI | Forced any/tool normalizes to auto for routed Claude 5.5 before thinking; final user payload rules still win. Delegated providers keep their contract. This is a compatibility downgrade, not a claim of forced-tool support. |
+| `aa4130e6` truncated Gemini stream classification | Gemini/Antigravity accepted HTTP200 -> stream completion -> auth selector | Executor truncation marker and conductor cooldown/retry; existing failure UI | Missing-terminal fixtures verify explicit failure without credential cooldown or paid replay on another account. Real account failures are not fabricated for testing. |
+| `8a982a52`, `b214385c`, `11e5f67b`, `999526c7`, merge `ec81e70a` LAN discovery | Optional LAN discovery, not enabled on scoped private NAS/Tokyo ingress by this maintenance | discovery spec/resolver/cache and docs; no new management discovery UI | Bounded split mDNS/TXT schema fixtures; deprecated management advertisement remains ignored. Preserve private listeners and existing network configuration; no network discovery activation. |
+| `1f917e77` obsolete sponsorship | Documentation/assets only | Upstream README/assets | No model or runtime capability claim. |
+
+Local compatibility repair: a new red regression demonstrated that default
+negotiated compression encodes large JSON 429s for Codex streaming Responses,
+which would bypass the installed bridge's bounded plaintext error formatter.
+Preserve identity only for that exact method/path/accept/client signature and
+429 JSON response when identity is allowed. Status, body and Retry-After remain
+unchanged. Ordinary clients, other methods/routes/statuses, successful streams,
+existing encodings and explicit identity rejection retain negotiated behavior.
+No local bridge reload or compressed-error decoding is introduced.
+
+The first full suite exposed a Home fixture timeout at the newly introduced
+initial jitter boundary. The non-drain regression now continuously fails if
+the blocking scope starts draining while waiting, and allows the existing
+initial retry interval plus one interval of transport/ACK overhead. All registry,
+ACK and service-cancellation assertions remain; no runtime backoff is altered.
+Original failure logs and before/after compression regression results are kept
+with the external maintenance receipt.
+
+Repeated race-mode suites also exposed a terminal-event ordering bug: after the
+client received response.completed, deferred HTTP-interrupt cleanup could still
+accept an unknown late interrupt and fabricate response.incomplete. Retire local
+interrupt delivery before publishing the terminal event and re-arm on the next
+response.created; preserve upstream control forwarding and existing authorization.
+The unchanged late-interrupt and active-interrupt integration tests are repeated
+thirty times with race detection. Separately, the OAuth callback fixture now uses
+a unique state ID per run because completed OAuth states intentionally remain
+reserved briefly; retain the production TTL and all callback assertions.
+
+Required gates: full Go 1.26.10 test/build, relevant repeated race suites,
+installed-engine loopback tests, API/updater/identity tests and static material
+build, precise NAS/Tokyo/manager manifests and desktop/390x844 verification.
+Catalog, provider IDs, histories, GPT 500k/other-model limits, 80 percent context
+compaction, Fast/Ultrafast entitlement, independent media parameters and Tokyo
+profile/relay remain unchanged. Paid or full-window inference is not claimed.
+Preparation is not installation; proxy/paired manager installation stays manual.
