@@ -498,3 +498,49 @@ then restoration of the specified original session. Do not update Tokyo, force-s
 requests, alter the relay/client/history, disable global bootstrap retries, fabricate
 compaction output, or treat this one-time release authorization as a daily policy.
 Exact source, image, backup and live results belong in the external repair receipt.
+
+## 2026-10-28: official v8.0.45 candidate
+
+The real stable tag contributes twenty-one commits after v8.0.44. Live baseline
+is now v8.0.44 on both NAS and Tokyo, independently verified; the earlier repair
+authorization has been consumed. This run prepares candidates only. Preserve the
+NAS Tokyo channel's Responses wire setting and native SSE frame boundaries.
+
+| Upstream commits / feature | Existing supplier and consumers | Implementation / UI | Evidence and disposition |
+| --- | --- | --- | --- |
+| `6b56ce6c`, merge `c3767123`: missing-field deletion | Shared thinking normalization for text consumers | `internal/util/sjson_delete.go`, thinking appliers; no UI | Upstream no-copy fixtures; final payload-rule precedence unchanged. |
+| `58a4d04f`, `1398f273`, `a8582fba`, merge `023dd2ad`: Vertex signatures | Optional Vertex Gemini replay | `internal/signature`, Gemini/Vertex executors; no UI | Observed key IDs and Vertex-only replay fixtures; no Vertex supplier enabled. |
+| `7517549a`, merge `437386db`: Antigravity CAQS signatures | Existing Gemini/Antigravity tool continuations | Signature validation, executor replay; no UI | Synthetic CAQS replay tests preserve channel-independent validity without relaxing other providers. |
+| `9a35fa12`, `86a1aabf`: transient turn capacity / early WS 429 | Codex text clients through auth scheduler, SSE/WS and existing error display | Codex terminal/WS executors, conductor cooldown/selection, retry headers; no new control | Trusted Retry-After and Issue7017 fixtures distinguish capacity from exhausted credentials; explicit upstream hints only. No real quota exhaustion or accelerated-tier claim. |
+| `19398539`: client workspace/orchestrator restrictions | Codex model-list consumers | `codex_client_models.json`; no management toggle | Preserve new restriction fields on known models. Keep the existing generic pinned catalog and legacy GPT-5.5 metadata instead of silently renaming/migrating it to GPT-6.1-Sol. Synthesized custom models must not inherit a template's multi-agent entitlement; config hot-reload and model tests remain unchanged. |
+| `be929f07`, `64316127`: Gemini SSE / partial tool arguments | Gemini/Antigravity and optional Vertex -> Chat, Responses, Claude text-agent consumers | Interactions helpers and Gemini translators; no UI | Stream-line and partialArgs assembly fixtures cover tools and terminal usage. No new paid model or all-consumer production claim. |
+| `908e95d9`: channel model prefixes | Existing Gemini channel registration -> policy-filtered selectors | `service_models.go`, alias tests; no UI | Prefix-preservation fixtures; existing IDs/preferences remain intact. |
+| `10417e5b`: on-demand catalog refresh | Operator v8 management, local/remote/Home catalog sources | `catalog_sources.go`, `model_definitions.go`, v8 routes | Upstream source-race/cancellation/failure fixtures. Backend operator capability only; not exposed as an ordinary UI refresh because it mutates runtime catalog publication outside this project's reviewed catalog/image pairing. Existing UI refresh remains a read. No production refresh call or automatic new-model registration. |
+| `f73e66ac`: upstream WS disconnect | Codex downstream sessions and continuation state | Responses WS forwarding and executor sessions; no UI | Upstream disconnect/retry fixtures retain downstream connection and explicit failure; preserve local terminal interrupt fix. |
+| `b4f59d70`: Devin patch recovery | Optional Devin tool execution | Devin executor/helps diagnostics; no UI | Complete bare-patch and content-free diagnostics fixtures; no Devin account/model enabled. |
+| `826bb167`: xAI image payload defaults | Existing independent image generation/editing entrances | xAI media executor, payload finalizer, OpenAI image handlers; no text speed/effort UI | Image multipart/default-rule tests retain final payload priority and image-only fields. Synthetic tests only, no paid generation. |
+| `b7442218`: request-state snapshots | Shared auth, logging and usage across all active text/media consumers | Conductor, handler context and usage manager; no UI | Integrate upstream explicit-header/client/access-token snapshot with local nil-context/cancellation regression. Repeated race tests; no credential or usage rewriting. |
+| `477605dc`, `ad8bdd3f`: incomplete body and bounded zstd logging | Shared private API ingress for every consumer | Multiplexer, middleware, logging and response writer; no UI | Upstream malformed/unfinished body and decompression bounds tests preserve authenticated streams and memory limits; no transport topology change. |
+
+Conflict resolution retains the pinned general catalog (including existing Tokyo
+models and local capability overrides) and both upstream and local request-snapshot
+semantics. New catalog entries are not evidence of model entitlement. The incoming
+legacy GPT-5.5 entry copied GPT-6.1-Sol identity and changed generic fallback metadata;
+retain its prior identity while adopting the two new restriction fields. Original
+model/config assertions are retained, not rewritten to accept a silent identity change.
+
+Race validation found a real streaming-log lifecycle bug: Finalize cleared the chunk
+channel before the asynchronous worker had read it. Clear it only after the worker
+signals completion, retaining channel close/drain and logging behavior. Preserve the
+failed log; repeat the unchanged reproducer one hundred times with race detection,
+then the full middleware suite three times. Synthetic fallback metadata now clears
+inherited multi-agent support before applying the explicit local opt-in.
+
+Required release gates: full Go 1.26.10 test/build; relevant repeated race suites;
+installed-engine bridge/search/transport loopbacks; API/updater/identity tests; exact
+NAS/Tokyo/manager source manifests, image health/file hashes and desktop/390x844
+management navigation. Results live in the external receipt. No production install,
+bridge reload, catalog refresh, paid generation, independent-task inspection or
+permission approval is part of this candidate run. Preserve GPT 500k/other-model
+windows, 80 percent compaction, histories, consumer policies, and independent
+Fast/Ultrafast/effort with actual response.service_tier acceptance boundaries.

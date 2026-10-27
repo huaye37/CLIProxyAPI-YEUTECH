@@ -152,6 +152,8 @@ func buildCodexClientModelsWithToolCapabilities(models []map[string]any, provide
 		}
 
 		entry := cloneCodexClientModelMap(defaultTemplate)
+		// A fallback template does not establish multi-agent support for another model.
+		entry["multi_agent_version"] = nil
 		applyCodexClientModelMetadata(entry, id, model, optimizeMultiAgentV2, clientVersion)
 		applyCodexClientMaxTokens(entry, model)
 		applyCodexClientSearchToolSupport(entry, id, false, searchToolProvidersForModel, toolSearchCapabilityForModel)

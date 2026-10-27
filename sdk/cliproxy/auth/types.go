@@ -877,33 +877,41 @@ func headerValueFromHTTPHeader(headers http.Header, name string) string {
 	return ""
 }
 
-type codexClientSnapshotKey struct{}
-
 // snapshotCodexClientRequest freezes caller classification before asynchronous
 // stream accounting can outlive the handler and its pooled Gin context.
 func snapshotCodexClientRequest(ctx context.Context) context.Context {
 	if ctx == nil {
 		return nil
 	}
-	return context.WithValue(ctx, codexClientSnapshotKey{}, IsCodexClientRequest(ctx))
+	return WithCodexClientRequest(ctx, IsCodexClientRequest(ctx))
+}
+
+type codexClientRequestContextKey struct{}
+
+// WithCodexClientRequest stores the resolved Codex client detection flag in ctx
+// so asynchronous post-request paths do not read a reused gin.Context.
+func WithCodexClientRequest(ctx context.Context, isCodexClient bool) context.Context {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	return context.WithValue(ctx, codexClientRequestContextKey{}, isCodexClient)
 }
 
 // IsCodexClientRequest reports whether the request originates from a Codex client.
 func IsCodexClientRequest(ctx context.Context, clientHeaders ...http.Header) bool {
-	if ctx != nil {
-		if codex, snapshotted := ctx.Value(codexClientSnapshotKey{}).(bool); snapshotted {
-			if codex {
-				return true
-			}
-		} else if ginCtx, ok := ctx.Value("gin").(*gin.Context); ok && ginCtx != nil && ginCtx.Request != nil {
-			if IsCodexClientUserAgent(headerValueFromHTTPHeader(ginCtx.Request.Header, "User-Agent")) {
-				return true
-			}
-		}
-	}
 	for _, headers := range clientHeaders {
 		if IsCodexClientUserAgent(headerValueFromHTTPHeader(headers, "User-Agent")) {
 			return true
+		}
+	}
+	if ctx != nil {
+		if isCodex, ok := ctx.Value(codexClientRequestContextKey{}).(bool); ok {
+			return isCodex
+		}
+		if ginCtx, ok := ctx.Value("gin").(*gin.Context); ok && ginCtx != nil && ginCtx.Request != nil {
+			if IsCodexClientUserAgent(headerValueFromHTTPHeader(ginCtx.Request.Header, "User-Agent")) {
+				return true
+			}
 		}
 	}
 	return false
@@ -912,10 +920,13 @@ func IsCodexClientRequest(ctx context.Context, clientHeaders ...http.Header) boo
 // IsCodexUseSIWCForRequest reports whether a request should use the nested SIWC credential section.
 // Requests from Codex clients ignore use_siwc and always use non-SIWC credentials.
 func IsCodexUseSIWCForRequest(ctx context.Context, a *Auth, clientHeaders ...http.Header) bool {
+	if !IsCodexUseSIWC(a) {
+		return false
+	}
 	if IsCodexClientRequest(ctx, clientHeaders...) {
 		return false
 	}
-	return IsCodexUseSIWC(a)
+	return true
 }
 
 // OuterExpirationTime extracts the outer credential expiration timestamp, ignoring the nested "siwc" section.
