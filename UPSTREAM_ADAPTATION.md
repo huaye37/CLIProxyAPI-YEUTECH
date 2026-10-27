@@ -536,6 +536,11 @@ failed log; repeat the unchanged reproducer one hundred times with race detectio
 then the full middleware suite three times. Synthetic fallback metadata now clears
 inherited multi-agent support before applying the explicit local opt-in.
 
+The full no-copy invariant gate also identified the new Vertex assembler's
+copy of private []string AST key references. Review confirms that it does not
+mutate payload bytes or aliased GJSON strings; record exactly one reviewed write
+with that reason, preserving the count guard against future unreviewed writes.
+
 Required release gates: full Go 1.26.10 test/build; relevant repeated race suites;
 installed-engine bridge/search/transport loopbacks; API/updater/identity tests; exact
 NAS/Tokyo/manager source manifests, image health/file hashes and desktop/390x844
