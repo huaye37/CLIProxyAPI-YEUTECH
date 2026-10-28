@@ -46,6 +46,7 @@ func TestCodexClientModelsResponseMultiAgentV2FollowsConfig(t *testing.T) {
 			if entry == nil {
 				t.Fatalf("missing synthesized model %q", modelID)
 			}
+			// Only the explicit opt-in grants synthesized models multi-agent support.
 			value, exists := entry["multi_agent_version"]
 			if tt.enabled {
 				if !exists || value != "v2" {

@@ -128,3 +128,43 @@ func TestClaudeExecutorSharedCredentialMetadataMixedAccess(t *testing.T) {
 	}
 	wg.Wait()
 }
+
+func TestClaudeSetupTokenFlagsShareMetadataLock(t *testing.T) {
+	keys := []string{"skip_account_profile", "is_setup_token", "setup_token"}
+	for _, key := range keys {
+		t.Run(key, func(t *testing.T) {
+			auth := newSharedClaudeOAuthAuth("setup-flag-" + key)
+			for _, value := range []any{nil, false, "true", true} {
+				claudeauth.StoreMetadataValue(&auth.Metadata, key, value)
+				want, _ := value.(bool)
+				if got := isClaudeSetupToken(auth, "sk-ant-oat-race-probe"); got != want {
+					t.Fatalf("flag %s = %#v: got %t, want %t", key, value, got, want)
+				}
+			}
+			if isClaudeSetupToken(auth, "ordinary-api-key") {
+				t.Fatal("setup flag must not turn an ordinary API key into OAuth")
+			}
+			start := make(chan struct{})
+			var wg sync.WaitGroup
+			for i := 0; i < 32; i++ {
+				wg.Add(1)
+				go func(i int) {
+					defer wg.Done()
+					<-start
+					for n := 0; n < 50; n++ {
+						if i%2 == 0 {
+							claudeauth.StoreMetadataValue(&auth.Metadata, key, n%2 == 0)
+						} else {
+							_ = isClaudeSetupToken(auth, "sk-ant-oat-race-probe")
+						}
+					}
+				}(i)
+			}
+			close(start)
+			wg.Wait()
+		})
+	}
+	if isClaudeSetupToken(nil, "sk-ant-oat-race-probe") {
+		t.Fatal("nil auth must not be classified as a setup token")
+	}
+}

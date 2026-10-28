@@ -6,6 +6,7 @@ import https from "node:https";
 import { randomUUID } from "node:crypto";
 import { isCodexStreamingResponse, rateLimitDisplay } from "./codex-yeutech-errors.mjs";
 import { isCodexStandaloneSearch, readSearchBody, routeStandaloneSearch } from "./codex-yeutech-search.mjs";
+import { isImageRequest, readImageBody, normalizeClaudeImages } from "./codex-yeutech-images.mjs";
 
 const listenHost = process.env.YEUTECH_CODEX_BRIDGE_HOST || "127.0.0.1";
 const listenPort = Number(process.env.YEUTECH_CODEX_BRIDGE_PORT || "18401");
@@ -23,6 +24,7 @@ const liveTransport = liveBase.protocol === "https:" ? https : http;
 let cachedToken = null;
 let cachedTokenAt = 0;
 let activeRequests = 0;
+let preparingImages = 0;
 
 function upstreamToken() {
   const envToken = process.env.YEUTECH_UPSTREAM_BEARER_TOKEN?.trim();
@@ -126,7 +128,7 @@ function forwardResponse(request, response, upstreamResponse) {
 const server = http.createServer(async (request, response) => {
   if (request.method === "GET" && request.url === "/_yeutech/health") {
     response.writeHead(200, { "content-type": "application/json" });
-    response.end(JSON.stringify({ ok: true, version: "20261024-http-fallback-v1", activeRequests, upstream: upstreamBase.origin, liveUpstream: liveBase.origin }));
+    response.end(JSON.stringify({ ok: true, version: "20261028-claude-image-copy-v1", activeRequests, preparingImages, upstream: upstreamBase.origin, liveUpstream: liveBase.origin }));
     return;
   }
 
@@ -140,6 +142,34 @@ const server = http.createServer(async (request, response) => {
   response.once("close", finishRequest);
 
   let searchBody;
+  let imageBody;
+  let imageComplete = false;
+  let imageChanged = false;
+  if (isImageRequest(request) && preparingImages < 2) {
+    preparingImages += 1;
+    const cancellation = new AbortController();
+    const cancel = () => cancellation.abort();
+    response.once("close", cancel);
+    request.once("aborted", cancel);
+    try {
+      const buffered = await readImageBody(request);
+      imageComplete = buffered.complete;
+      imageBody = imageComplete
+        ? await normalizeClaudeImages(buffered.body, { signal: cancellation.signal }) : buffered.body;
+      imageChanged = imageBody !== buffered.body;
+    } catch {
+      if (!response.destroyed) {
+        response.writeHead(400, { "content-type": "application/json" });
+        response.end(JSON.stringify({ error: { message: "无法处理发往 Claude 的超限图片；原图与历史记录未修改。", type: "invalid_request_error", code: "image_preprocessing_failed" } }));
+      }
+      request.resume();
+      return;
+    } finally {
+      preparingImages -= 1;
+      response.off("close", cancel); request.off("aborted", cancel);
+    }
+    if (request.aborted || response.destroyed) return;
+  }
   if (isCodexStandaloneSearch(request)) {
     try {
       if (request.headers["content-encoding"] && request.headers["content-encoding"] !== "identity") {
@@ -165,6 +195,8 @@ const server = http.createServer(async (request, response) => {
   try {
     headers = requestHeaders(request.headers, target, live);
     if (searchBody) headers["content-length"] = String(searchBody.length);
+    if (imageComplete) headers["content-length"] = String(imageBody.length);
+    if (imageChanged) for (const name of ["content-md5", "digest", "content-digest"]) delete headers[name];
   } catch (error) {
     response.writeHead(503, { "content-type": "application/json" });
     response.end(JSON.stringify({ error: { message: error.message, type: "bridge_auth_error" } }));
@@ -196,6 +228,8 @@ const server = http.createServer(async (request, response) => {
     if (!response.writableEnded) upstreamRequest.destroy();
   });
   if (searchBody) upstreamRequest.end(searchBody);
+  else if (imageComplete) upstreamRequest.end(imageBody);
+  else if (imageBody) { upstreamRequest.write(imageBody); request.pipe(upstreamRequest); }
   else request.pipe(upstreamRequest);
 });
 

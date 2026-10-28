@@ -549,3 +549,58 @@ bridge reload, catalog refresh, paid generation, independent-task inspection or
 permission approval is part of this candidate run. Preserve GPT 500k/other-model
 windows, 80 percent compaction, histories, consumer policies, and independent
 Fast/Ultrafast/effort with actual response.service_tier acceptance boundaries.
+
+## 2026-10-29: official v8.0.46 and the installed local image-copy repair
+
+The official stable tag contributes nineteen commits after v8.0.45. Production
+NAS/Tokyo remain v8.0.44. The paired manager was independently updated to source
+dc63233a5a for browser-history navigation; use that already-committed implementation
+from the canonical monorepo, not yesterday's older manager bundle. Main currently
+has unrelated in-progress changes, so prepare in an isolated candidate only.
+
+| Upstream commits / feature | Existing supplier and call chain | Implementation / UI | Evidence and disposition |
+| --- | --- | --- | --- |
+| `86d951cd`, merge `f7342c38`, `ae65e26d`: private metadata and SSE recovery | Codex -> Responses/WS -> local clients, workbench and text consumers; independent image streaming shares framing | `openai_responses_handlers.go`, websocket forwarder, `openai_images_handlers.go`; no new UI | Metadata filtering fixtures retain private events for actual Codex clients, omit them for standard parsers; fragmented JSON, empty data and split-field regressions. Preserve native Responses compaction frames and original output/usage. |
+| `bc807104`, merge `e30575dc`, `58874f3b`: indexed web-search capabilities | Registry mutations -> all provider/model selectors and policy-filtered consumers | `model_registry.go`; no UI/schema change | Full-scan oracle compares model/provider/excluded-client combinations after registration, reconciliation, removal and capability changes. Index optimization does not add web search or grant models to any consumer. |
+| `3c948a58`, merge `ba26dea0`: synchronous zstd decode and lazy sniff | Existing upstream HTTP/SSE providers -> all text/media protocol consumers | `helps/response_decode.go`; no UI | Labeled/unlabeled gzip/zstd, fragmented reads and first-byte fixtures. Do not enable client request compression or change memory admission. |
+| `16c6b4bd`, `12f2cafe`, merge `f6ee1e64`, `a3e76891`: pooled response encoders | Shared API HTTP/SSE responses | `response_compression.go`; existing negotiated compression only | Reuse/error-path/finished-writer tests and empty-pool benchmarks retain Content-Encoding and fail late writes. Local Codex JSON-429 display exclusion stays intact. |
+| `9717e325`: late and unknown WS interrupts | Codex WS and HTTP fallback, active response ownership | Executor websocket session and OpenAI websocket input/forwarder; no UI | Deterministic completed/failed/rejected/disconnected/fallback cases. Upstream ownership-aware begin/reactivate/deactivate supersedes the earlier local begin/end calls while preserving rejection before terminal publication and answering already-claimed frames exactly once. Keep local regression assertions. |
+| `65889d39`: catalog/environment tests | Pinned client catalog, model context and opt-in metadata | Client/API/registry tests; no consumer settings change | Adopt environment-compatible discovery and SIWC fixtures, but retain zero unknown-provider context, pinned GPT-5.5 identity/hash and disabled synthesized multi-agent support. Dynamic template expectations must not weaken these existing contracts. Include both legacy GPT-5.5 and upstream Luna counterexamples for configuration-update support. |
+| `8365de86`, `b4cbda59`, merge `f6d29ec7`: Kimi/GPT availability documentation | Optional Kimi and existing GPT directory | README variants only | No provider/model automatically enabled; existing user-selected desktop policy remains authoritative. Documentation is not entitlement or live inference evidence. |
+| `c6425a6e`, merge `a9e0d48a`: ecosystem documentation | No production call chain | README variants only | Not applicable to runtime; no consumer/frontend implementation required. |
+
+Semantically integrate local repair 69312cc0b2 unchanged: the four-module Mac
+bridge version 20261028-claude-image-copy-v1 was already installed and verified
+on October 28. Only outgoing inline image copies for claude-*-tokyo, uncompressed
+Responses, and more than twenty image blocks receive the observed 3000px bound.
+Original images/history, parameters, compaction, Live, search and credential
+replacement remain unchanged. Preserve explicit processing bounds, URL/file-ID
+non-fetch behavior and native computer-screenshot coordinate exclusions. The
+thirty-seven local regressions and installed-engine loopback are synthetic;
+they do not establish a real upstream image acceptance or resume a user task.
+Do not reinstall/reload the already matching local bridge during maintenance.
+
+Required gates: full Go 1.26.10 test/build; repeated race tests for registry,
+compression, decode, executor and Responses handlers; installed-engine bridge
+loopbacks; API/updater/source-identity tests; exact NAS/Tokyo/manager manifests,
+image health/hash checks and desktop/390x844 update navigation. No paid model call,
+new capability publication, production installation or independent-task inspection
+is implied. Record actual preparation results in the external maintenance receipt.
+
+Repeated executor validation exposed a test-isolation defect: the Home-balance
+fixture cleared executor maps but retained the conductor's known credits hint
+between -count repetitions, bypassing the KV lookup on later runs. Reset that
+fixture's hint before and after the test; preserve its exact KVGet-count and
+remote-balance-precedence assertions. Production credits logic is unchanged.
+
+The repeated full executor race suite then reproduced a real shared-credential
+race: isClaudeSetupToken read three boolean metadata flags directly while
+PrepareRequestAuth stored profile fields under the canonical metadata mutex.
+Read skip_account_profile, is_setup_token and setup_token through the same locked
+boolean helper. Preserve exact bool-only, OAuth-only and missing-value semantics;
+do not change account identity, scopes, profile fallback or refresh behavior.
+Retain the original failure log and unchanged profile race regression, add a
+barrier-synchronized flag-reader/writer regression, and repeat them under race
+detection before rerunning the full executor suite. The no-copy review also
+deduplicates upstream's identical Vertex allowlist entry without changing its
+count or weakening the invariant gate.

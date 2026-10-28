@@ -36,6 +36,7 @@ func TestModelsMultiAgentClientConfigAndReload(t *testing.T) {
 				raw  string
 				want bool
 			}{
+				// Synthesized models do not inherit unrelated template entitlements.
 				{"omitted", "{}", false},
 				{"enabled", "client: {codex: {optimize-multi-agent-v2: true}}", true},
 				{"disabled", "client: {codex: {optimize-multi-agent-v2: false}}", false},

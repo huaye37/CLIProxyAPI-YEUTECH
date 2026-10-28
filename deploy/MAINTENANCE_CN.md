@@ -171,3 +171,14 @@ enable_request_compression = false
 的严格 Git 缺失文件分类和 Home socket 取消修复，并接入上游 index 分类、
 同步取消及 Antigravity 工具签名修复。本轮不安装、不重启生产；v8.0.41 的一次
 发布授权不延伸至本次定时任务。本机已运行的桥接和默认配置不重复安装或重写。
+
+## 2026-10-29 已运行的本机多图修复
+
+本机桥接已于 10 月 28 日自然空闲后平滑加载为
+`20261028-claude-image-copy-v1`，本轮将其源码整合到维护候选，不重复安装。
+安装器须成套保留 auth-bridge、errors、search、images 四个模块。
+仅在未压缩 Responses 请求发往现有 `claude-*-tokyo` 且图片超过 20 张时，
+对超过 3000 像素的内联图片生成等比例发送副本；历史和原图不改。
+处理预算、原生 computer_screenshot 坐标例外及 URL/file-ID 不抓取边界
+见 `scripts/codex-yeutech-images.mjs` 和外部 2026-10-28 图片修复回执。
+不能以目录或回环测试声称真实上游图片验收，也不自动续跑原会话。
