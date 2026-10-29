@@ -604,3 +604,131 @@ barrier-synchronized flag-reader/writer regression, and repeat them under race
 detection before rerunning the full executor suite. The no-copy review also
 deduplicates upstream's identical Vertex allowlist entry without changing its
 count or weakening the invariant gate.
+
+## 2026-10-29: local cross-model compaction compatibility
+
+An existing Claude Tokyo conversation contained a `cmp_ag_compact_*` item with
+`cpa-ag-compact-v1:` data. Switching to GPT sent that provider-owned capsule into
+OpenAI remote compaction, which rejected it as `thinking_signature_invalid`.
+This is not an exhausted GPT context window or a corrupt OpenAI-native capsule.
+
+The local Mac authentication bridge now owns a fifth module,
+`scripts/codex-yeutech-compaction.mjs`, and version
+`20261029-cross-model-compaction-v1`. For GPT JSON POSTs on `/v1/responses` and
+`/v1/responses/compact`, it validates/decrypts only CPA-owned compaction items and
+substitutes a user-level historical-summary message at the same position in an
+outbound copy. The CPA fixed key is public and conveys no instruction authority.
+Native OpenAI compaction/reasoning state, message/tool order, compaction triggers,
+model/effort/speed preferences and stored history are not altered. Non-GPT bodies
+retain CPA capsules. Invalid or unknown CPA formats fail explicitly, never by
+dropping context or forwarding the capsule unexamined.
+
+Both streamed compaction v2 and standalone compact bodies are covered, including
+identity/gzip/deflate/Brotli/zstd. Unchanged requests retain the original wire bytes
+and encoding. Changed requests use identity framing with recalculated length and
+removed stale content digests. Wire/decoded bodies are bounded at 256 MiB; two
+preprocessing slots allow at most one large, encoded or unknown-length body.
+Over-budget/unsupported input is rejected explicitly; saturation returns 503 with
+Retry-After rather than silently bypassing validation. Cancellation releases the
+slot. The existing Claude image-copy adapter remains identity-only and <=32 MiB;
+its original image, coordinate, file-ID and remote-URL boundaries are retained.
+
+Regression evidence includes GPT continuation, repeated conversion, both compact
+paths, mixed tool/native state, damaged capsules, bounded decoding, cancellation,
+chunked bodies and saturation. The installed Codex engine completes a real
+ephemeral Claude turn and streamed compact, switches to GPT, continues, compacts
+again and continues with the native capsule, with request compression on and off.
+All model responses in this test are loopback fixtures: zero paid calls. The
+original affected capsule is separately verified offline with only summary hashes
+recorded; its rollout hash remains unchanged. Early fixture failures (a plain
+assistant response where compaction v2 required a compaction item) were corrected
+in the mock, not by relaxing conversion or completion assertions.
+
+The existing installer copies and syntax-checks all five modules and reloads only
+at a confirmed idle window using graceful SIGTERM. Keep configuration, LaunchAgent,
+OAuth-to-loopback routing, credential replacement, Live, search, 429 display and
+HTTP fallback unchanged. Do not resume the original task automatically. Exact
+test counts, source identity, backups and installation state are in external
+receipt `2026-10-29-codex-cross-model-compaction.json`; queued is not installed.
+This isolated repair does not replace the v8.0.46 NAS/Tokyo/manager candidate or
+install any production proxy. Future maintenance must semantically retain this
+five-module repair before staging a new candidate; older three/four-module sources
+must not overwrite the running bridge.
+
+### Follow-up: reviewed Grok task-state recovery, not native decryption
+
+A second affected thread (the existing Tibo monitor) switched from Grok to GPT.
+Its native Grok compaction and six later encrypted reasoning items are not CPA
+capsules. Grok's random-looking unpadded base64 is explicitly NOT a provider
+classifier (`internal/signature/grok_validation.go`); provenance was instead
+established from the local rollout's Grok turn contexts. The previous CPA-only
+repair intentionally preserved these unknown native blobs, so this failure was
+not covered by that repair or its original acceptance claims.
+
+Local bridge version `20261029-cross-model-compaction-v2` retains the five-module
+layout and adds an explicit reviewed-checkpoint registry to the existing
+compaction module. It reads only a file named by the exact encrypted-content
+SHA256 under `~/.codex/compaction-recoveries/`; it does not search other sessions
+or infer the provider from ciphertext. Records must be owner-only regular files,
+not symlinks, no larger than 64 KiB, with matching schema, item type/ID/hash,
+confirmed xAI/Grok provenance, GPT target and source rollout SHA. Missing records
+leave unknown/native items byte-identical; invalid records fail closed. Known
+OpenAI-native envelopes are always preserved. Tests may override only the
+fixture registry directory through `YEUTECH_CODEX_RECOVERY_DIR`.
+
+For this explicitly repaired task, one compaction checkpoint records the visible
+monitor rules, durable state location, historical last successful check, cutoff
+and duplicate-alert boundaries, and original rollout reference. Six exact known
+Grok reasoning items receive honest historical markers, never invented thoughts.
+These are user-level messages, explicitly labelled as visible-record recovery,
+not decrypted private state. Public tool calls/results remain in place. The
+underlying 120 MB rollout, monitoring deduplication file, alert history, scheduled
+task, model choice and notification policy are unchanged. No group message,
+ringing, immediate rerun, new thread or paid model request is part of this repair.
+
+Offline replay of the actual current window replaces exactly seven registered
+items while retaining the other 107 items byte-equivalently, with identical
+identity/zstd results. The installed-engine loopback matrix covers both Claude
+CPA and reviewed Grok checkpoints switching to GPT, then recompacting and
+continuing with native OpenAI state, with compression on/off. This does not claim
+to decrypt arbitrary Grok/native state, restore private reasoning, or provide a
+universal lossless cross-provider converter. Other old native checkpoints require
+their own evidence-backed migration; never silently delete foreign compaction.
+
+Preserve both the source repair and the private reviewed registry in future local
+bridge maintenance. Do not copy task checkpoints into Git or production images.
+The external `2026-10-29-codex-grok-checkpoint-recovery.json` receipt records exact
+source, private-record hashes, verification and graceful installation state.
+
+## 2026-10-30: official v8.0.47 candidate and current-main reconciliation
+
+Latest official release verified at preparation: v8.0.47, tag
+`90c447d3a8727d115aa7552ec93ce023736ed492`, five commits after v8.0.46.
+Both production profiles are now v8.0.46, installed by a separate operation.
+This run prepares candidates only. Start from verified maintenance source
+424cd826a6 (including v8.0.46 and both local compaction repairs), then merge
+current main 7026a34000 without discarding its shared navigation/PWA work.
+The imported main changes for unrelated sites are not deployed by this task.
+
+| Upstream commit / feature | Suppliers and consumer chain | Implementation / frontend | Evidence and disposition |
+| --- | --- | --- | --- |
+| `e324e4814c`: frontend auth body opt-out | Optional plugin frontend authentication before existing model routes; applies equally to local clients, workbench, text and separate media consumers when explicitly enabled | `internal/pluginhost/adapters_auth.go`, RPC schema and `sdk/pluginapi/types.go`; schema 7+ opt-in, no new user-facing setting | Body read/decode skip, schema gate, RPC wire shape and clone-ownership tests. Existing non-opted providers retain body behavior and admission. Do not enable a plugin or change credentials merely because capability exists. |
+| `0fe38224e5`: raw byte-range patching and subsequent WS interception | Optional before/after-auth plugins; Codex Responses continuation/steering and shared API input paths | `adapters_interceptors.go`, `rpc_client.go`, schema 8 / ABI, SDK handlers, `codex_websockets_duplex.go`; no new consumer parameter or management UI required | Raw CABI/schema gating, offset/overlap/JSON validation, ownership and subsequent-frame interceptor tests; four related packages run three times under race. Preserve authentication, model binding, headers, cancellation and the payload final semantic barrier. Source adoption is not a claim that a new production plugin has been enabled or tested. |
+| `535110e109`: Nia Live Demo documentation | No existing runtime supplier or consumer call chain | README language variants only; no UI | Not applicable to runtime; documentation reference does not register a provider/model. |
+| `3f2b8f2815`: merge of documentation PR #7082 | Same documentation-only change | Merge ancestry; no extra UI or configuration | Retain official ancestry; no separate runtime capability. |
+| `90c447d3a8`: Gemini tool-search item identity | Gemini/Antigravity -> OpenAI Responses -> local clients, AI workbench, writing/study/question/scoring text consumers when using tool search; media parameters remain independent | Gemini Responses translator and `helps/codex_input_ids.go`; `tsc_` call-item prefix, stable call IDs and collision repair; no UI | Streaming/non-streaming round trips, discovered namespace calls, same-named user functions and ID collisions are covered by upstream fixtures plus full Go tests. Backend protocol repair is automatically applied in this candidate; production acceptance awaits user installation and is not inferred from a catalog entry. |
+
+No new supplier, model, catalog publication, speed entitlement, window/80-percent
+threshold, quota source, image reasoning setting or historical identity is changed.
+Keep the already-installed five-module bridge v2 and its private reviewed registry;
+all five files match the preserved source, and registry contents stay outside Git
+and every image. Existing Gemini/Claude compaction, SSE bootstrap, Gin accounting,
+logger lifecycle and Claude metadata race repairs remain in the maintenance tree.
+The bridge/installed-engine suite passes 53 cases without paid model calls.
+
+Required candidate gates remain full Go 1.26.10 test/build, API/updater/identity and
+material/syntax checks, exact NAS/Tokyo source/archive/image identity, paired-manager
+entrypoint health/runtime hashes, Tokyo protocol/privacy/admission/catalog tests,
+NAS two-layer compaction and desktop/390x844 navigation/update checks. Browser
+preview fixtures are not live readiness evidence. The external receipt records
+individual results, any transient failures and the explicit installed=false state.

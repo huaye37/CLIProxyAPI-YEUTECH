@@ -37,11 +37,13 @@ fi
 "$node_bin" --check "$script_dir/codex-yeutech-errors.mjs"
 "$node_bin" --check "$script_dir/codex-yeutech-search.mjs"
 "$node_bin" --check "$script_dir/codex-yeutech-images.mjs"
+"$node_bin" --check "$script_dir/codex-yeutech-compaction.mjs"
 
 /bin/mkdir -p "$target_dir" "$log_dir"
 /usr/bin/install -m 0600 "$script_dir/codex-yeutech-errors.mjs" "$target_dir/codex-yeutech-errors.mjs"
 /usr/bin/install -m 0600 "$script_dir/codex-yeutech-search.mjs" "$target_dir/codex-yeutech-search.mjs"
 /usr/bin/install -m 0600 "$script_dir/codex-yeutech-images.mjs" "$target_dir/codex-yeutech-images.mjs"
+/usr/bin/install -m 0600 "$script_dir/codex-yeutech-compaction.mjs" "$target_dir/codex-yeutech-compaction.mjs"
 /usr/bin/install -m 0700 "$script_dir/codex-yeutech-auth-bridge.mjs" "$target"
 
 if (( ! running )); then
@@ -62,7 +64,7 @@ verified=0
 for attempt in {1..100}; do
   if /usr/bin/curl --silent --fail "$health_url" | "$node_bin" --input-type=module -e '
     let input=""; for await (const c of process.stdin) input+=c;
-    try { const h=JSON.parse(input); process.exit(h.ok && h.version === "20261028-claude-image-copy-v1" ? 0 : 1); }
+    try { const h=JSON.parse(input); process.exit(h.ok && h.version === "20261029-cross-model-compaction-v2" ? 0 : 1); }
     catch { process.exit(1); }
   '; then
     verified=1

@@ -6,7 +6,8 @@ import https from "node:https";
 import { randomUUID } from "node:crypto";
 import { isCodexStreamingResponse, rateLimitDisplay } from "./codex-yeutech-errors.mjs";
 import { isCodexStandaloneSearch, readSearchBody, routeStandaloneSearch } from "./codex-yeutech-search.mjs";
-import { isImageRequest, readImageBody, normalizeClaudeImages } from "./codex-yeutech-images.mjs";
+import { isImageRequest, imageBodyLimit, normalizeClaudeImages } from "./codex-yeutech-images.mjs";
+import { isResponsesBody, readResponseBody, normalizeProxyCompaction } from "./codex-yeutech-compaction.mjs";
 
 const listenHost = process.env.YEUTECH_CODEX_BRIDGE_HOST || "127.0.0.1";
 const listenPort = Number(process.env.YEUTECH_CODEX_BRIDGE_PORT || "18401");
@@ -25,6 +26,8 @@ let cachedToken = null;
 let cachedTokenAt = 0;
 let activeRequests = 0;
 let preparingImages = 0;
+let preparingResponses = 0;
+let preparingLargeResponses = 0;
 
 function upstreamToken() {
   const envToken = process.env.YEUTECH_UPSTREAM_BEARER_TOKEN?.trim();
@@ -128,7 +131,7 @@ function forwardResponse(request, response, upstreamResponse) {
 const server = http.createServer(async (request, response) => {
   if (request.method === "GET" && request.url === "/_yeutech/health") {
     response.writeHead(200, { "content-type": "application/json" });
-    response.end(JSON.stringify({ ok: true, version: "20261028-claude-image-copy-v1", activeRequests, preparingImages, upstream: upstreamBase.origin, liveUpstream: liveBase.origin }));
+    response.end(JSON.stringify({ ok: true, version: "20261029-cross-model-compaction-v2", activeRequests, preparingImages, preparingResponses, upstream: upstreamBase.origin, liveUpstream: liveBase.origin }));
     return;
   }
 
@@ -142,30 +145,49 @@ const server = http.createServer(async (request, response) => {
   response.once("close", finishRequest);
 
   let searchBody;
-  let imageBody;
-  let imageComplete = false;
-  let imageChanged = false;
-  if (isImageRequest(request) && preparingImages < 2) {
-    preparingImages += 1;
+  let responseBody;
+  let bodyChanged = false;
+  if (isResponsesBody(request)) {
+    // Two bounded preprocessing slots, at most one large/encoded/unknown body,
+    // independent of long-running inference.
+    // Never bypass capsule validation under load. Clients may retry safely.
+    const length = Number(request.headers["content-length"]);
+    const large = !Number.isSafeInteger(length) || length > imageBodyLimit
+      || Boolean(request.headers["content-encoding"] && request.headers["content-encoding"] !== "identity");
+    if (preparingResponses >= 2 || (large && preparingLargeResponses >= 1)) {
+      response.writeHead(503, { "content-type": "application/json", "retry-after": "1" });
+      response.end(JSON.stringify({ error: { message: "请求预处理繁忙，请稍后重试；历史记录未修改。", type: "bridge_request_error", code: "responses_preprocessing_busy" } }));
+      request.resume(); return;
+    }
+    preparingResponses += 1;
+    if (large) preparingLargeResponses += 1;
     const cancellation = new AbortController();
     const cancel = () => cancellation.abort();
     response.once("close", cancel);
     request.once("aborted", cancel);
     try {
-      const buffered = await readImageBody(request);
-      imageComplete = buffered.complete;
-      imageBody = imageComplete
-        ? await normalizeClaudeImages(buffered.body, { signal: cancellation.signal }) : buffered.body;
-      imageChanged = imageBody !== buffered.body;
-    } catch {
+      const original = await readResponseBody(request, { signal: cancellation.signal });
+      responseBody = await normalizeProxyCompaction(original, { encoding: request.headers["content-encoding"] || "identity", signal: cancellation.signal });
+      if (isImageRequest(request) && original.length <= imageBodyLimit) {
+        preparingImages += 1;
+        try { responseBody = await normalizeClaudeImages(responseBody, { signal: cancellation.signal }); }
+        catch { throw Object.assign(new Error("image_preprocessing_failed"), { code: "image_preprocessing_failed" }); }
+        finally { preparingImages -= 1; }
+      }
+      bodyChanged = responseBody !== original;
+    } catch (error) {
       if (!response.destroyed) {
-        response.writeHead(400, { "content-type": "application/json" });
-        response.end(JSON.stringify({ error: { message: "无法处理发往 Claude 的超限图片；原图与历史记录未修改。", type: "invalid_request_error", code: "image_preprocessing_failed" } }));
+        response.writeHead(error.statusCode || 400, { "content-type": "application/json" });
+        response.end(JSON.stringify({ error: { message: error.code === "image_preprocessing_failed"
+          ? "无法处理发往 Claude 的超限图片；原图与历史记录未修改。"
+          : "无法安全转换请求中的压缩上下文，请检查请求格式或大小；原会话历史未修改。",
+          type: "invalid_request_error", code: error.code || "responses_preprocessing_failed" } }));
       }
       request.resume();
       return;
     } finally {
-      preparingImages -= 1;
+      preparingResponses -= 1;
+      if (large) preparingLargeResponses -= 1;
       response.off("close", cancel); request.off("aborted", cancel);
     }
     if (request.aborted || response.destroyed) return;
@@ -195,8 +217,8 @@ const server = http.createServer(async (request, response) => {
   try {
     headers = requestHeaders(request.headers, target, live);
     if (searchBody) headers["content-length"] = String(searchBody.length);
-    if (imageComplete) headers["content-length"] = String(imageBody.length);
-    if (imageChanged) for (const name of ["content-md5", "digest", "content-digest"]) delete headers[name];
+    if (responseBody) headers["content-length"] = String(responseBody.length);
+    if (bodyChanged) for (const name of ["content-encoding", "content-md5", "digest", "content-digest"]) delete headers[name];
   } catch (error) {
     response.writeHead(503, { "content-type": "application/json" });
     response.end(JSON.stringify({ error: { message: error.message, type: "bridge_auth_error" } }));
@@ -228,8 +250,7 @@ const server = http.createServer(async (request, response) => {
     if (!response.writableEnded) upstreamRequest.destroy();
   });
   if (searchBody) upstreamRequest.end(searchBody);
-  else if (imageComplete) upstreamRequest.end(imageBody);
-  else if (imageBody) { upstreamRequest.write(imageBody); request.pipe(upstreamRequest); }
+  else if (responseBody) upstreamRequest.end(responseBody);
   else request.pipe(upstreamRequest);
 });
 
