@@ -600,6 +600,7 @@ func (s *proxyTestAntigravityOAuthService) FetchProjectID(ctx context.Context, a
 }
 
 func TestStartOAuthV8AntigravityAndPluginSessionProxyAndRestartPersistence(t *testing.T) {
+	cleanupOAuthFixtureStates(t, "plugin-proxy-state-1")
 	gin.SetMode(gin.TestMode)
 
 	var proxyHits, directHits atomic.Int32
@@ -905,6 +906,7 @@ func TestStartOAuthV8AntigravityProjectDiscoveryProxyFailureFailsSession(t *test
 }
 
 func TestStartOAuthV8PluginPollCancelRaceDoesNotDropProxyOrSaveCancelledSession(t *testing.T) {
+	cleanupOAuthFixtureStates(t, "plugin-cancel-race-state", "plugin-commit-barrier-state", "plugin-interleave-poll-state")
 	gin.SetMode(gin.TestMode)
 
 	var proxyHits, directHits atomic.Int32
@@ -1149,6 +1151,7 @@ func (p *proxyRefreshTestAuthProvider) RefreshAuth(ctx context.Context, req plug
 }
 
 func TestStartOAuthV8WithoutProxyPreservesDefaultBehaviorAndPersistedProxyRefresh(t *testing.T) {
+	cleanupOAuthFixtureStates(t, "refresh-sso-state")
 	gin.SetMode(gin.TestMode)
 
 	var proxyHits, directHits atomic.Int32

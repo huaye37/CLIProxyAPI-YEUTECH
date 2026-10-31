@@ -732,3 +732,138 @@ entrypoint health/runtime hashes, Tokyo protocol/privacy/admission/catalog tests
 NAS two-layer compaction and desktop/390x844 navigation/update checks. Browser
 preview fixtures are not live readiness evidence. The external receipt records
 individual results, any transient failures and the explicit installed=false state.
+
+## 2026-10-30: bidirectional local history portability
+
+The failing Gemini continuation carried an OpenAI native capsule produced by an
+earlier GPT turn, not a damaged Claude CPA capsule. The existing v2 bridge only
+handled the GPT destination and reviewed Grok checkpoints. A native capsule can
+outlive several later model switches; the currently selected model is not proof
+of the capsule's origin.
+
+`scripts/codex-yeutech-history.mjs` recovers visible pre-compaction history from
+the exact local thread rollout, bound to the capsule type/ID/SHA and its producing
+turn's model. It uses the saved guardian history, not a private-state decryption.
+It skips already-retained messages with multiplicity, retains public tool results
+and images, and never promotes old system/developer text to active instructions.
+Foreign encrypted reasoning becomes only its already-visible summary (or an
+explicit no-visible-summary marker). Same-family native state, unregistered
+unknown state and unknown models remain unchanged. Missing/oversize/unsupported
+recovery material fails closed rather than silently discarding history.
+
+The installed engine actually sends `thread-id` and `session-id`, not
+`session_id`; both must agree. The initial failing header assertion is preserved
+in the external evidence logs. Both normal and compact requests use the adapter,
+including identity/gzip/deflate/Brotli/zstd request bodies. CPA capsules are also
+expanded for native Grok destinations; Claude/Gemini retain their shared CPA
+format. The existing exact-reviewed checkpoint registry remains unchanged.
+
+The installer now copies six modules and targets
+`20261030-portable-history-v3`. It retains the natural-idle/SIGTERM drain gate,
+credentials, config, LaunchAgent and original rollout files. Local regression
+tests include the installed engine across eight source/destination combinations,
+compression on/off, continuation and re-compaction; loopback only, no paid calls.
+The affected real rollout was replayed offline, restoring its capsule and known
+foreign reasoning while retaining every other input item and the original file
+hash. These checks do not claim a production task rerun or upstream quota reset.
+
+This is an isolated local bridge repair, not a replacement for the frozen
+v8.0.47 NAS/Tokyo/manager candidate. Merge it semantically before the next unified
+stage; never install an older five-module source over this local repair. Preserve
+the private checkpoint directory outside Git and images. See the external
+2026-10-30 portable-history repair receipt for installation and boundary evidence.
+
+## 2026-10-31: bounded history recovery and target-context budgeting
+
+The deployed large-rollout streaming fix from the parallel repair chat is retained
+in its own commit. Runtime hashes were independently matched before further work;
+the earlier 128 MiB whole-file gate was the cause of repeated local conversion
+failures, not quota exhaustion. The follow-up review also reproduced an unrelated
+17 MiB record rejecting a same-family request, and identified the separate 512 KiB
+recovered-transcript gate and a real Claude context-overflow turn.
+
+The v4 reader bounds memory per record, skips oversized unindexed records without
+guessing their provenance, clears attribution across skipped records, and ignores
+only an unfinished trailing append after verifying the thread. No whole-rollout
+size cutoff remains. Requested private-item identities alone are retained in the
+index. Unknown provenance remains unchanged; a missing required snapshot is not
+fabricated and native encrypted state is never decrypted.
+
+Large recovered snapshots now become explicit, incomplete extractive checkpoints
+with local byte-range references and capsule identity binding. Original messages,
+tool outputs and images remain in the rollout. This is not claimed as a lossless
+semantic summary: omitted historical details must be retrieved from the original.
+The local catalog supplies the model's 80-percent/auto-compaction budget; no
+capacity is guessed from a model name. After conversion, a conservative text-byte
+estimate plus image allowance can checkpoint only the old input prefix. Current
+instructions, the latest user input and active tool-call/result pairs stay intact.
+An oversized protected current input gets a specific error rather than truncation.
+Same-family requests that need no conversion remain byte-identical.
+
+Tests cover large/CRLF/oversized-record/partial-append histories, exact provenance,
+over-512-KiB checkpoints, catalog budgets, protected input and paired tools, plus
+16 installed-engine source/target/compression scenarios (including a large GPT to
+Claude snapshot). All 62 tests and Go build pass. Actual affected-thread offline
+replays preserve the latest user request and fit recovered cross-model contexts
+within the conservative catalog budget. No business task is resumed by these tests.
+
+Install `20261031-budgeted-history-v4` with the existing six-module idle/drain
+installer, preserving config, LaunchAgent and private checkpoint files. Keep the
+prior runtime backup. This local repair does not install or replace NAS/Tokyo/
+manager candidates; future unified staging must semantically retain both the
+large-rollout fix and this budgeting fix. See the external 2026-10-31 repair receipt
+for live-installation verification and any production probe limits.
+
+## 2026-11-01: official v8.0.48 and paired recovery/usage surfaces
+
+Verified stable tag `dbb706215a3afd2f0ea3c96482d4233856466caa` contributes
+27 commits after v8.0.47. Start from portable-history 37c785568d, including
+the v8.0.47 maintenance candidate and all six-module v4 repairs, then merge
+main b306ffa343. Unrelated main site changes are preserved but not deployed.
+Production was independently read as v8.0.46 on both profiles before preparation.
+
+| Upstream commits / functionality | Providers and actual consumer chain | Files / frontend adaptation | Verification and disposition |
+| --- | --- | --- | --- |
+| `fa42f390`, merge `56efc81f`: WS disconnect assertion | Codex Responses clients | `sdk/api/handlers/openai/*steering*test.go`; no UI | Existing disconnect regression asserts error event without wall-clock ordering; test-only correction. |
+| `02ee3139`: JSON control-character diagnostics | Optional Devin executor | `helps/devin_apply_patch_diagnostic*`; no UI | Diagnostic fixtures; Devin is not enabled by this run. |
+| `498170a4`, `7df437c8`, merge `265ca179`: fragmented relay SSE | Optional AI Studio relay -> shared text/tool consumers | `helps/relay_sse_buffer*`, `aistudio*`; no generation control | Fragmented/multiline/frame tests; no new AI Studio account or relay deployment. |
+| `89e472f3`: Anthropic structured usage | Tokyo Claude -> NAS -> local clients, workbench, novel text, study/questions/scoring | Claude executors and `helps/usage_helpers*`; paired manager request records | Preserve cache TTL, tool and iteration details in upstream sinks. Expose an explicit bounded numeric subset via v8 recent usage, BFF and UI; no prompt, raw body, private metadata or arbitrary map keys. |
+| `24840fdd`: xAI usage | Existing Grok text and independent media routes | xAI HTTP/WS/media/speech executors, usage helpers; same manager display | Capture provider-reported counters; no conversion of accumulated search usage into context length and no invented quota/cost. |
+| `01551f5f`: OpenAI/Codex usage | Existing Responses/Chat and separate image entrances | Codex/OpenAI executors, `sdk/cliproxy/usage`; same manager display | Preserve requested/response tiers, modality counts and independent image semantics; no Fast grant inferred from request fields. |
+| `bd5ec531`: Gemini family usage | Existing Gemini/Antigravity and optional Vertex/AI Studio | Executors and usage helpers; same manager display | Structured SDK records are automatic candidate behavior; final consumer responses/usage are not rewritten. |
+| `d5eb4ca1`: usage observation performance | Shared streaming text/media paths | `helps/openai_stream_usage_observer*`, usage parsing | Observer ownership/large-payload tests; no claim of measured production speedup. |
+| `97dd3a4a`: failed stream and multipart/zero counters | Existing text retries and independent image upload | Usage helpers and image executors | Retain failed partial usage; absent counters remain absent, reported zero remains zero. Manager allowlist tests reject negative/fractional/private fields. |
+| `82deffb9`, merge `eabcb1b7`: done-item tools and multiline usage | Responses tool continuations | Stream observer, SDK detail types | Upstream fixtures plus bounded ring deep-copy test; all structured detail stays available to SDK sinks, while manager intentionally shows only supported counters. |
+| `a6b4477b`, merge `d30edd7f`: Home WS access | Optional Home mode | API routes and WS auth tests | Auth gate tests; Home is not activated and no private endpoint is exposed. |
+| `4cb98e3c`, merge `8dfb45d2`: deferred WS logging ownership | Local/workbench Responses streams | `internal/logging/request_capture.go`, WS handlers | Capture tests and repeated race checks; preserve prior Gin snapshot, stream logging lifecycle and cancellation repairs. |
+| `43068c86`, merge `67beb7a6`: relative auth-dir cooldown file | All shared credential scheduling | `sdk/cliproxy/auth/cooldown_state*` | Relative/absolute path tests; production auth dirs/credentials are not changed. |
+| `f013eb66`: incomplete streams not credential refusals | OpenAI-compatible text streaming | Executor failure classification and auth conductor | Missing terminal-frame tests; keep request failure visible without inventing upstream credential cooldown. |
+| `514d09f7`: terminal renewal recovery | Existing Codex credentials -> v8 manager -> account detail | Auth renewal/session handling; `apps/api/server.mjs`, `public/app.js` | Added sanitized recovery stages and original-account re-login action, authoritative target lookup, explicit `verify:false`, failure/retry and refreshed-state checks. Wrong-account rejection/adoption/renewal covered by upstream fixtures. No real login, credential verification or paid request is triggered. |
+| `12d97cfe`: mid-conversation tool additions | Claude-format clients -> Codex/OpenAI | Claude request translators/util tool metadata | Added-tool history fixtures; no new UI field. |
+| `bc81923b`: multi-provider model registration | Optional model registrar plugins | `internal/pluginhost/adapters*`, service model exclusions | Registration/exclusion fixtures; no automatic plugin or supplier activation. |
+| `81de4b9c`, `068fe153`: tool-result errors | Claude-format clients -> Gemini/Antigravity | `util/claude_tool_result*`, request translators | Error semantics preserved in tool history; no retries silently rewritten as successful output. |
+| `dbb70621`: CPA capsules to GPT | All Codex HTTP/compact/WS/steer/token-count paths | Compaction helper and Codex executors | Preserve native OpenAI items, reject malformed CPA items, apply payload rules last. Local adaptation restores old context as ordinary user history, not elevated developer instructions; HTTP/compact/WS tests assert this deliberately narrower contract. Six-module Mac v4 provenance/budget logic remains unchanged. |
+
+The existing manager needed actual implementation, not just an upstream merge:
+the recent-usage ring/BFF/UI previously dropped all new structured counters, and
+account summaries discarded terminal-renewal recovery state. The new UI reuses
+existing account detail, OAuth dialog and request cards/materials. Login completion,
+loaded credential, inference verification and automatic-renewal verification remain
+distinct; original-account recovery does not automatically perform paid inference.
+Operator-only manual credential verification remains a backend capability; this
+candidate does not add an automatic verification loop or a misleading success label.
+
+The first repeated management run exposed fixed synthetic OAuth state IDs retained
+across test repetitions by the new completed-session TTL. Test cleanup removes only
+those six tests' synthetic session IDs under the store lock; production TTL, duplicate
+rejection and cancellation semantics are unchanged. Initial logs are retained.
+The initial full run's developer-role assertions were updated only for the explicit
+historical-privilege contract above; native-item/payload-precedence assertions remain.
+
+Required gates: full Go 1.26.10 test/build, six relevant packages under repeated
+race, 74 local/installed-engine loopbacks, 117 manager tests, updater/identity tests,
+exact-source NAS/Tokyo/manager stage, protocol and compaction probes, image hashes,
+desktop/390x844 recovery-failure/retry and usage display, and live update checks.
+Final results and any unresolved gates belong in the external receipt. No production
+installation, task resumption/interruption, bridge reload, network change, new model
+registration, fee-bearing generation or all-consumer acceptance claim is authorized.

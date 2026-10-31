@@ -131,7 +131,7 @@ function forwardResponse(request, response, upstreamResponse) {
 const server = http.createServer(async (request, response) => {
   if (request.method === "GET" && request.url === "/_yeutech/health") {
     response.writeHead(200, { "content-type": "application/json" });
-    response.end(JSON.stringify({ ok: true, version: "20261029-cross-model-compaction-v2", activeRequests, preparingImages, preparingResponses, upstream: upstreamBase.origin, liveUpstream: liveBase.origin }));
+    response.end(JSON.stringify({ ok: true, version: "20261031-budgeted-history-v4", activeRequests, preparingImages, preparingResponses, upstream: upstreamBase.origin, liveUpstream: liveBase.origin }));
     return;
   }
 
@@ -167,7 +167,11 @@ const server = http.createServer(async (request, response) => {
     request.once("aborted", cancel);
     try {
       const original = await readResponseBody(request, { signal: cancellation.signal });
-      responseBody = await normalizeProxyCompaction(original, { encoding: request.headers["content-encoding"] || "identity", signal: cancellation.signal });
+      if (request.headers["thread-id"] && request.headers["session-id"] && request.headers["thread-id"] !== request.headers["session-id"]) {
+        throw Object.assign(new Error("foreign_history_thread_conflict"), { code: "foreign_history_thread_conflict" });
+      }
+      responseBody = await normalizeProxyCompaction(original, { encoding: request.headers["content-encoding"] || "identity", signal: cancellation.signal,
+        threadId: request.headers["thread-id"] || request.headers["session-id"], sessionDirectory: process.env.YEUTECH_CODEX_SESSIONS_DIR });
       if (isImageRequest(request) && original.length <= imageBodyLimit) {
         preparingImages += 1;
         try { responseBody = await normalizeClaudeImages(responseBody, { signal: cancellation.signal }); }
@@ -180,6 +184,10 @@ const server = http.createServer(async (request, response) => {
         response.writeHead(error.statusCode || 400, { "content-type": "application/json" });
         response.end(JSON.stringify({ error: { message: error.code === "image_preprocessing_failed"
           ? "无法处理发往 Claude 的超限图片；原图与历史记录未修改。"
+          : error.code === "context_budget_current_input_too_large"
+          ? "当前指令或未完成工具结果超出目标模型的保守上下文预算，未截断本轮输入；完整历史仍保留。"
+          : error.code === "context_budget_history_unavailable"
+          ? "恢复内容超过目标模型的上下文预算，但未找到可核验的原会话记录；未删除或截断历史。"
           : "无法安全转换请求中的压缩上下文，请检查请求格式或大小；原会话历史未修改。",
           type: "invalid_request_error", code: error.code || "responses_preprocessing_failed" } }));
       }

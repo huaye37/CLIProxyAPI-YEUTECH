@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { createCipheriv, createHash, randomBytes } from "node:crypto";
 import { spawn } from "node:child_process";
 import { once } from "node:events";
-import { mkdtemp, rm, readFile, writeFile, chmod, symlink } from "node:fs/promises";
+import { mkdtemp, mkdir, rm, readFile, writeFile, chmod, symlink } from "node:fs/promises";
 import { tmpdir, homedir } from "node:os";
 import { join } from "node:path";
 import http from "node:http";
@@ -58,12 +58,12 @@ test("GPT switch expands only CPA capsules, retaining order, tools, native state
   assert.equal(await normalizeProxyCompaction(result), result, "idempotent on repeated compaction");
 });
 
-test("native OpenAI state, unrelated fields and non-GPT requests remain byte-identical", async () => {
+test("native state, unrelated fields and CPA-compatible requests remain byte-identical", async () => {
   for (const value of [
     { ...payload(), input: [native, reasoning] },
     { ...payload(), model: "claude-opus-5-5-tokyo" },
     { ...payload(), model: "gemini-4-argon" },
-    { ...payload(), model: "grok-4.7-build-fast" },
+    { ...payload(), model: "grok-4.7-build-fast", input: [native, reasoning] },
     { model: "gpt-6.1-sol", input: "Plain text." },
     { model: "gpt-6.1-sol", input: [{ type: "message", role: "user", content: "cpa-ag-compact-v1: user quoted text" }] },
     null,
@@ -221,14 +221,22 @@ test("busy admission never bypasses conversion; abort releases slot and chunked 
 
 // Installed app-server, real model switch and remote compact, all against a
 // loopback mock. Only ephemeral test threads are created; no task is resumed.
-test("installed engine switches provider to GPT, continues and recompacts state", { skip: !process.env.CODEX_TEST_BIN, timeout: 240000 }, async t => {
-  for (const sourceModel of ["claude-opus-5-5-tokyo", "grok-4.7-build-fast"]) {
+test("installed engine switches both directions, continues and recompacts state", { skip: !process.env.CODEX_TEST_BIN, timeout: 480000 }, async t => {
+  for (const [sourceModel, targetModel] of [
+    ["claude-opus-5-5-tokyo", "gpt-6-astra"], ["grok-4.7-build-fast", "gpt-6-astra"],
+    ["gpt-6-astra", "gemini-4-argon-high"], ["gpt-6-astra", "claude-opus-5-5-tokyo"],
+    ["gpt-6-astra", "grok-4.7-build-fast"], ["grok-4.7-build-fast", "gemini-4-argon-high"],
+    ["claude-opus-5-5-tokyo", "grok-4.7-build-fast"], ["gemini-4-argon-high", "gpt-6-astra"],
+  ]) {
   for (const compression of [false, true]) {
-    await t.test(`${sourceModel} compression=${compression}`, { timeout: 50000 }, async t => {
+    await t.test(`${sourceModel} -> ${targetModel} compression=${compression}`, { timeout: 50000 }, async t => {
       const directory = await mkdtemp(join(tmpdir(), "yeutech-compaction-engine-"));
       t.after(() => rm(directory, { recursive: true, force: true }));
       const sourceCapsule = sourceModel.startsWith("grok-")
-        ? { type: "compaction", id: "cmp_fixture_grok", encrypted_content: randomBytes(64).toString("base64").replace(/=+$/, "") } : capsule();
+        ? { type: "compaction", id: "cmp_fixture_grok", encrypted_content: randomBytes(64).toString("base64").replace(/=+$/, "") }
+        : sourceModel.startsWith("gpt-") ? native : capsule();
+      const targetCapsule = targetModel.startsWith("gpt-") ? native : targetModel.startsWith("grok-")
+        ? { type: "compaction", id: "cmp_grok_target", encrypted_content: "opaque-grok-target" } : capsule();
       if (sourceModel.startsWith("grok-")) await registerCheckpoint(directory, sourceCapsule);
       const calls = [];
       let stage = "start", lastMethods = [];
@@ -238,18 +246,18 @@ test("installed engine switches provider to GPT, continues and recompacts state"
         calls.push({ path: record.path, body, encoding: record.headers["content-encoding"] });
         if (record.path === "/v1/responses/compact") {
           res.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({ id: "cmp_fixture_response", object: "response.compaction", created_at: 1793242926,
-            output: [{ role: "user", content: [{ type: "input_text", text: "Fixture task context." }] }, native], usage: { input_tokens: 30, output_tokens: 10, total_tokens: 40 } }));
+            output: [{ role: "user", content: [{ type: "input_text", text: "Fixture task context." }] }, targetCapsule], usage: { input_tokens: 30, output_tokens: 10, total_tokens: 40 } }));
           return;
         }
         const compacting = body.input.some(item => item.type === "compaction_trigger");
         const item = compacting
-          ? { ...(body.model === sourceModel ? sourceCapsule : native), status: "completed" }
+          ? { ...(body.model === sourceModel ? sourceCapsule : targetCapsule), status: "completed" }
           : { type: "message", id: `msg_fixture_${calls.length}`, role: "assistant", status: "completed", content: [{ type: "output_text", text: "OK", annotations: [] }] };
         const response = { id: `resp_fixture_${calls.length}`, object: "response", status: "completed", model: body.model, output: [item], usage: { input_tokens: 10, output_tokens: 1, total_tokens: 11 } };
         const events = [{ type: "response.created", response: { ...response, status: "in_progress", output: [] } },
           { type: "response.output_item.added", output_index: 0, item }, { type: "response.output_item.done", output_index: 0, item }, { type: "response.completed", response }];
         res.writeHead(200, { "content-type": "text/event-stream" }).end(events.map(event => `data: ${JSON.stringify(event)}\n\n`).join(""));
-      }, { YEUTECH_CODEX_RECOVERY_DIR: directory });
+      }, { YEUTECH_CODEX_RECOVERY_DIR: directory, YEUTECH_CODEX_SESSIONS_DIR: join(directory, "sessions") });
       const args = ["-c", 'model_provider="openai"', "-c", `openai_base_url="${base}/v1"`,
         "-c", `features.enable_request_compression=${compression}`, "-c", "features.memories=false", "-c", "model_context_window=500000", "-c", "model_auto_compact_token_limit=400000", "app-server"];
       if (process.env.CODEX_TEST_CATALOG) args.unshift("-c", `model_catalog_json=${JSON.stringify(process.env.CODEX_TEST_CATALOG)}`);
@@ -313,26 +321,36 @@ test("installed engine switches provider to GPT, continues and recompacts state"
       await turn(sourceModel);
       stage = "source compact";
       await compactThread();
-      stage = "GPT turn";
-      await turn("gpt-6-astra");
-      const gpt = calls.find(call => call.body.model === "gpt-6-astra" && call.path === "/v1/responses");
-      assert.ok(gpt, "real GPT continuation reached bridge");
+      assert.ok(seen.every(record => record.headers["thread-id"] === threadId && record.headers["session-id"] === threadId), "real engine supplies matching exact thread/session identities");
+      const day = join(directory, "sessions/2026/10/30"); await mkdir(day, { recursive: true });
+      await writeFile(join(day, `rollout-fixture-${threadId}.jsonl`), [
+        { type: "session_meta", payload: { id: threadId } },
+        { type: "compacted", payload: { replacement_history: [sourceCapsule], guardian_history: [
+          { type: "message", role: "user", content: [{ type: "input_text", text: "Keep project A; next step B."
+            + (sourceModel.startsWith("gpt-") && targetModel.startsWith("claude-") ? "x".repeat(600000) : "") }] }
+        ], latest_token_usage_record: { turn_id: "source" } } },
+        { type: "turn_context", payload: { turn_id: "source", model: sourceModel } },
+      ].map(JSON.stringify).join("\n") + "\n", { mode: 0o600 });
+      stage = "target turn";
+      await turn(targetModel);
+      const gpt = calls.find(call => call.body.model === targetModel && call.path === "/v1/responses");
+      assert.ok(gpt, "real target continuation reached bridge");
       assert.ok(gpt.body.input.some(item => item.role === "user" && item.content?.some(part => part.text?.includes("next step B"))));
       assert.ok(!JSON.stringify(gpt.body.input).includes("cpa-ag-compact-"));
       assert.ok(!JSON.stringify(gpt.body.input).includes(sourceCapsule.encrypted_content));
-      stage = "GPT compact";
+      stage = "target compact";
       await compactThread();
-      const compact = calls.find(call => call.body.model === "gpt-6-astra" && call.body.input.some(item => item.type === "compaction_trigger"));
+      const compact = calls.find(call => call.body.model === targetModel && call.body.input.some(item => item.type === "compaction_trigger"));
       assert.ok(compact, "real engine used streamed remote compaction v2");
       assert.ok(compact.body.input.some(item => item.role === "user" && item.content?.some(part => part.text?.includes("next step B"))));
       assert.ok(!JSON.stringify(compact.body.input).includes("cpa-ag-compact-"));
-      stage = "GPT native continuation";
-      await turn("gpt-6-astra");
-      assert.ok(calls.at(-1).body.input.some(item => item.type === "compaction" && item.encrypted_content === native.encrypted_content));
+      stage = "target native continuation";
+      await turn(targetModel);
+      assert.ok(calls.at(-1).body.input.some(item => item.type === "compaction" && item.encrypted_content === targetCapsule.encrypted_content));
       assert.ok(seen.every(record => record.headers.authorization === "Bearer fixture-gateway"));
       assert.equal(calls.length, 5, "three turns and two compactions, no retries or external calls");
       stage = "verified";
-      console.log(JSON.stringify({ sourceModel, compression, inferenceCalls: 3, compactCalls: 2, switchedAndCompacted: true, nativeCapsulePreserved: true, paidCalls: 0 }));
+      console.log(JSON.stringify({ sourceModel, targetModel, compression, inferenceCalls: 3, compactCalls: 2, switchedAndCompacted: true, nativeCapsulePreserved: true, paidCalls: 0 }));
     });
   }
   }

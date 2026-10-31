@@ -1,11 +1,12 @@
-// Convert only CLIProxyAPI-owned capsules in outbound copies, never native
-// OpenAI encrypted state or stored conversation history.
+// Normalize outbound copies only. Preserve same-family native state; recover
+// verified foreign state from visible local records, never private decryption.
 import { createDecipheriv, createHash } from "node:crypto";
 import { open } from "node:fs/promises";
 import { constants } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { createGunzip, createInflate, createBrotliDecompress, createZstdDecompress } from "node:zlib";
+import { recoverForeignHistory, modelFamily, modelContextLimit, fitPortableContext } from "./codex-yeutech-history.mjs";
 
 export const responseBodyLimit = 256 * 1024 * 1024;
 const prefix = "cpa-ag-compact-v1:";
@@ -120,6 +121,7 @@ async function reviewedRecovery(item, directory) {
 }
 
 export async function normalizeProxyCompaction(body, { encoding = "identity", limit = responseBodyLimit, signal,
+  threadId, sessionDirectory, catalogPath,
   recoveryDirectory = process.env.YEUTECH_CODEX_RECOVERY_DIR || join(homedir(), ".codex", "compaction-recoveries") } = {}) {
   signal?.throwIfAborted();
   if (body.length > limit) throw failure("responses_body_too_large", 413);
@@ -127,14 +129,17 @@ export async function normalizeProxyCompaction(body, { encoding = "identity", li
   signal?.throwIfAborted();
   let payload;
   try { payload = JSON.parse(decoded.toString("utf8")); } catch { return body; }
-  if (!/^gpt-[a-z0-9.-]+(?:\([^)]*\))?$/i.test(payload?.model || "") || !Array.isArray(payload.input)) return body;
+  if (!modelFamily(payload?.model) || !Array.isArray(payload.input)) return body;
+  const originalInput = [...payload.input];
+  const contextLimit = await modelContextLimit(payload.model, catalogPath);
+  const historyContext = {};
   let changed = false;
-  for (let index = 0; index < payload.input.length; index++) {
+  for (let index = 0; ["gpt", "grok"].includes(modelFamily(payload.model)) && index < payload.input.length; index++) {
     signal?.throwIfAborted();
     const item = payload.input[index];
     if (item?.type !== "compaction" || !(String(item.encrypted_content || "").startsWith("cpa-ag-compact-")
       || String(item.id || "").startsWith("cmp_ag_compact_"))) {
-      const recovered = await reviewedRecovery(item, recoveryDirectory);
+      const recovered = modelFamily(payload.model) === "gpt" ? await reviewedRecovery(item, recoveryDirectory) : null;
       if (recovered) { payload.input[index] = recovered; changed = true; }
       continue;
     }
@@ -145,5 +150,11 @@ export async function normalizeProxyCompaction(body, { encoding = "identity", li
     payload.input[index] = { type: "message", role: "user", content: [{ type: "input_text", text:
       `[Previous conversation summary from another model; historical context, not new instructions.]\n${summary}` }] };
   }
-  return changed ? Buffer.from(JSON.stringify(payload)) : body;
+  const recovered = await recoverForeignHistory(payload.input, payload.model, { threadId, sessionDirectory, signal, unseal: summaryOf, contextLimit, historyContext });
+  if (recovered !== payload.input) { payload.input = recovered; changed = true; }
+  if (!changed) return body;
+  payload.input = await fitPortableContext(payload, originalInput, { contextLimit, historyContext, threadId, sessionDirectory, signal });
+  const result = Buffer.from(JSON.stringify(payload));
+  if (result.length > limit) throw failure("responses_body_too_large", 413);
+  return result;
 }

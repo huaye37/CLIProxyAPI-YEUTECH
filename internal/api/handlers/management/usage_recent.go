@@ -2,6 +2,7 @@ package management
 
 import (
 	"context"
+	"maps"
 	"net/http"
 	"strconv"
 	"strings"
@@ -14,31 +15,33 @@ import (
 
 // recentUsageEntry deliberately excludes credentials, prompts and response bodies.
 type recentUsageEntry struct {
-	RequestID            string    `json:"requestId"`
-	TraceID              string    `json:"traceId,omitempty"`
-	Provider             string    `json:"provider"`
-	AuthIndex            string    `json:"authIndex,omitempty"`
-	RequestedModel       string    `json:"requestedModel"`
-	RoutedModel          string    `json:"routedModel"`
-	ResponseModel        string    `json:"responseModel,omitempty"`
-	RequestedAt          time.Time `json:"requestedAt"`
-	LatencyMS            int64     `json:"latencyMs"`
-	TTFTMS               int64     `json:"ttftMs,omitempty"`
-	Failed               bool      `json:"failed"`
-	StatusCode           int       `json:"statusCode,omitempty"`
-	InputTokens          int64     `json:"inputTokens"`
-	OutputTokens         int64     `json:"outputTokens"`
-	CachedTokens         int64     `json:"cachedTokens"`
-	CacheReadTokens      int64     `json:"cacheReadTokens"`
-	CacheCreationTokens  int64     `json:"cacheCreationTokens"`
-	ReasoningTokens      int64     `json:"reasoningTokens"`
-	RequestedServiceTier string    `json:"-"`
-	ResponseServiceTier  string    `json:"responseServiceTier,omitempty"`
+	RequestID            string           `json:"requestId"`
+	TraceID              string           `json:"traceId,omitempty"`
+	Provider             string           `json:"provider"`
+	AuthIndex            string           `json:"authIndex,omitempty"`
+	RequestedModel       string           `json:"requestedModel"`
+	RoutedModel          string           `json:"routedModel"`
+	ResponseModel        string           `json:"responseModel,omitempty"`
+	RequestedAt          time.Time        `json:"requestedAt"`
+	LatencyMS            int64            `json:"latencyMs"`
+	TTFTMS               int64            `json:"ttftMs,omitempty"`
+	Failed               bool             `json:"failed"`
+	StatusCode           int              `json:"statusCode,omitempty"`
+	InputTokens          int64            `json:"inputTokens"`
+	OutputTokens         int64            `json:"outputTokens"`
+	CachedTokens         int64            `json:"cachedTokens"`
+	CacheReadTokens      int64            `json:"cacheReadTokens"`
+	CacheCreationTokens  int64            `json:"cacheCreationTokens"`
+	ReasoningTokens      int64            `json:"reasoningTokens"`
+	RequestedServiceTier string           `json:"-"`
+	ResponseServiceTier  string           `json:"responseServiceTier,omitempty"`
+	StructuredUsage      map[string]int64 `json:"-"`
 }
 
 type recentUsageEntryV8 struct {
 	recentUsageEntry
-	RequestedServiceTier string `json:"requestedServiceTier,omitempty"`
+	RequestedServiceTier string           `json:"requestedServiceTier,omitempty"`
+	StructuredUsage      map[string]int64 `json:"structuredUsage,omitempty"`
 }
 
 type recentUsageRing struct {
@@ -84,6 +87,33 @@ func (r *recentUsageRing) HandleUsage(_ context.Context, record coreusage.Record
 	if entry.RequestedModel == "" {
 		entry.RequestedModel = entry.RoutedModel
 	}
+	// Snapshot only bounded, non-secret numeric counters. Preserve absent versus zero.
+	d := record.Detail
+	entry.StructuredUsage = make(map[string]int64)
+	for key, value := range map[string]*int64{
+		"cacheWrite5m": d.CacheCreation5mTokens, "cacheWrite1h": d.CacheCreation1hTokens,
+		"textInput": d.TextInputTokens, "imageInput": d.ImageInputTokens,
+		"audioInput": d.AudioInputTokens, "videoInput": d.VideoInputTokens,
+		"textOutput": d.TextOutputTokens, "imageOutput": d.ImageOutputTokens,
+		"audioOutput": d.AudioOutputTokens, "imageCount": d.ImageCount,
+		"webSearchRequests": d.WebSearchRequests,
+	} {
+		if value != nil && *value >= 0 {
+			entry.StructuredUsage[key] = *value
+		}
+	}
+	if d.ToolUsageDetails != nil {
+		for key, value := range map[string]*int64{
+			"webSearchCalls":       d.ToolUsageDetails.WebSearchCalls,
+			"xSearchCalls":         d.ToolUsageDetails.XSearchCalls,
+			"codeExecutionCalls":   d.ToolUsageDetails.CodeExecutionCalls,
+			"imageGenerationCalls": d.ToolUsageDetails.ImageGenerationCalls,
+		} {
+			if value != nil && *value >= 0 {
+				entry.StructuredUsage[key] = *value
+			}
+		}
+	}
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	if len(r.items) < r.limit {
@@ -106,7 +136,9 @@ func (r *recentUsageRing) snapshot(limit int) []recentUsageEntry {
 		if len(r.items) == r.limit {
 			position = (r.next + len(r.items) - 1 - index) % len(r.items)
 		}
-		result = append(result, r.items[position])
+		entry := r.items[position]
+		entry.StructuredUsage = maps.Clone(entry.StructuredUsage)
+		result = append(result, entry)
 	}
 	return result
 }
@@ -129,7 +161,7 @@ func (h *Handler) GetRecentUsageV8(c *gin.Context) {
 	entries := recentUsage.snapshot(limit)
 	records := make([]recentUsageEntryV8, 0, len(entries))
 	for _, entry := range entries {
-		records = append(records, recentUsageEntryV8{recentUsageEntry: entry, RequestedServiceTier: entry.RequestedServiceTier})
+		records = append(records, recentUsageEntryV8{recentUsageEntry: entry, RequestedServiceTier: entry.RequestedServiceTier, StructuredUsage: entry.StructuredUsage})
 	}
 	c.JSON(http.StatusOK, gin.H{"records": records, "retention": "memory", "capacity": recentUsage.limit})
 }

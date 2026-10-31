@@ -51,6 +51,24 @@ func TestGetRecentUsageRejectsOversizedLimit(t *testing.T) {
 	}
 }
 
+func TestRecentStructuredUsageOwnsCountersAndPreservesZero(t *testing.T) {
+	zero, count, invalid := int64(0), int64(3), int64(-1)
+	ring := &recentUsageRing{limit: 2}
+	ring.HandleUsage(context.Background(), coreusage.Record{Detail: coreusage.Detail{
+		ImageCount: &count, TextInputTokens: &invalid,
+		ToolUsageDetails: &coreusage.ToolUsageDetails{WebSearchCalls: &zero, Extra: map[string]int64{"private": 42}},
+	}})
+	count = 9
+	got := ring.snapshot(1)[0].StructuredUsage
+	if got["imageCount"] != 3 || got["webSearchCalls"] != 0 || len(got) != 2 {
+		t.Fatalf("counters = %+v", got)
+	}
+	got["imageCount"] = 100
+	if ring.snapshot(1)[0].StructuredUsage["imageCount"] != 3 {
+		t.Fatal("snapshot aliases ring storage")
+	}
+}
+
 func TestRecentUsageV8ExposesRequestedTierWithoutChangingLegacyContract(t *testing.T) {
 	recentUsage = &recentUsageRing{limit: 2}
 	t.Cleanup(func() { recentUsage = &recentUsageRing{limit: 500} })
