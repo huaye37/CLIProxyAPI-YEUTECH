@@ -867,3 +867,81 @@ desktop/390x844 recovery-failure/retry and usage display, and live update checks
 Final results and any unresolved gates belong in the external receipt. No production
 installation, task resumption/interruption, bridge reload, network change, new model
 registration, fee-bearing generation or all-consumer acceptance claim is authorized.
+## 2026-11-01: scope recovery budgets to actual history expansion
+
+The Gemini continuation failure `context_budget_current_input_too_large` came
+from the local bridge, not a provider token-limit response. The v4 gate ran after
+any foreign-state conversion, including reasoning-only replacements that merely
+carry an already-visible summary. It counted opaque encoded state as conservative
+text bytes and could reject an otherwise short current turn. Synthetic regressions
+reproduce the false rejection without any unfinished tool calls. A separate red
+regression shows that hoisting native signature carriers away from their preceding
+messages while checkpointing old text was unsafe.
+
+`20261101-recovery-budget-v5` only applies the recovery budget when a compaction
+capsule or a registered recovery checkpoint actually restores visible history.
+Reasoning-only conversion keeps every other input item in its original position;
+the existing client/provider context management remains responsible for that
+already-present context. The byte estimator is not a tokenizer and does not prove
+provider acceptance. Wire/decompression size limits remain in place. No model
+window, compaction threshold, speed mode, configuration or usage value is changed.
+
+When actual expansion needs checkpointing, retain the whole native/unknown state
+turn and its following history instead of detaching opaque items. Preserve open
+calls even when no output has arrived. Distinguish insufficient room for protected
+old native history from an oversized current input, without deleting either or
+promoting historical text to developer instructions.
+
+Validation: 77 Node tests pass, including installed-engine loopbacks, cross-family
+continuation/recompaction, compression, image, search and graceful-drain coverage;
+Go 1.26.10 build and syntax/diff checks pass. The named affected rollout's offline
+projection retains all 1,210 items, converting only 87 foreign reasoning items;
+199 remaining opaque items, all non-reasoning items and the latest turn remain
+exact. The file hash/size/mtime are unchanged. This projection is not a captured
+outbound request: without request-level tools/instructions the old implementation
+also accepts it; the error regression uses explicitly synthetic inputs. No original
+chat is resumed and no paid inference is performed.
+
+Use the existing six-module idle/drain installer with a backup and source-drift
+check. Preserve the private recovery registry and config/plist. NAS/Tokyo, their
+paired manager and v8.0.48 candidates are not installed or replaced. Future
+candidate maintenance must semantically retain this change on top of the v4
+maintenance source; the external repair receipt records the exact deployed SHA.
+## 2026-11-02: official v8.0.50 candidate
+
+Continue from the verified v8.0.48 candidate, integrate the deployed six-module
+v5 repair `6320a516b0`, and retain local main `836cd9a8d2` without publishing its
+unrelated sites. The following covers all 29 official commits after v8.0.48.
+Source integration is not production installation or paid consumer acceptance.
+
+| Upstream commits / feature | Supplier and consumer chain | Implementation / frontend requirement | Evidence and disposition |
+| --- | --- | --- | --- |
+| `cc4b9949e7`: visible Codex commentary | Claude-protocol clients using Codex; existing Responses consumers unchanged | `helps/codex_commentary.go`, Codex executor and Claude translator; opt-in client protocol configuration, no invented model parameter | Commentary/final/reasoning/replay fixtures preserve phase and usage. Not enabled globally; no new manager control needed for current Responses entrances. |
+| `4c46f0aaa5`, `f42f58719d`: empty system parts | Existing Gemini/Antigravity text/tool consumers | `internal/signature/gemini_sanitize.go`, request translators; no UI | Empty-part and no-op tests; instructions and nonempty content retained. |
+| `234217d081`, `250d598175`: tool response pairing and grouping | Gemini/Antigravity tools from local/workbench/novel/study/scoring clients | Antigravity Gemini translator; no UI | Per-turn excess-response and grouping regressions; no claim of measured production speedup. |
+| `7d2959a79b`, merge `675debc068`: idle release flusher | Optional Home scheduling | `internal/home/concurrency_release.go`; no UI | Flusher idle/pending tests; Home is not activated. |
+| `d00267c3fe`: Anthropic credit error | Claude API error -> scheduler -> existing error display | `internal/clienterror`, auth conductor; no UI | Exact credit-balance 400 classification tests; not a blanket account-ban or quota inference. No live error manufactured. |
+| `b63322b9c3`: explicit Claude thinking level | Antigravity Claude 5.5 capability -> normal thinking pipeline | Registry and executor; existing effort controls consume capabilities | Preserve local pinned catalog and add only low/medium/high to the two exact Antigravity entries. Streaming/nonstreaming level tests; not new Tokyo model authorization or Fast. |
+| `bf834311e6`, `34a01b7602`, `9f0c9ff420`, `638f5f55e0`, `6c231c2332`, `893958e401`, `fd02b720e6`, merge `f692d93e27`, `a21814ec60`: per-key connection pools | Shared upstream transport for existing providers | Config/synthesizer, `helps/proxy_helpers.go`, uTLS/cache, service publisher; operator-only opt-in, no consumer generation parameter | Pool isolation/overrides/generation/retirement tests and repeated race. Omitted config remains disabled; no network, credentials or timeout policy changed. This is not proof of fixing the previously observed NAS-HK-Tokyo EOF. |
+| `a96e640d88`: Codex re-login quarantine | Credential refresh -> existing v8 account recovery BFF/UI | Auth conductor and management refresh/re-login; existing recovery action retained | Preserve-sign-in-required/manual-refresh fixtures and manager recovery tests. Does not automatically verify credentials, log in or spend tokens. |
+| `9037d5430d`: output-only replay field | Responses websocket continuation | `sdk/api/handlers/openai/*websocket_requests.go`; no UI | Remove only output-only content_token_count; replay/tool repair tests retain other fields. |
+| `d65840fb5c`: xAI filename identity | Existing xAI credential storage -> auth manager | `internal/auth/xai/filename.go`, SDK auth/store; no UI | Collision/adoption tests; no migration or credential filename rewriting performed on production. |
+| `a8dbebabdf`: multiple plugin OAuth entries | Optional plugins -> v8 operator OAuth | Plugin host/ABI and management OAuth; not an enabled provider | Multi-entry/session/quota tests. Do not add unsupported generic UI choices or enable plugins. |
+| `41c03b7451`, `f7331b5197`: same-format plugin stream framing | Optional plugin executor -> protocol/SSE consumers | `adapters_executors_deframe.go`, stream translator and hook gating; no UI | Deframe and usage fixtures plus race; keep terminal/error behavior explicit. |
+| `08437a6742`, merge `aca8dfe0f4`: shortened MCP names | Claude clients -> Codex tools | Claude request tool-name translation; no UI | Readable-name/replay fixtures preserve tool identity and outputs. |
+| `ecbaa6c710`: compound fast thinking | Optional Devin | `helps/devin_models.go`; no UI for disabled provider | Variant mapping fixtures; not GPT Fast/Ultrafast and not a new entitlement. |
+| `5d8fddd338`, `bb6e1aa8c0`: Muse namespace/client headers | Optional Meta Muse | Meta executor and tool helper; no enabled consumer change | Tool namespace/header tests; no new supplier activated. |
+
+Local v5 remains installed and must not be downgraded. Preserve the private recovery
+registry outside Git/images, same-model state, current instructions, unfinished
+tool pairs, 80-percent compaction and per-workload speed/effort/image boundaries.
+The existing API recovery and structured-usage UI is unchanged. Its paired image
+must still be rebuilt for this exact source. Runtime v8.0.46 and candidate v8.0.50
+are distinct; normal installation remains user-triggered on each node.
+
+Validation gates/results are recorded in the external maintenance receipt: full
+Go test/build, seven packages with three race repetitions, 77 local/real-engine
+loopbacks, API/updater/source identity tests, static contracts, exact dual-node
+images and paired manager hashes, plus desktop/390x844 actual update checks.
+No paid call, new account/model permission, actual Fast grant or all-consumer
+business acceptance follows from these tests. Retain initial failures as evidence.

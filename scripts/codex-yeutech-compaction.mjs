@@ -134,13 +134,14 @@ export async function normalizeProxyCompaction(body, { encoding = "identity", li
   const contextLimit = await modelContextLimit(payload.model, catalogPath);
   const historyContext = {};
   let changed = false;
+  let expandedHistory = false;
   for (let index = 0; ["gpt", "grok"].includes(modelFamily(payload.model)) && index < payload.input.length; index++) {
     signal?.throwIfAborted();
     const item = payload.input[index];
     if (item?.type !== "compaction" || !(String(item.encrypted_content || "").startsWith("cpa-ag-compact-")
       || String(item.id || "").startsWith("cmp_ag_compact_"))) {
       const recovered = modelFamily(payload.model) === "gpt" ? await reviewedRecovery(item, recoveryDirectory) : null;
-      if (recovered) { payload.input[index] = recovered; changed = true; }
+      if (recovered) { payload.input[index] = recovered; changed = true; expandedHistory = true; }
       continue;
     }
     const summary = summaryOf(item);
@@ -153,7 +154,12 @@ export async function normalizeProxyCompaction(body, { encoding = "identity", li
   const recovered = await recoverForeignHistory(payload.input, payload.model, { threadId, sessionDirectory, signal, unseal: summaryOf, contextLimit, historyContext });
   if (recovered !== payload.input) { payload.input = recovered; changed = true; }
   if (!changed) return body;
-  payload.input = await fitPortableContext(payload, originalInput, { contextLimit, historyContext, threadId, sessionDirectory, signal });
+  expandedHistory ||= originalInput.some((item, index) => item?.type === "compaction" && payload.input[index] !== item);
+  // Replacing foreign reasoning with its already-visible summary is not history
+  // expansion. The client's native context manager owns that existing history;
+  // treating opaque bytes as tokens here can reject short turns and detach native
+  // signature carriers from their messages. Budget only restored/expanded history.
+  if (expandedHistory) payload.input = await fitPortableContext(payload, originalInput, { contextLimit, historyContext, threadId, sessionDirectory, signal });
   const result = Buffer.from(JSON.stringify(payload));
   if (result.length > limit) throw failure("responses_body_too_large", 413);
   return result;

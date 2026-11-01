@@ -263,19 +263,31 @@ export async function fitPortableContext(payload, originalInput, { contextLimit,
   if (!index) throw failure("context_budget_history_unavailable");
   const users = originalInput.flatMap((x, i) => x?.role === "user" ? [i] : []);
   if (!users.length) throw failure("context_budget_current_input_too_large");
+  const pairedBoundary = start => {
+    let boundary = start;
+    const completed = new Set(input.filter(i => /_call_output$/.test(i?.type || "")).map(i => i.call_id));
+    for (;;) {
+      const ids = new Set(input.slice(boundary).filter(i => /_call_output$/.test(i?.type || "")).map(i => i.call_id));
+      const earlier = input.findIndex((i, n) => n < boundary && /_call$/.test(i?.type || "") && (ids.has(i.call_id) || !completed.has(i.call_id)));
+      if (earlier === -1) return boundary;
+      boundary = earlier;
+    }
+  };
   // Start with two prior user turns; shorten only old history, never the latest
   // user input, active instructions, images or in-flight tool-call/result pairs.
   for (const candidate of users.slice(-3)) {
     signal?.throwIfAborted();
-    let boundary = candidate;
+    let boundary = pairedBoundary(candidate);
     for (;;) {
-      const ids = new Set(input.slice(boundary).filter(i => /_call_output$/.test(i?.type || "")).map(i => i.call_id));
-      const earlier = input.findIndex((i, n) => n < boundary && /_call$/.test(i?.type || "") && ids.has(i.call_id));
-      if (earlier === -1) break;
-      boundary = earlier;
+      // Native/unknown opaque items may bind to preceding text or subsequent
+      // tool calls. Retain their whole original user turn and the following tail,
+      // rather than hoisting isolated signatures ahead of a checkpoint.
+      const native = input.findIndex((i, n) => n < boundary && i?.encrypted_content);
+      if (native === -1) break;
+      boundary = pairedBoundary(users.findLast(n => n <= native) ?? 0);
     }
     const prefix = input.slice(0, boundary);
-    const protectedPrefix = prefix.filter(i => ["system", "developer"].includes(i?.role) || i?.encrypted_content);
+    const protectedPrefix = prefix.filter(i => ["system", "developer"].includes(i?.role));
     const old = prefix.filter(i => !protectedPrefix.includes(i));
     if (!old.length) continue;
     const preserved = [...protectedPrefix, ...input.slice(boundary)];
@@ -287,5 +299,8 @@ export async function fitPortableContext(payload, originalInput, { contextLimit,
     const result = [...protectedPrefix, checkpointItem, ...input.slice(boundary)];
     if (contextCost({ ...rest, input: result }) <= limit) return result;
   }
-  throw failure("context_budget_current_input_too_large");
+  const latest = pairedBoundary(users.at(-1));
+  const current = [...input.slice(0, latest).filter(i => ["system", "developer"].includes(i?.role)), ...input.slice(latest)];
+  throw failure(contextCost({ ...rest, input: current }) > limit
+    ? "context_budget_current_input_too_large" : "context_budget_preserved_history_too_large");
 }

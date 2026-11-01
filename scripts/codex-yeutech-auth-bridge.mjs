@@ -131,7 +131,7 @@ function forwardResponse(request, response, upstreamResponse) {
 const server = http.createServer(async (request, response) => {
   if (request.method === "GET" && request.url === "/_yeutech/health") {
     response.writeHead(200, { "content-type": "application/json" });
-    response.end(JSON.stringify({ ok: true, version: "20261031-budgeted-history-v4", activeRequests, preparingImages, preparingResponses, upstream: upstreamBase.origin, liveUpstream: liveBase.origin }));
+    response.end(JSON.stringify({ ok: true, version: "20261101-recovery-budget-v5", activeRequests, preparingImages, preparingResponses, upstream: upstreamBase.origin, liveUpstream: liveBase.origin }));
     return;
   }
 
@@ -185,7 +185,9 @@ const server = http.createServer(async (request, response) => {
         response.end(JSON.stringify({ error: { message: error.code === "image_preprocessing_failed"
           ? "无法处理发往 Claude 的超限图片；原图与历史记录未修改。"
           : error.code === "context_budget_current_input_too_large"
-          ? "当前指令或未完成工具结果超出目标模型的保守上下文预算，未截断本轮输入；完整历史仍保留。"
+          ? "本轮输入、当前指令或关联工具结果超出本机历史恢复预算估算；未截断输入，完整历史仍保留。这不是上游实际 token 超限回执。"
+          : error.code === "context_budget_preserved_history_too_large"
+          ? "恢复预算不足以安全保留旧的原生状态及其关联历史；未删除或重排这些内容。请先在原模型完成上下文压缩；这不代表本轮输入过大。"
           : error.code === "context_budget_history_unavailable"
           ? "恢复内容超过目标模型的上下文预算，但未找到可核验的原会话记录；未删除或截断历史。"
           : "无法安全转换请求中的压缩上下文，请检查请求格式或大小；原会话历史未修改。",

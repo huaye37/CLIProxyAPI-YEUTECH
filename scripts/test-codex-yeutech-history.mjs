@@ -4,7 +4,7 @@ import { mkdtemp, mkdir, writeFile, readFile, rm, symlink, open } from "node:fs/
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { normalizeProxyCompaction } from "./codex-yeutech-compaction.mjs";
-import { contextCost, modelContextLimit } from "./codex-yeutech-history.mjs";
+import { contextCost, modelContextLimit, fitPortableContext } from "./codex-yeutech-history.mjs";
 
 const threadId = "11111111-2222-3333-4444-555555555555";
 const capsule = { type: "compaction", id: "cmp_native", encrypted_content: "gAAAA-native-fixture" };
@@ -172,4 +172,49 @@ test("large rollout is scanned with bounded memory and CRLF offsets", async t =>
   const result = JSON.parse(await normalizeProxyCompaction(body, f.options));
   assert.match(result.input[0].content[0].text, /Remember A and next step B/);
   assert.deepEqual(result.input[1], kept);
+});
+
+test("reasoning-only conversion does not budget or reorder existing native history", async t => {
+  const f = await fixture(t, "claude-opus-5-5-tokyo");
+  const catalogPath = join(f.directory, "catalog.json");
+  await writeFile(catalogPath, JSON.stringify({ models: [{ slug: "gemini-4-argon-high", context_window: 100000 }] }));
+  const native = { ...reasoning, id: "rs_native", encrypted_content: "opaque".repeat(20000) };
+  const call = { type: "custom_tool_call", call_id: "retained", name: "exec", input: "synthetic" };
+  const output = { type: "custom_tool_call_output", call_id: "retained", output: "observed" };
+  const original = { model: "gemini-4-argon-high", input: [
+    { type: "message", role: "user", content: "old visible input".repeat(10000) },
+    reasoning, native, call, output, kept,
+  ] };
+  const before = await readFile(f.path);
+  const result = JSON.parse(await normalizeProxyCompaction(Buffer.from(JSON.stringify(original)), { ...f.options, catalogPath }));
+  assert.equal(result.input.length, original.input.length);
+  assert.equal(result.input[1].role, "user");
+  for (const i of [0, 2, 3, 4, 5]) assert.deepEqual(result.input[i], original.input[i]);
+  assert.ok(contextCost(result) > 80000, "existing state is not a measured provider token count");
+  assert.deepEqual(await readFile(f.path), before);
+});
+
+test("expanded history cannot detach native state from its previous message or tool group", async t => {
+  const f = await fixture(t);
+  const catalogPath = join(f.directory, "catalog.json");
+  await writeFile(catalogPath, JSON.stringify({ models: [{ slug: "gemini-4-argon-high", context_window: 100000 }] }));
+  const native = { ...reasoning, id: "rs_unregistered", encrypted_content: "opaque-native" };
+  const original = { model: "gemini-4-argon-high", input: [capsule,
+    { type: "message", role: "user", content: "old native turn" },
+    { type: "message", role: "assistant", content: "x".repeat(100000) }, native, kept] };
+  await assert.rejects(normalizeProxyCompaction(Buffer.from(JSON.stringify(original)), { ...f.options, catalogPath }),
+    { code: "context_budget_preserved_history_too_large" });
+});
+
+test("budgeting preserves unfinished calls before the latest user and native turns byte-for-byte", async () => {
+  const call = { type: "custom_tool_call", call_id: "pending", name: "exec", input: "not completed" };
+  const input = [{ role: "user", content: "old ".repeat(40000) }, call, kept];
+  const options = { contextLimit: 80000, historyContext: { index: { path: "/synthetic/fixture", size: 0 } } };
+  const result = await fitPortableContext({ input }, input, options);
+  assert.deepEqual(result.slice(-2), [call, kept]);
+  const native = { type: "reasoning", encrypted_content: "opaque", summary: [] };
+  const previous = { role: "assistant", content: "native signature target" };
+  const nativeInput = [input[0], { role: "user", content: "native turn" }, previous, native, kept];
+  const nativeResult = await fitPortableContext({ input: nativeInput }, nativeInput, options);
+  assert.deepEqual(nativeResult.slice(-4), nativeInput.slice(-4));
 });
