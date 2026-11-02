@@ -960,6 +960,16 @@ later model-visibility tests. Those two tests pass five repetitions alone, and
 all five original failing cases pass twenty race repetitions together after the
 fixture repairs. No production scheduler or terminal-auth semantics were weakened.
 
+The complete three-round SDK run then exposed a second, independent fixture leak:
+`TestHandleAuthUpdatesDiscardedSnapshotTriggersWatcherReread` left `acct.json`
+registered across rounds. A temporary locked registry diagnostic identified that
+exact client alongside the deliberately failed account; running only that snapshot
+test and the two visibility tests reproduced both failures on round two. Add
+exact-ID cleanup to it and the neighboring `cooldown.json` snapshot fixture.
+Remove the temporary diagnostic and retain both original disappearance assertions.
+The entire SDK package now passes three race repetitions; the other six packages
+already passed three repetitions. Initial failing logs remain external evidence.
+
 Continue the v8.0.50 lineage with these 15 official commits; the preceding ledger
 still covers the 29 commits from v8.0.48 through v8.0.50.
 
