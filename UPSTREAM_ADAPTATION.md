@@ -945,3 +945,42 @@ loopbacks, API/updater/source identity tests, static contracts, exact dual-node
 images and paired manager hashes, plus desktop/390x844 actual update checks.
 No paid call, new account/model permission, actual Fast grant or all-consumer
 business acceptance follows from these tests. Retain initial failures as evidence.
+
+## 2026-11-03: v8.0.51 and repeatable validation recovery
+
+The previous five failures were traced to test isolation, not established live
+credential failures. Completed synthetic OAuth sessions intentionally survive
+CancelOAuthSession, so three new fixture creation sites now register exact-ID
+cleanup under the existing store lock. Production TTL and duplicate rejection are
+unchanged. The batch-auth test incorrectly assumed that the second concurrent
+worker was auth B; it now observes which per-auth registration actually completed
+before retrying that revision. Cleanup joins the held batch before unregistering
+clients. Previously a failed assertion leaked client registrations into the two
+later model-visibility tests. Those two tests pass five repetitions alone, and
+all five original failing cases pass twenty race repetitions together after the
+fixture repairs. No production scheduler or terminal-auth semantics were weakened.
+
+Continue the v8.0.50 lineage with these 15 official commits; the preceding ledger
+still covers the 29 commits from v8.0.48 through v8.0.50.
+
+| Commits / feature | Supplier and current consumer chain | Implementation / UI | Evidence and conclusion |
+| --- | --- | --- | --- |
+| `95f125ffd0`, `7b4c64b006`, merge `24f9744013`, `9513c2d5dc` | Codex credentials -> automatic refresh -> existing targeted re-login UI | Auth conductor/executor and docs; no new control | Missing-renewal-credential and disabled-backoff regressions. Keep existing explicit verify:false recovery; no credential mutation or login performed on production. |
+| `3ac384983e` | Gemini Responses parallel tools with developer notices | Gemini request translator; no UI | Preserve complete tool-output batches and developer notice boundaries; upstream replay regressions. |
+| `00b7677102` | Responses -> Chat compatible text consumers | Responses request translator; no UI | Preserve genuine developer roles. This does not promote recovered historical summaries to developer; existing CPA user-history boundary remains. |
+| `ec06c3cb8b` | Function schema conversion for existing tool consumers | Shared schema utilities/translators; no UI | Numeric constraint normalization fixtures; no invented tool parameters or weakened output pairing. |
+| `53ff2f9e74`, `ce39bc620f` | Optional plugin OAuth entries/locales | Plugin host/store/management metadata; no active plugin UI requirement | Per-entry name/logo and locale passthrough fixtures. No new plugin enabled or OAuth flow launched. |
+| `f0ddc38f29`, `c69cdd933d`, merge `7cad1cb7df` | Existing independent xAI video pathway | Registry and video handlers; existing workload-specific controls | Semantically deduplicate existing local Lite support with upstream fallback metadata and preserve explicit resolution. Existing catalog video parameters retained; no text effort/speed applied and no paid generation acceptance claimed. |
+| `d9a688e615`, `b147b8d210`, merge `4448b96e4c` | Optional Meta Muse | Executor headers/tool namespace already integrated in v8.0.50 | Retain equivalent upstream ancestry without enabling Meta or claiming a new consumer capability. |
+
+An independent operation changed the live API manager. Its server SHA matches the
+current main working file, whose only uncommitted server delta adds the ai-chatroom
+consumer. Preserve that verified running addition, its test and the two shared
+navigation entries in this isolated candidate. Do not commit, reset or overwrite
+main's unrelated chatroom/assistant/runtime work. Keep these snapshot identities in
+the external receipt. This maintenance does not deploy the chatroom application.
+
+All source, race, static, exact-image and browser gates remain mandatory. The live
+six-module v5 bridge and private recovery registry remain untouched. Proxy and
+paired-manager installation is manual; source tests never imply upstream Fast,
+OAuth renewal or all-consumer production acceptance.

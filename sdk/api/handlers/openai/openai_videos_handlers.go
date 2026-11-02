@@ -150,7 +150,7 @@ func videosModelBase(model string) string {
 func isXAIVideosModel(model string) bool {
 	prefix, baseModel := imagesModelParts(model)
 	baseModel = strings.ToLower(strings.TrimSpace(baseModel))
-	if baseModel != defaultXAIVideosModel && baseModel != xaiVideos15Model && baseModel != xaiVideos15PreviewAlias && baseModel != xaiVideos15LiteModel {
+	if baseModel != defaultXAIVideosModel && baseModel != xaiVideos15Model && baseModel != xaiVideos15LiteModel && baseModel != xaiVideos15PreviewAlias {
 		return false
 	}
 
@@ -202,10 +202,10 @@ func canonicalXAIVideosModel(model string) string {
 	switch videosModelBase(model) {
 	case defaultXAIVideosModel:
 		return defaultXAIVideosModel
-	case xaiVideos15LiteModel:
-		return xaiVideos15LiteModel
 	case xaiVideos15Model, xaiVideos15PreviewAlias:
 		return xaiVideos15Model
+	case xaiVideos15LiteModel:
+		return xaiVideos15LiteModel
 	}
 	return defaultXAIVideosModel
 }
@@ -217,10 +217,10 @@ func routingXAIVideosModel(model string) string {
 	switch videosModelBase(model) {
 	case defaultXAIVideosModel:
 		return defaultXAIVideosModel
-	case xaiVideos15LiteModel:
-		return xaiVideos15LiteModel
 	case xaiVideos15Model:
 		return xaiVideos15Model
+	case xaiVideos15LiteModel:
+		return xaiVideos15LiteModel
 	case xaiVideos15PreviewAlias:
 		return xaiVideos15PreviewAlias
 	}
@@ -473,6 +473,8 @@ func xaiVideosResolution(raw string, fallback string) string {
 		return "480p"
 	case "720p":
 		return "720p"
+	case "1080p":
+		return "1080p"
 	default:
 		return fallback
 	}

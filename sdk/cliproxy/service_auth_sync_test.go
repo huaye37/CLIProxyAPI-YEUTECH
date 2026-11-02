@@ -1046,6 +1046,7 @@ func TestHandleAuthUpdates_SameRevisionWaitDoesNotWaitForOtherAuthInBatch(t *tes
 
 	bStarted := make(chan struct{})
 	bBlock := make(chan struct{})
+	finishedBatch := make(chan struct{})
 	var started atomic.Int32
 	modelRegistrationTaskHook = func() {
 		if started.Add(1) == 2 {
@@ -1054,12 +1055,19 @@ func TestHandleAuthUpdates_SameRevisionWaitDoesNotWaitForOtherAuthInBatch(t *tes
 		}
 	}
 	t.Cleanup(func() {
-		modelRegistrationTaskHook = nil
 		select {
 		case <-bBlock:
 		default:
 			close(bBlock)
 		}
+		// Join workers before restoring the hook and unregistering fixture clients.
+		// Otherwise a failed assertion can leak registrations into the next test.
+		select {
+		case <-finishedBatch:
+		case <-time.After(2 * time.Second):
+			t.Error("batch fixture workers did not finish during cleanup")
+		}
+		modelRegistrationTaskHook = nil
 	})
 
 	updateA := watcher.AuthUpdate{Action: watcher.AuthUpdateActionModify, ID: authAID, Auth: authA}
@@ -1067,7 +1075,6 @@ func TestHandleAuthUpdates_SameRevisionWaitDoesNotWaitForOtherAuthInBatch(t *tes
 	updateB := watcher.AuthUpdate{Action: watcher.AuthUpdateActionModify, ID: authBID, Auth: authB}
 	updateB.SetRevision(1)
 
-	finishedBatch := make(chan struct{})
 	go func() {
 		defer close(finishedBatch)
 		service.handleAuthUpdates(context.Background(), []watcher.AuthUpdate{updateA, updateB})
@@ -1079,15 +1086,34 @@ func TestHandleAuthUpdates_SameRevisionWaitDoesNotWaitForOtherAuthInBatch(t *tes
 		t.Fatal("second auth registration in batch did not start")
 	}
 
+	// Workers run concurrently: the second hook invocation can belong to A or B.
+	// Retry the auth whose registration actually finished while the other is held.
+	completedUpdate := updateA
+	waitA := service.authRegistrationWaitCh(authAID)
+	waitB := service.authRegistrationWaitCh(authBID)
+	if waitA != nil {
+		if waitB == nil {
+			completedUpdate = updateB
+		} else {
+			select {
+			case <-waitA:
+			case <-waitB:
+				completedUpdate = updateB
+			case <-time.After(2 * time.Second):
+				t.Fatal("unblocked auth registration did not finish")
+			}
+		}
+	}
+
 	doneA := make(chan struct{})
 	go func() {
-		service.handleAuthUpdate(context.Background(), updateA)
+		service.handleAuthUpdate(context.Background(), completedUpdate)
 		close(doneA)
 	}()
 	select {
 	case <-doneA:
 	case <-time.After(2 * time.Second):
-		t.Fatal("auth A hook wait blocked on unrelated auth B registration")
+		t.Fatal("completed auth hook wait blocked on the unrelated held registration")
 	}
 
 	close(bBlock)
