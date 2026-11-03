@@ -9,11 +9,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/MoeForge/moego/ojson"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/config"
 	auth "github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/auth"
 	execution "github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/executor"
 	translator "github.com/router-for-me/CLIProxyAPI/v8/sdk/translator"
-	"github.com/tidwall/gjson"
 )
 
 func TestOpenAICompatResponsesPreservesSSEFrameBoundaries(t *testing.T) {
@@ -70,10 +70,10 @@ func TestOpenAICompatResponsesWireProtocol(t *testing.T) {
 				if r.URL.Path != "/responses" {
 					t.Errorf("path=%s", r.URL.Path)
 				}
-				if gjson.GetBytes(body, "stream_options").Exists() {
+				if ojson.GetBytesNoCopy(body, "stream_options").Exists() {
 					t.Error("Responses request must not contain Chat Completions stream_options")
 				}
-				if !gjson.GetBytes(body, "input").Exists() || !strings.Contains(string(body), "call_echo") {
+				if !ojson.GetBytesNoCopy(body, "input").Exists() || !strings.Contains(string(body), "call_echo") {
 					t.Errorf("lost tool transcript: %s", body)
 				}
 				if stream {

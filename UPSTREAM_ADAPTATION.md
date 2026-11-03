@@ -1008,3 +1008,16 @@ Full consumer matrix, source evidence and remaining rollout gates are recorded
 in `../api/docs/context-max-20261104.md`. Preserve v5 recovery and all v8.0.51
 adaptations. Paired proxy/manager installation remains manual; do not overwrite
 the deployed Agent from this older proxy-maintenance Agent subtree.
+
+## 2026-11-04 — v8.0.53 continuation with context changes retained
+
+Official 01b24f1f95 adds 32 commits including the moego JSON/base64 migration.
+See `../api/docs/proxy-v8053-adaptation-20261104.md` for every commit, supplier,
+call chain, frontend relevance and verification boundary. Preserve memory admission,
+Responses wire-api/SSE framing, orphan delegation repair, CPA history as user,
+Gemini paired tool IDs, payload-finalizer ordering and the six-module local v5.
+Resolve new OAuth test isolation and cache-scanner performance without weakening
+assertions or production limits. The user now authorizes this latest version's
+normal drained installation after exact three-part candidate acceptance; daily
+future proxy/manager updates remain manual. No forced interruption or paid probe
+is implied, and waiting/installed/effective consumer config remain separate.

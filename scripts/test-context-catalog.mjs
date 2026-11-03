@@ -29,3 +29,13 @@ test('missing maximum falls back to declared capability and policy remains autho
   const [model]=generate(caps,[],['gpt-future']);
   assert.equal(model.slug,'gpt-future');assert.equal(model.context_window,700000);
 });
+test('vision does not imply Codex original-image-detail support',()=>{
+  const caps=[{...capability('gpt-native',872000),supported_input_modalities:['text','image']},
+    {...capability('claude-vision',1000000,'claude'),supported_input_modalities:['text','image']}];
+  const native={slug:'gpt-native',context_window:500000,max_context_window:872000,supports_image_detail_original:true};
+  const entries=new Map(generate(caps,[native]).map(m=>[m.slug,m]));
+  assert.equal(entries.get('gpt-native').supports_image_detail_original,true);
+  assert.equal(entries.get('claude-vision').supports_image_detail_original,false);
+  assert.ok(entries.get('claude-vision').input_modalities.includes('image'));
+  assert.equal(generate([caps[0]],[{...native,supports_image_detail_original:false}])[0].supports_image_detail_original,false);
+});

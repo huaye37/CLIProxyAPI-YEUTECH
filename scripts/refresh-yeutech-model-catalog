@@ -116,6 +116,7 @@ fi
         .key as $priority
         | .value
         | .id as $model_id
+        | (.type == "openai" or .owned_by == "openai") as $is_codex_route
         | ([$provider[0].models[]? | select(.slug == $model_id)][0] // null) as $provider_model
         | ((channel) + " · " + (readable_name)) as $grouped_name
         | ((vendor) + " / " + (channel)) as $group_label
@@ -170,7 +171,7 @@ fi
             apply_patch_tool_type: "freeform",
             web_search_tool_type: "text",
             truncation_policy: {mode: "tokens", limit: 10000},
-            supports_image_detail_original: (.supported_input_modalities | index("image") != null),
+            supports_image_detail_original: false,
             context_window: ([$upstream_context_window, $codex_context_window] | min),
             max_context_window: ([$upstream_context_window, $codex_max_context_window] | min),
             effective_context_window_percent: 95,
@@ -210,6 +211,12 @@ fi
         | .context_window = (if ($model_id | test("^(gpt-|chatgpt-web-gpt-)")) then $provider_context_window else $upstream_context_window end)
         | .max_context_window = .context_window
         | .auto_compact_token_limit = ((.context_window * 0.8) | floor)
+        # Original-detail is a Codex transport capability, not generic vision.
+        | .supports_image_detail_original = (if $is_codex_route then
+            (if ($provider_model | type) == "object" and ($provider_model | has("supports_image_detail_original"))
+             then ($provider_model.supports_image_detail_original == true)
+             else (.supports_image_detail_original == true) end)
+            else false end)
         # Astra Lite rejects preserved multi-turn histories with upstream
         # "response protection is unavailable"; the identical standard
         # Responses request succeeds. Override after bundled inheritance,
