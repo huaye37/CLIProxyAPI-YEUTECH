@@ -26,8 +26,8 @@ export function inspectCatalog(capabilities, clientModels) {
     for(const k of ['supported_input_modalities','supported_output_modalities','supported_workloads'])if(!m[k]?.length)gaps.push(k);
     if(m.token_limits_applicable!==false&&!m.context_length)gaps.push('context_length');
     if(m.token_limits_applicable!==false&&!m.max_output_tokens)gaps.push('max_output_tokens');
-    // GPT intentionally retains a 500k consumer policy below its provider maximum.
-    if(c && !m.id.startsWith('gpt-') && m.supported_workloads?.includes('conversation') && c.max_context_window!==m.context_length)gaps.push('client_context_mismatch');
+    // Every conversation model must expose the same supported route maximum.
+    if(c && m.supported_workloads?.includes('conversation') && c.max_context_window!==m.context_length)gaps.push('client_context_mismatch');
     return {id:m.id,provider:m.owned_by,type:m.type,context:m.context_length,inputLimit:m.max_input_tokens,outputLimit:m.max_output_tokens,
       input:m.supported_input_modalities,output:m.supported_output_modalities,workloads:m.supported_workloads,
       thinking:m.thinking??null,parameters:m.supported_parameters??[],serviceTiers:m.service_tiers??[],

@@ -994,3 +994,17 @@ All source, race, static, exact-image and browser gates remain mandatory. The li
 six-module v5 bridge and private recovery registry remain untouched. Proxy and
 paired-manager installation is manual; source tests never imply upstream Fast,
 OAuth renewal or all-consumer production acceptance.
+
+## 2026-11-04 — User-requested maximum route context
+
+The explicit request to maximize every model/consumer supersedes the old GPT
+500K policy. Public capabilities now use the exact native Codex maximum (872000
+for current GPT routes), not the 500K default or a larger unrelated static/API
+limit; explicit route overrides and separate input/output bounds remain intact.
+The local Codex and Qoder generators remove the family cap and retain existing
+model selections and 80% compaction. Capability audit no longer exempts GPT from
+client/public context mismatches. Independent media stays outside text budgets.
+Full consumer matrix, source evidence and remaining rollout gates are recorded
+in `../api/docs/context-max-20261104.md`. Preserve v5 recovery and all v8.0.51
+adaptations. Paired proxy/manager installation remains manual; do not overwrite
+the deployed Agent from this older proxy-maintenance Agent subtree.

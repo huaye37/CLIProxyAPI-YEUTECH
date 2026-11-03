@@ -14,3 +14,7 @@ test('catalog declaration is not live acceptance and mismatched windows stay vis
 test('incomplete image metadata never gets fabricated text capabilities',()=>{
   const [m]=inspectCatalog([{id:'media',context_length:0}],[]);assert.ok(m.gaps.includes('supported_workloads'));assert.equal(m.context,0);
 });
+test('GPT no longer receives an exception for a stale consumer window',()=>{
+  const [m]=inspectCatalog([{id:'gpt-6.1-sol',context_length:872000,max_output_tokens:128000,supported_input_modalities:['text'],supported_output_modalities:['text'],supported_workloads:['conversation']}],[{slug:'gpt-6.1-sol',max_context_window:500000}]);
+  assert.deepEqual(m.gaps,['client_context_mismatch']);
+});

@@ -54,14 +54,9 @@ func (s *Server) modelCapabilitiesHandler(c *gin.Context) {
 		// route override first; otherwise use that validated maximum for GPT.
 		clientCapability := codexCapabilities[info.ID]
 		if info.MaxContextLength <= 0 && info.Type == "openai" && strings.HasPrefix(info.ID, "gpt-") {
-			if maximum := clientCapability.MaxContextWindow; maximum > contextLength {
+			if maximum := clientCapability.MaxContextWindow; maximum > 0 {
 				contextLength = maximum
 			}
-		}
-		// Publish the shared GPT conversation budget to every catalog consumer.
-		// Never advertise more than the provider's declared window.
-		if (strings.HasPrefix(info.ID, "gpt-") || strings.HasPrefix(info.ID, "chatgpt-web-gpt-")) && contextLength > 500000 {
-			contextLength = 500000
 		}
 		inputLimit := info.InputTokenLimit
 		if inputLimit <= 0 {

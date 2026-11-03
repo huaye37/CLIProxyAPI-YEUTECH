@@ -205,9 +205,9 @@ fi
             | .additional_speed_tiers = additional_speed_tiers($provider_model)
             | .default_service_tier = ($provider_model.default_service_tier // null)
           else . end
-        # The gateway capability catalog is authoritative for the provider
-        # window. GPT uses at most 500K; other providers keep their maximum.
-        | .context_window = (if ($model_id | test("^(gpt-|chatgpt-web-gpt-)")) then ([$provider_context_window, 500000] | min) else $upstream_context_window end)
+        # Use the authenticated route maximum, not a model-family policy cap.
+        # Codex metadata distinguishes its default from the selectable maximum.
+        | .context_window = (if ($model_id | test("^(gpt-|chatgpt-web-gpt-)")) then $provider_context_window else $upstream_context_window end)
         | .max_context_window = .context_window
         | .auto_compact_token_limit = ((.context_window * 0.8) | floor)
         # Astra Lite rejects preserved multi-turn histories with upstream

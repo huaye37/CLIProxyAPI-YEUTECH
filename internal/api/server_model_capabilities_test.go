@@ -68,6 +68,11 @@ func TestModelCapabilitiesHandlerUsesSafeCatalogBudget(t *testing.T) {
 			ContextLength: 272000, MaxCompletionTokens: 10000,
 			SupportedInputModalities: []string{"text"}, SupportedOutputModalities: []string{"text"},
 		},
+		{
+			ID: "gpt-5.6-sol", Object: "model", OwnedBy: "openai", Type: "openai",
+			ContextLength: 921000, InputTokenLimit: 800000, MaxCompletionTokens: 128000,
+			SupportedInputModalities: []string{"text"}, SupportedOutputModalities: []string{"text"},
+		},
 	})
 	t.Cleanup(func() { modelRegistry.UnregisterClient(clientID) })
 	server := newTestServer(t)
@@ -86,12 +91,16 @@ func TestModelCapabilitiesHandlerUsesSafeCatalogBudget(t *testing.T) {
 	assertCapabilityWorkloads(t, target, "conversation", "agent")
 
 	large := requestModelCapabilityFromServer(t, server, "gpt-6-sol")
-	if large["context_length"] != float64(500000) || large["max_input_tokens"] != float64(500000) {
-		t.Fatalf("GPT context policy = %#v, want capped 500000", large)
+	if large["context_length"] != float64(700000) || large["max_input_tokens"] != float64(700000) {
+		t.Fatalf("GPT context policy = %#v, want explicit route maximum 700000", large)
 	}
 	fromClientCatalog := requestModelCapabilityFromServer(t, server, "gpt-6-luna")
-	if fromClientCatalog["context_length"] != float64(500000) || fromClientCatalog["max_input_tokens"] != float64(500000) {
-		t.Fatalf("GPT client maximum = %#v, want capped 500000", fromClientCatalog)
+	if fromClientCatalog["context_length"] != float64(872000) || fromClientCatalog["max_input_tokens"] != float64(872000) {
+		t.Fatalf("GPT client maximum = %#v, want declared maximum 872000", fromClientCatalog)
+	}
+	bounded := requestModelCapabilityFromServer(t, server, "gpt-5.6-sol")
+	if bounded["context_length"] != float64(872000) || bounded["max_input_tokens"] != float64(800000) || bounded["max_output_tokens"] != float64(128000) {
+		t.Fatalf("route maximum must not inherit a larger static default or erase input/output limits: %#v", bounded)
 	}
 }
 
