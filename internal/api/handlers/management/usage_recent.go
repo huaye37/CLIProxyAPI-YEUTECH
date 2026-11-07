@@ -92,6 +92,7 @@ func (r *recentUsageRing) HandleUsage(_ context.Context, record coreusage.Record
 	entry.StructuredUsage = make(map[string]int64)
 	for key, value := range map[string]*int64{
 		"cacheWrite5m": d.CacheCreation5mTokens, "cacheWrite1h": d.CacheCreation1hTokens,
+		"cachedText": d.CachedTextTokens, "cachedImage": d.CachedImageTokens, "cachedAudio": d.CachedAudioTokens,
 		"textInput": d.TextInputTokens, "imageInput": d.ImageInputTokens,
 		"audioInput": d.AudioInputTokens, "videoInput": d.VideoInputTokens,
 		"textOutput": d.TextOutputTokens, "imageOutput": d.ImageOutputTokens,

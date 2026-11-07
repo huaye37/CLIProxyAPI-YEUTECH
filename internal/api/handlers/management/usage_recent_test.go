@@ -56,11 +56,12 @@ func TestRecentStructuredUsageOwnsCountersAndPreservesZero(t *testing.T) {
 	ring := &recentUsageRing{limit: 2}
 	ring.HandleUsage(context.Background(), coreusage.Record{Detail: coreusage.Detail{
 		ImageCount: &count, TextInputTokens: &invalid,
+		CachedTextTokens: &count, CachedImageTokens: &zero, CachedAudioTokens: &invalid,
 		ToolUsageDetails: &coreusage.ToolUsageDetails{WebSearchCalls: &zero, Extra: map[string]int64{"private": 42}},
 	}})
 	count = 9
 	got := ring.snapshot(1)[0].StructuredUsage
-	if got["imageCount"] != 3 || got["webSearchCalls"] != 0 || len(got) != 2 {
+	if got["imageCount"] != 3 || got["webSearchCalls"] != 0 || got["cachedText"] != 3 || got["cachedImage"] != 0 || len(got) != 4 {
 		t.Fatalf("counters = %+v", got)
 	}
 	got["imageCount"] = 100

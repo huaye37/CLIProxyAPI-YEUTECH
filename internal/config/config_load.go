@@ -161,7 +161,7 @@ func LoadConfigOptional(configFile string, optional bool) (*Config, error) {
 		if optional {
 			if os.IsNotExist(err) || errors.Is(err, syscall.EISDIR) {
 				// Missing and optional: return empty config (cloud deploy standby).
-				cfg := &Config{CredentialInFlight: DefaultCredentialInFlightConfig()}
+				cfg := &Config{CredentialInFlight: DefaultCredentialInFlightConfig(), KVStore: KVStoreConfig{Disabled: true}}
 				cfg.NormalizePluginsConfig()
 				cfg.NormalizeClaudeConfig()
 				return cfg, nil
@@ -172,7 +172,7 @@ func LoadConfigOptional(configFile string, optional bool) (*Config, error) {
 
 	// In cloud deploy mode (optional=true), if file is empty or contains only whitespace, return empty config.
 	if optional && len(bytes.TrimSpace(data)) == 0 {
-		cfg := &Config{CredentialInFlight: DefaultCredentialInFlightConfig()}
+		cfg := &Config{CredentialInFlight: DefaultCredentialInFlightConfig(), KVStore: KVStoreConfig{Disabled: true}}
 		cfg.NormalizePluginsConfig()
 		cfg.NormalizeClaudeConfig()
 		return cfg, nil
@@ -180,7 +180,7 @@ func LoadConfigOptional(configFile string, optional bool) (*Config, error) {
 
 	if errValidate := validateCredentialWeightYAML(data); errValidate != nil {
 		if optional {
-			cfgOptional := &Config{CredentialInFlight: DefaultCredentialInFlightConfig()}
+			cfgOptional := &Config{CredentialInFlight: DefaultCredentialInFlightConfig(), KVStore: KVStoreConfig{Disabled: true}}
 			cfgOptional.NormalizePluginsConfig()
 			cfgOptional.NormalizeClaudeConfig()
 			return cfgOptional, nil
@@ -191,6 +191,8 @@ func LoadConfigOptional(configFile string, optional bool) (*Config, error) {
 	// Unmarshal the YAML data into the Config struct.
 	var cfg Config
 	// Set defaults before unmarshal so that absent keys keep defaults.
+	// Preserve the prior in-memory behavior unless explicitly enabled.
+	cfg.KVStore.Disabled = true
 	cfg.Host = "" // Default empty: binds to all interfaces (IPv4 + IPv6)
 	cfg.LoggingToFile = false
 	cfg.LogsMaxTotalSizeMB = 0
@@ -212,7 +214,7 @@ func LoadConfigOptional(configFile string, optional bool) (*Config, error) {
 	if err = yaml.Unmarshal(data, &cfg); err != nil {
 		if optional {
 			// In cloud deploy mode, if YAML parsing fails, return empty config instead of error.
-			cfgOptional := &Config{CredentialInFlight: DefaultCredentialInFlightConfig()}
+			cfgOptional := &Config{CredentialInFlight: DefaultCredentialInFlightConfig(), KVStore: KVStoreConfig{Disabled: true}}
 			cfgOptional.NormalizePluginsConfig()
 			cfgOptional.NormalizeClaudeConfig()
 			return cfgOptional, nil
@@ -263,6 +265,8 @@ func LoadConfigOptional(configFile string, optional bool) (*Config, error) {
 	if cfg.Pprof.Addr == "" {
 		cfg.Pprof.Addr = DefaultPprofAddr
 	}
+
+	cfg.KVStore.Path = strings.TrimSpace(cfg.KVStore.Path)
 
 	if cfg.LogsMaxTotalSizeMB < 0 {
 		cfg.LogsMaxTotalSizeMB = 0

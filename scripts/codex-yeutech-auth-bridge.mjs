@@ -131,7 +131,7 @@ function forwardResponse(request, response, upstreamResponse) {
 const server = http.createServer(async (request, response) => {
   if (request.method === "GET" && request.url === "/_yeutech/health") {
     response.writeHead(200, { "content-type": "application/json" });
-    response.end(JSON.stringify({ ok: true, version: "20261101-recovery-budget-v5", activeRequests, preparingImages, preparingResponses, upstream: upstreamBase.origin, liveUpstream: liveBase.origin }));
+    response.end(JSON.stringify({ ok: true, version: "20261106-bounded-summary-v6", activeRequests, preparingImages, preparingResponses, upstream: upstreamBase.origin, liveUpstream: liveBase.origin }));
     return;
   }
 

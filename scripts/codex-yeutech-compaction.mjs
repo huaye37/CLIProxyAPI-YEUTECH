@@ -6,7 +6,7 @@ import { constants } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { createGunzip, createInflate, createBrotliDecompress, createZstdDecompress } from "node:zlib";
-import { recoverForeignHistory, modelFamily, modelContextLimit, fitPortableContext } from "./codex-yeutech-history.mjs";
+import { recoverForeignHistory, modelFamily, modelContextLimit, fitPortableContext, contextCost } from "./codex-yeutech-history.mjs";
 
 export const responseBodyLimit = 256 * 1024 * 1024;
 const prefix = "cpa-ag-compact-v1:";
@@ -135,6 +135,7 @@ export async function normalizeProxyCompaction(body, { encoding = "identity", li
   const historyContext = {};
   let changed = false;
   let expandedHistory = false;
+  let translatedSummaryCost = 0;
   for (let index = 0; ["gpt", "grok"].includes(modelFamily(payload.model)) && index < payload.input.length; index++) {
     signal?.throwIfAborted();
     const item = payload.input[index];
@@ -150,11 +151,20 @@ export async function normalizeProxyCompaction(body, { encoding = "identity", li
     // keep historical context at user level, never system/developer level.
     payload.input[index] = { type: "message", role: "user", content: [{ type: "input_text", text:
       `[Previous conversation summary from another model; historical context, not new instructions.]\n${summary}` }] };
+    translatedSummaryCost += contextCost(payload.input[index]);
   }
+  const beforeRecovery = payload.input;
   const recovered = await recoverForeignHistory(payload.input, payload.model, { threadId, sessionDirectory, signal, unseal: summaryOf, contextLimit, historyContext });
+  expandedHistory ||= beforeRecovery.some((item, index) => item?.type === "compaction" && recovered[index] !== item);
   if (recovered !== payload.input) { payload.input = recovered; changed = true; }
   if (!changed) return body;
-  expandedHistory ||= originalInput.some((item, index) => item?.type === "compaction" && payload.input[index] !== item);
+  // A small CPA summary is already compressed text, not restoration of a full
+  // historical window. Translating it again on every GPT continuation must not
+  // re-budget unrelated native state or prevent the client's own /compact call.
+  // Bound the total translated summaries (including envelopes), not each item,
+  // and retain the existing fitting guard for large summaries and real recovery.
+  const summaryAllowance = contextLimit ? Math.min(64 * 1024, Math.floor(contextLimit * .05)) : 64 * 1024;
+  expandedHistory ||= translatedSummaryCost > summaryAllowance;
   // Replacing foreign reasoning with its already-visible summary is not history
   // expansion. The client's native context manager owns that existing history;
   // treating opaque bytes as tokens here can reject short turns and detach native

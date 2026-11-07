@@ -3,6 +3,7 @@ package executor
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -59,6 +60,57 @@ func TestOpenAICompatResponsesPreservesSSEFrameBoundaries(t *testing.T) {
 		if !json.Valid([]byte(payload)) || payload != events[i] {
 			t.Errorf("frame %d changed or became invalid: %q", i, frame)
 		}
+	}
+}
+
+func TestNativeResponsesCompactionTriggerPreservesOpaqueInput(t *testing.T) {
+	for _, stream := range []bool{false, true} {
+		t.Run(fmt.Sprint(stream), func(t *testing.T) {
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				body, _ := io.ReadAll(r.Body)
+				if r.URL.Path != "/responses" || ojson.GetBytes(body, "input.0.encrypted_content").String() != "native-state" || ojson.GetBytes(body, "input.1.type").String() != "compaction_trigger" {
+					t.Errorf("native compaction protocol was changed: path=%s", r.URL.Path)
+				}
+				payload := `{"id":"native-compacted","object":"response","status":"completed","output":[{"type":"compaction","encrypted_content":"next-native-state"}]}`
+				if stream {
+					w.Header().Set("Content-Type", "text/event-stream")
+					_, _ = io.WriteString(w, "data: {\"type\":\"response.completed\",\"response\":"+payload+"}\n\n")
+				} else {
+					w.Header().Set("Content-Type", "application/json")
+					_, _ = io.WriteString(w, payload)
+				}
+			}))
+			defer srv.Close()
+			cfg := &config.Config{OpenAICompatibility: []config.OpenAICompatibility{{Name: "native", WireAPI: "responses", BaseURL: srv.URL}}}
+			e := NewOpenAICompatExecutor("native", cfg)
+			a := &auth.Auth{Provider: "native", Attributes: map[string]string{"base_url": srv.URL, "compat_name": "native"}}
+			req := execution.Request{Model: "test", Payload: []byte(`{"model":"test","input":[{"type":"compaction","encrypted_content":"native-state"},{"type":"compaction_trigger"}]}`)}
+			opts := execution.Options{SourceFormat: translator.FormatOpenAIResponse, Stream: stream}
+			if stream {
+				result, err := e.ExecuteStream(context.Background(), a, req, opts)
+				if err != nil {
+					t.Fatal(err)
+				}
+				var output strings.Builder
+				for chunk := range result.Chunks {
+					if chunk.Err != nil {
+						t.Fatal(chunk.Err)
+					}
+					output.Write(chunk.Payload)
+				}
+				if !strings.Contains(output.String(), "next-native-state") {
+					t.Fatal("native output lost")
+				}
+			} else {
+				result, err := e.Execute(context.Background(), a, req, opts)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if ojson.GetBytes(result.Payload, "output.0.encrypted_content").String() != "next-native-state" {
+					t.Fatal("native output lost")
+				}
+			}
+		})
 	}
 }
 

@@ -27,6 +27,53 @@ const payload = () => ({ model: "gpt-6-astra", stream: true, reasoning: { effort
     { type: "function_call_output", call_id: "call_1", output: "Keep tool result." }, { role: "user", content: "Continue." }] });
 const encoders = { identity: b => b, gzip: gzipSync, deflate: deflateSync, br: brotliCompressSync, zstd: zstdCompressSync };
 
+async function budgetFixture(t) {
+  const directory = await mkdtemp(join(tmpdir(), "bounded-summary-"));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const threadId = "11111111-2222-3333-4444-555555555555";
+  const sessionDirectory = join(directory, "sessions");
+  const date = join(sessionDirectory, "2026", "11", "06");
+  await mkdir(date, { recursive: true });
+  await writeFile(join(date, `rollout-fixture-${threadId}.jsonl`), JSON.stringify({ type: "session_meta", payload: { id: threadId } }) + "\n");
+  const catalogPath = join(directory, "catalog.json");
+  await writeFile(catalogPath, JSON.stringify({ models: [{ slug: "gpt-6-astra", context_window: 100000 }] }));
+  return { threadId, sessionDirectory, catalogPath };
+}
+
+test("bounded CPA summary translation does not re-budget a native turn or its short retry", async t => {
+  const options = await budgetFixture(t);
+  const call = { type: "custom_tool_call", name: "exec", call_id: "keep-call", input: "fixture" };
+  const output = { type: "custom_tool_call_output", call_id: "keep-call", output: "中文工具结果".repeat(20000) };
+  for (const retry of [false, true]) {
+    const original = { ...payload(), input: [
+      { role: "developer", content: "Preserve instructions." }, capsule(),
+      { role: "user", content: "Existing native turn" }, reasoning, call, output,
+      ...(retry ? [{ role: "user", content: "?" }] : []),
+    ] };
+    for (const encode of Object.values(encoders)) {
+      const encoding = Object.keys(encoders).find(k => encoders[k] === encode);
+      const body = encode(json(original)), before = Buffer.from(body);
+      const actual = JSON.parse(await normalizeProxyCompaction(body, { ...options, encoding }));
+      assert.deepEqual(body, before);
+      assert.equal(actual.input.length, original.input.length);
+      assert.equal(actual.input[1].role, "user");
+      for (let i = 0; i < original.input.length; i++) if (i !== 1) assert.deepEqual(actual.input[i], original.input[i]);
+      assert.deepEqual({ ...actual, input: null }, { ...original, input: null });
+    }
+  }
+});
+
+test("large or aggregated CPA summaries still require the recovery budget", async t => {
+  const options = await budgetFixture(t);
+  for (const capsules of [
+    [capsule(JSON.stringify({ summary: "large restored summary ".repeat(5000) }))],
+    Array.from({ length: 20 }, () => capsule(JSON.stringify({ summary: "small summary ".repeat(30) }))),
+  ]) {
+    const original = { model: "gpt-6-astra", input: [...capsules, { role: "user", content: "too large current turn ".repeat(10000) }] };
+    await assert.rejects(normalizeProxyCompaction(json(original), options), { code: "context_budget_current_input_too_large" });
+  }
+});
+
 test("select only JSON Responses and compact POST paths, not search or Live", () => {
   const request = { method: "POST", url: "/v1/responses?x=1", headers: { "content-type": "application/json; charset=utf-8", "content-encoding": "zstd" } };
   assert.equal(isResponsesBody(request), true);
@@ -185,6 +232,22 @@ test("bridge converts stream/nonstream and compact bodies, corrects framing, pre
   assert.equal(failed.status, 400);
   assert.doesNotMatch(await failed.text(), /private-invalid/);
   assert.equal(seen.length, count, "corruption never reaches upstream");
+});
+
+test("long native history with a bounded CPA summary reaches both continuation and compact routes", async t => {
+  const { seen, base } = await fixture(t);
+  const original = payload();
+  original.input.push({ type: "custom_tool_call", call_id: "long-call", name: "exec", input: "fixture" },
+    { type: "custom_tool_call_output", call_id: "long-call", output: "中文工具输出".repeat(60000) });
+  for (const path of ["/v1/responses", "/v1/responses/compact"]) {
+    const response = await fetch(base + path, { method: "POST", headers: { "content-type": "application/json", "content-encoding": "zstd" }, body: zstdCompressSync(json(original)) });
+    assert.equal(response.status, 200);
+    await response.text();
+    const actual = JSON.parse(seen.at(-1).body);
+    assert.equal(actual.input.length, original.input.length);
+    for (let i = 0; i < original.input.length; i++) if (i !== 1) assert.deepEqual(actual.input[i], original.input[i]);
+    assert.equal(actual.input[1].role, "user");
+  }
 });
 
 test("busy admission never bypasses conversion; abort releases slot and chunked retries succeed", async t => {

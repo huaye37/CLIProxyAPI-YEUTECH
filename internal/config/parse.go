@@ -22,6 +22,8 @@ func ParseConfigBytes(data []byte) (*Config, error) {
 
 	var cfg Config
 	// Keep defaults aligned with LoadConfigOptional.
+	// YEUTECH blue/green instances share auth storage; persistence is opt-in.
+	cfg.KVStore.Disabled = true
 	cfg.Host = "" // Default empty: binds to all interfaces (IPv4 + IPv6)
 	cfg.LoggingToFile = false
 	cfg.LogsMaxTotalSizeMB = 0
@@ -83,6 +85,8 @@ func ParseConfigBytes(data []byte) (*Config, error) {
 	if cfg.Pprof.Addr == "" {
 		cfg.Pprof.Addr = DefaultPprofAddr
 	}
+
+	cfg.KVStore.Path = strings.TrimSpace(cfg.KVStore.Path)
 
 	if cfg.LogsMaxTotalSizeMB < 0 {
 		cfg.LogsMaxTotalSizeMB = 0

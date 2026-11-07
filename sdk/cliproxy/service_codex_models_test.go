@@ -103,6 +103,28 @@ func TestRegisterModelsForAuthCodexConfigurationUpdate(t *testing.T) {
 	}
 }
 
+func TestCodexNewDefinitionsDoNotAutomaticallyExpandOAuthInventory(t *testing.T) {
+	const id = "codex-unverified-inventory-test"
+	r := internalregistry.GetGlobalRegistry()
+	r.UnregisterClient(id)
+	t.Cleanup(func() { r.UnregisterClient(id) })
+	s := &Service{cfg: &config.Config{}}
+	s.registerModelsForAuth(context.Background(), &coreauth.Auth{ID: id, Provider: "codex", Status: coreauth.StatusActive, Attributes: map[string]string{"plan_type": "pro"}})
+	models := r.GetModelsForClient(id)
+	kept := false
+	for _, model := range models {
+		if model.ID == "gpt-image-2.6" || model.ID == "gpt-image-2.6-flare" || model.ID == "gpt-image-2.6-sunburst" || model.ID == "gpt-6-chat-thinking" {
+			t.Fatalf("unverified route was auto-registered: %s", model.ID)
+		}
+		if model.ID == "gpt-image-2.5" {
+			kept = true
+		}
+	}
+	if !kept {
+		t.Fatal("existing image route disappeared")
+	}
+}
+
 func TestRegisterModelsForAuthCodexAPIKeyModels(t *testing.T) {
 	defaultModels := internalregistry.GetCodexProModels()
 	if len(defaultModels) == 0 {
@@ -121,7 +143,7 @@ func TestRegisterModelsForAuthCodexAPIKeyModels(t *testing.T) {
 			name:        "defaults without explicit models",
 			entry:       config.CodexKey{APIKey: "default-key"},
 			wantIDs:     codexModelIDSet(defaultModels),
-			wantPresent: []string{"gpt-image-1.5", "gpt-image-2", "gpt-image-2.5-flare", "gpt-image-2.5-sunburst", "gpt-image-2.5"},
+			wantPresent: []string{"gpt-image-1.5", "gpt-image-2", "gpt-image-2.5-flare", "gpt-image-2.5-sunburst", "gpt-image-2.5", "gpt-image-2.6-flare", "gpt-image-2.6-sunburst", "gpt-image-2.6"},
 		},
 		{
 			name: "only explicitly configured models",
@@ -132,7 +154,7 @@ func TestRegisterModelsForAuthCodexAPIKeyModels(t *testing.T) {
 				}},
 			},
 			wantIDs:    map[string]struct{}{"configured-codex": {}},
-			wantAbsent: []string{"gpt-image-1.5", "gpt-image-2", "gpt-image-2.5-flare", "gpt-image-2.5-sunburst", "gpt-image-2.5"},
+			wantAbsent: []string{"gpt-image-1.5", "gpt-image-2", "gpt-image-2.5-flare", "gpt-image-2.5-sunburst", "gpt-image-2.5", "gpt-image-2.6-flare", "gpt-image-2.6-sunburst", "gpt-image-2.6"},
 		},
 		{
 			name: "exclusions apply to defaults",
@@ -337,7 +359,7 @@ func TestRegisterConfigAPIKeyAuthsCodexModelModes(t *testing.T) {
 					t.Errorf("missing registered model %q", modelID)
 				}
 			}
-			for _, modelID := range []string{"gpt-image-1.5", "gpt-image-2", "gpt-image-2.5-flare", "gpt-image-2.5-sunburst", "gpt-image-2.5"} {
+			for _, modelID := range []string{"gpt-image-1.5", "gpt-image-2", "gpt-image-2.5-flare", "gpt-image-2.5-sunburst", "gpt-image-2.5", "gpt-image-2.6-flare", "gpt-image-2.6-sunburst", "gpt-image-2.6"} {
 				_, registered := registeredIDs[modelID]
 				if registered != testCase.wantImages {
 					t.Errorf("registered model %q = %t, want %t", modelID, registered, testCase.wantImages)

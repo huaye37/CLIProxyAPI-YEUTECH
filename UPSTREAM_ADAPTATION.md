@@ -1021,3 +1021,70 @@ assertions or production limits. The user now authorizes this latest version's
 normal drained installation after exact three-part candidate acceptance; daily
 future proxy/manager updates remain manual. No forced interruption or paid probe
 is implied, and waiting/installed/effective consumer config remain separate.
+
+## 2026-11-06 — bounded CPA summary translation, local bridge v6
+
+The local v5 recovery guard treated every CPA capsule translation as restored
+history. A small old capsule remained in subsequent GPT requests, repeatedly
+triggering a byte-based estimate of unrelated native turns. The observed novel
+thread failed first with `context_budget_current_input_too_large`, then with
+`context_budget_preserved_history_too_large` after a one-character retry.
+
+Treat bounded CPA summaries as protocol translation, not restoration of the full
+historical window. The aggregate translated text plus envelopes is limited to
+the smaller of 64 KiB and 5% of the existing catalog-derived recovery budget.
+Larger or aggregated summaries, reviewed checkpoint restoration and foreign
+native-compaction expansion retain the original fitting safeguards. No model
+window, output allowance, tokenizer claim, native-state protection or tool-pair
+rule is relaxed. CPA text remains ordinary user history, never instructions.
+
+The local bridge and existing six-module idle-aware installer identify v6 as
+`20261106-bounded-summary-v6`. Preserve v5 lineage and the private recovery
+registry. The affected thread's two reconstructed windows now pass offline;
+all 18 retained native state items and every non-converted item are unchanged.
+The original rollout hash/size/mtime is unchanged. This is not a captured exact
+outbound request or an automatic retry of the user's business task.
+
+Validation: 80 Node regression/installed-engine loopback checks, including 16
+cross-model continuation/recompaction cases and large-history Responses/compact
+transport checks; Go build and syntax/diff checks pass. Initial concurrent tests
+had a local port collision; serialized tests pass with assertions unchanged.
+No paid calls, proxy/manager deployment or network changes. The source here is
+a local bridge repair, not a newly staged proxy candidate; future maintenance
+must integrate it and rebind/stage its own exact candidate before publication.
+
+## 2026-11-07 — v8.0.58 source checkpoint, validation failed
+
+Continue from fd44c3534f, retaining installed local v6 and maximum route contexts.
+Official e5e6ad1e1b adds 45 commits, individually tracked in
+`../api/docs/proxy-v8058-adaptation-20261107.md`. Two conflicts are semantically
+resolved: preserve retry-buffer overflow backoff with upstream header/context
+eligibility, and keep the fixed catalog without restoring free/plus groups.
+
+Full Go tests fail in registry (Image 2.6 workload metadata), executor (native
+Responses compaction is intercepted by the new compatible summary path), and
+util (new bbolt envelope write needs the exact no-copy ownership audit).
+Do not weaken assertions. New default-on local KV also needs shared-auth blue/
+green lifecycle adaptation; cached modality usage needs end-to-end management
+export/display. No full acceptance, exact image, unified stage or installation
+is claimed. Preserve this checkpoint and the external failure log; next run
+starts here and fixes these causes rather than repeating the same notification.
+Production NAS/Tokyo remains v8.0.53; local v6 is untouched. No paid calls,
+network changes, task continuation, proxy/controller or Agent restart occurred.
+
+## 2026-11-08 — v8.0.59 continuation and previous blocker repairs
+
+Continue from a405625612; integrate official c5251b57b3 and its 11 commits.
+`../api/docs/proxy-v8059-adaptation-20261108.md` supersedes the previous source
+gate failures with concrete fixes: Image 2.6 media metadata, native Responses
+compaction forwarding, exact bbolt ownership audit, opt-in local KV persistence,
+and bounded cached-modality export/display. New image/chat models are not
+automatically registered for OAuth or enabled in consumer selections.
+
+Preserve six-module local v6, current maximum contexts, native state/tool pairs,
+CPA user-role history, memory admission and unchanged production config/network.
+New OAuth fixed-state fixtures clean only their own completed state. Websocket
+test cleanup joins its own hijacked handler/logging finalizer. No assertion,
+production auth TTL or timeout is relaxed. Full source and repeated race evidence,
+browser preview and remaining exact-image/readiness gates are distinguished in
+the new ledger and external maintenance receipt. No proxy installation is implied.
