@@ -1088,3 +1088,15 @@ test cleanup joins its own hijacked handler/logging finalizer. No assertion,
 production auth TTL or timeout is relaxed. Full source and repeated race evidence,
 browser preview and remaining exact-image/readiness gates are distinguished in
 the new ledger and external maintenance receipt. No proxy installation is implied.
+
+## 2026-11-09 — v8.0.61 candidate continuation
+
+Integrate official681ce41b6e (24 commits) from verified e50150a912, keeping all
+v8.0.59 fixes and local six-module v6. Per-commit supplier, call chain, files,
+frontend and evidence dispositions are in
+`../api/docs/proxy-v8061-adaptation-20261109.md`. SIWC rotation/partition windows,
+orphan tool outputs, WS transcript replacement, Claude completed-body draining,
+effort conversion, image SSE boundaries and plugin shadow/usage changes pass
+full source tests and fifteen affected three-pass race packages. Keep opt-in KV,
+model admission gates, native context, memory policy and network unchanged.
+No new supplier/plugin/grant, paid inference or production installation is implied.
