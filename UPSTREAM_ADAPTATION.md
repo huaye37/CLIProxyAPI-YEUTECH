@@ -1111,3 +1111,14 @@ remain authoritative. See `../api/docs/proxy-continuity-repair-20261109.md`.
 All55 live routes must pass a new network-isolated/read-only exact-image stage
 gate, not merely static source tests. The prior41e79 candidate failed installation
 and must not be advertised as ready; production installation remains manual.
+
+## 2026-11-10 — v8.0.62 continuation
+
+Continue from d307b453ce, preserving repaired live-route continuity, native
+contexts, six-module v6 and opt-in persistence. The20-commit ledger is
+`../api/docs/proxy-v8062-adaptation-20261110.md`. Adopt upstream's explicit reversal
+of v61 Claude connection reuse/post-stream drain together with its replacement
+terminal tests; keep cancellation and edge privacy. Weighted sticky/pinned routing,
+equivalent-model cooldowns, Gemini signature replay, legacy KV decoding and matched
+route error logging are separately tested. No new provider/strategy/plugin is
+enabled and no production install or screenshot-error resolution is claimed.
