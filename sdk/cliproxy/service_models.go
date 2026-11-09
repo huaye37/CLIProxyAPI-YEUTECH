@@ -182,9 +182,10 @@ func (s *Service) registerModelsForAuthWithConfigAndCache(ctx context.Context, c
 		default:
 			models = registry.GetCodexProModels()
 		}
-		// Definitions are not account acceptance. Keep the established OAuth
-		// inventory until these new routes receive explicit live validation.
-		models = applyExcludedModels(models, []string{"gpt-image-2.6*", "gpt-6-chat-thinking"})
+		// New media definitions are not account acceptance. Do not extend this
+		// gate to existing text routes: gpt-6-chat-thinking is already registered
+		// in the live catalog and must survive a deployment unchanged.
+		models = applyExcludedModels(models, []string{"gpt-image-2.6*"})
 		models = applyExcludedModels(models, excluded)
 	case "kimi", "kimi-ai", "kimi.ai", "kimi.com":
 		models = registry.GetKimiModels()

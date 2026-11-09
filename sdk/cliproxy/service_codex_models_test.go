@@ -112,16 +112,30 @@ func TestCodexNewDefinitionsDoNotAutomaticallyExpandOAuthInventory(t *testing.T)
 	s.registerModelsForAuth(context.Background(), &coreauth.Auth{ID: id, Provider: "codex", Status: coreauth.StatusActive, Attributes: map[string]string{"plan_type": "pro"}})
 	models := r.GetModelsForClient(id)
 	kept := false
+	keptThinking := false
+	keptTerra := false
 	for _, model := range models {
-		if model.ID == "gpt-image-2.6" || model.ID == "gpt-image-2.6-flare" || model.ID == "gpt-image-2.6-sunburst" || model.ID == "gpt-6-chat-thinking" {
+		if model.ID == "gpt-image-2.6" || model.ID == "gpt-image-2.6-flare" || model.ID == "gpt-image-2.6-sunburst" {
 			t.Fatalf("unverified route was auto-registered: %s", model.ID)
 		}
 		if model.ID == "gpt-image-2.5" {
 			kept = true
 		}
+		if model.ID == "gpt-6-chat-thinking" {
+			keptThinking = true
+		}
+		if model.ID == "gpt-6.1-terra" {
+			keptTerra = true
+		}
 	}
 	if !kept {
 		t.Fatal("existing image route disappeared")
+	}
+	if !keptThinking {
+		t.Fatal("existing live gpt-6-chat-thinking route disappeared")
+	}
+	if !keptTerra {
+		t.Fatal("existing live gpt-6.1-terra route missing from offline fallback")
 	}
 }
 

@@ -1100,3 +1100,14 @@ effort conversion, image SSE boundaries and plugin shadow/usage changes pass
 full source tests and fifteen affected three-pass race packages. Keep opt-in KV,
 model admission gates, native context, memory policy and network unchanged.
 No new supplier/plugin/grant, paid inference or production installation is implied.
+
+## 2026-11-09 — correct live-route continuity after failed user installation
+
+The earlier blanket exclusion misclassified live gpt-6-chat-thinking as a new
+route. Remove that exclusion, require its continued registration, and retain the
+image admission/user policy boundaries. Restore existing dynamic gpt-6.1-terra
+in pro/team embedded fallback from exact upstream metadata; native Codex limits
+remain authoritative. See `../api/docs/proxy-continuity-repair-20261109.md`.
+All55 live routes must pass a new network-isolated/read-only exact-image stage
+gate, not merely static source tests. The prior41e79 candidate failed installation
+and must not be advertised as ready; production installation remains manual.
