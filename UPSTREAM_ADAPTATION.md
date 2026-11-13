@@ -1122,3 +1122,14 @@ terminal tests; keep cancellation and edge privacy. Weighted sticky/pinned routi
 equivalent-model cooldowns, Gemini signature replay, legacy KV decoding and matched
 route error logging are separately tested. No new provider/strategy/plugin is
 enabled and no production install or screenshot-error resolution is claimed.
+
+## 2026-11-11 — v8.0.64 source checkpoint; race gate failed
+
+Integrate independently installed v63 mirror7c00cf3688 before official905637daa3,
+continuing canonical66e1f12417. The23-commit ledger is `../api/docs/proxy-v8064-adaptation-20261111.md`.
+Implement bounded v8 failure classification through ring/BFF/request-card UI;
+isolated desktop/mobile preview and API tests pass. Preserve live model catalog,
+local v6, native compaction, explicit is-compat boundaries and image contracts.
+The existing Claude scanner20ms race gate fails repeatedly, including old v62
+baseline. Unsuccessful optimization experiments are reverted, assertions unchanged.
+No new exact-image stage or install; production v63 and previous artifacts remain.

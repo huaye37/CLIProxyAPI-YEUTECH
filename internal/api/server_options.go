@@ -14,19 +14,20 @@ import (
 )
 
 type serverOptionConfig struct {
-	extraMiddleware       []gin.HandlerFunc
-	engineConfigurator    func(*gin.Engine)
-	routerConfigurator    func(*gin.Engine, *handlers.BaseAPIHandler, *config.Config)
-	requestLoggerFactory  func(*config.Config, string) logging.RequestLogger
-	localPassword         string
-	keepAliveEnabled      bool
-	keepAliveTimeout      time.Duration
-	keepAliveOnTimeout    func()
-	postAuthHook          auth.PostAuthHook
-	postAuthPersistHook   auth.PostAuthHook
-	pluginHost            *pluginhost.Host
-	configReloadHook      func(context.Context, *config.Config)
-	exampleAPIKeySafeMode bool
+	websocketTunnelEnabled bool
+	extraMiddleware        []gin.HandlerFunc
+	engineConfigurator     func(*gin.Engine)
+	routerConfigurator     func(*gin.Engine, *handlers.BaseAPIHandler, *config.Config)
+	requestLoggerFactory   func(*config.Config, string) logging.RequestLogger
+	localPassword          string
+	keepAliveEnabled       bool
+	keepAliveTimeout       time.Duration
+	keepAliveOnTimeout     func()
+	postAuthHook           auth.PostAuthHook
+	postAuthPersistHook    auth.PostAuthHook
+	pluginHost             *pluginhost.Host
+	configReloadHook       func(context.Context, *config.Config)
+	exampleAPIKeySafeMode  bool
 }
 
 // ServerOption customises HTTP server construction.

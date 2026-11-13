@@ -40,6 +40,22 @@ func TestRecentUsageKeepsNewestWithoutSensitiveFields(t *testing.T) {
 	}
 }
 
+func TestRecentUsageFailureClassificationIsBounded(t *testing.T) {
+	for _, code := range []string{coreusage.FailureRequestScopedCode, coreusage.FailureForceCooldownCode, coreusage.FailureStreamTruncatedCode, "private error body"} {
+		ring := &recentUsageRing{limit: 2}
+		ring.HandleUsage(context.Background(), coreusage.Record{Failed: true, Fail: coreusage.Failure{Code: code}})
+		ring.HandleUsage(context.Background(), coreusage.Record{Failed: false, Fail: coreusage.Failure{Code: code}})
+		got := ring.snapshot(2)
+		want := code
+		if code == "private error body" {
+			want = ""
+		}
+		if got[0].FailureCode != "" || got[1].FailureCode != want {
+			t.Fatalf("classification: %+v", got)
+		}
+	}
+}
+
 func TestGetRecentUsageRejectsOversizedLimit(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	w := httptest.NewRecorder()
@@ -73,7 +89,7 @@ func TestRecentStructuredUsageOwnsCountersAndPreservesZero(t *testing.T) {
 func TestRecentUsageV8ExposesRequestedTierWithoutChangingLegacyContract(t *testing.T) {
 	recentUsage = &recentUsageRing{limit: 2}
 	t.Cleanup(func() { recentUsage = &recentUsageRing{limit: 500} })
-	recentUsage.HandleUsage(context.Background(), coreusage.Record{RequestID: "tier", ServiceTier: "priority", ResponseServiceTier: "default"})
+	recentUsage.HandleUsage(context.Background(), coreusage.Record{RequestID: "tier", ServiceTier: "priority", ResponseServiceTier: "default", Failed: true, Fail: coreusage.Failure{Code: coreusage.FailureRequestScopedCode}})
 
 	request := func(path string, handler gin.HandlerFunc) map[string]any {
 		w := httptest.NewRecorder()
@@ -94,6 +110,12 @@ func TestRecentUsageV8ExposesRequestedTierWithoutChangingLegacyContract(t *testi
 	}
 	v8 := request("/v8/management/observability/usage/recent", (&Handler{}).GetRecentUsageV8)
 	v8Record := v8["records"].([]any)[0].(map[string]any)
+	if v8Record["failureCode"] != "request_scoped" {
+		t.Fatalf("missing classification: %+v", v8Record)
+	}
+	if _, exists := legacyRecord["failureCode"]; exists {
+		t.Fatal("legacy failure contract changed")
+	}
 	if v8Record["requestedServiceTier"] != "priority" || v8Record["responseServiceTier"] != "default" {
 		t.Fatalf("v8 tiers = %+v", v8Record)
 	}

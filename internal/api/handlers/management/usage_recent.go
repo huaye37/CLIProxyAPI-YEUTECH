@@ -26,6 +26,7 @@ type recentUsageEntry struct {
 	LatencyMS            int64            `json:"latencyMs"`
 	TTFTMS               int64            `json:"ttftMs,omitempty"`
 	Failed               bool             `json:"failed"`
+	FailureCode          string           `json:"-"`
 	StatusCode           int              `json:"statusCode,omitempty"`
 	InputTokens          int64            `json:"inputTokens"`
 	OutputTokens         int64            `json:"outputTokens"`
@@ -40,6 +41,7 @@ type recentUsageEntry struct {
 
 type recentUsageEntryV8 struct {
 	recentUsageEntry
+	FailureCode          string           `json:"failureCode,omitempty"`
 	RequestedServiceTier string           `json:"requestedServiceTier,omitempty"`
 	StructuredUsage      map[string]int64 `json:"structuredUsage,omitempty"`
 }
@@ -86,6 +88,12 @@ func (r *recentUsageRing) HandleUsage(_ context.Context, record coreusage.Record
 	}
 	if entry.RequestedModel == "" {
 		entry.RequestedModel = entry.RoutedModel
+	}
+	if entry.Failed {
+		switch record.Fail.Code {
+		case coreusage.FailureRequestScopedCode, coreusage.FailureForceCooldownCode, coreusage.FailureStreamTruncatedCode:
+			entry.FailureCode = record.Fail.Code
+		}
 	}
 	// Snapshot only bounded, non-secret numeric counters. Preserve absent versus zero.
 	d := record.Detail
@@ -162,7 +170,7 @@ func (h *Handler) GetRecentUsageV8(c *gin.Context) {
 	entries := recentUsage.snapshot(limit)
 	records := make([]recentUsageEntryV8, 0, len(entries))
 	for _, entry := range entries {
-		records = append(records, recentUsageEntryV8{recentUsageEntry: entry, RequestedServiceTier: entry.RequestedServiceTier, StructuredUsage: entry.StructuredUsage})
+		records = append(records, recentUsageEntryV8{recentUsageEntry: entry, FailureCode: entry.FailureCode, RequestedServiceTier: entry.RequestedServiceTier, StructuredUsage: entry.StructuredUsage})
 	}
 	c.JSON(http.StatusOK, gin.H{"records": records, "retention": "memory", "capacity": recentUsage.limit})
 }
