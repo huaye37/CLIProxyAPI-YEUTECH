@@ -1,4 +1,23 @@
-# NAS 与东京共用代理源码
+# NAS 代理维护（东京已永久退役）
+
+## 当前约束：2026-11-14 起生效
+
+用户已要求整体移除东京接入，并将自行回收东京服务器。现用维护范围仅为
+`yeutech/apps/model` 与其配套 `yeutech/apps/api`，统一候选入口只准备 NAS。
+不得访问、探测、构建、测试、stage 或安装东京，不恢复 NAS→香港→东京隧道、
+节点登记、专用 SSH 凭据或 `*-tokyo` 模型；东京缺席不是 NAS 候选的阻塞条件。
+历史账号、会话、备份与事故记录保留，不把服务器回收意向当成代删服务器的授权。
+
+当前唯一入口：在干净隔离单仓的 `apps/api` 运行
+`python3 scripts/stage-unified-proxy.py --source <同一工作树>/apps/model --upstream-version <正式标签> --go <工具链>`。
+保留源码/镜像配对、现网目录连续性、内存和两层续聊门禁；日常仅准备候选，
+代理及配套仍由用户手动安装。2026-11-14 的一次安装授权已经消费。
+退役证据见统一控制 `docs/maintenance/2026-11-14-tokyo-retired-v8069-installed.json`。
+
+以下内容是历史部署经过，不是当前操作指令；其中涉及东京的维护、登录、
+网络、候选与回退命令均已失效，不得执行。
+
+## 历史：NAS 与东京共用代理源码
 
 唯一代理仓库为 `huaye37/CLIProxyAPI-YEUTECH`，维护分支为
 `yeutech-capability-v15`。东京不维护第二份长期 fork。上游 `main` 用于观察变化，

@@ -1,5 +1,18 @@
 # Unified v8.0.29 adaptation gate
 
+## 2026-11-15 — v8.0.71 NAS-only source continuation
+
+The current21-commit ledger is ../api/docs/proxy-v8071-adaptation-20261115.md.
+Continue the installedv69 and complete Tokyo retirement source9c37ed2394.
+Preserve the private WS default-off gate while merging new SDK interceptor and
+Muse handler fields; keep both bounded recent-usage and standalone in-flight
+management routes. No new provider, credential, consumer route or replacement
+default is admitted. TOS credentials remain terminal-disabled; pool-wide pause
+requires explicit configuration so an omitted new setting cannot silently change
+existing sibling-account policy. Native state, limits and six-module v6 stay.
+New empty/abnormal Gemini stream checks are protocol-fixture evidence only,
+not a claim that the user's upstream service suspension is repaired.
+
 Checked 2026-10-15 Asia/Shanghai. GitHub's latest non-draft, non-prerelease
 release is v8.0.29 (published 2026-10-14T16:19:43Z). The official tag is an
 ancestor of this isolated candidate. NAS and Tokyo share this source; neither

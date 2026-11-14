@@ -1,4 +1,15 @@
-# Isolated Claude edge
+# Archived isolated Claude edge — retired
+
+Tokyo integration was permanently retired at the user's request on November 14,
+2026. The user will reclaim the server separately. This directory preserves
+historical evidence only: do not run its login, SSH, tunnel, probe, deployment,
+acceptance or rollback commands, access the host, or restore its models and
+credentials. Current maintenance targets NAS and its paired API manager only;
+the unified staging entrypoint has no remote-node path. The retirement receipt is
+`docs/maintenance/2026-11-14-tokyo-retired-v8069-installed.json` in the unified
+control workspace. No server deletion is authorized by this archival notice.
+
+## Historical deployment description
 
 This deployment keeps Claude OAuth files on the edge host and exposes inference
 only through a private SSH tunnel. NAS consumers receive a separate bridge key.
