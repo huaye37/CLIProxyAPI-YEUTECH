@@ -114,15 +114,15 @@ func TestPluginFileSnapshotCannotOverwriteLaterPersistedPrefix(t *testing.T) {
 		}, true, nil
 	})
 	snapshot := func(data []byte) []*coreauth.Auth {
-		items, errSynthesize := SynthesizeAuthFile(&SynthesisContext{
+		items, handled, errSynthesize := SynthesizeAuthFileDetailed(&SynthesisContext{
 			Config:           &config.Config{},
 			AuthDir:          dir,
 			Now:              time.Now(),
 			IDGenerator:      NewStableIDGenerator(),
 			PluginAuthParser: parser,
 		}, path, data)
-		if errSynthesize != nil || len(items) != 2 {
-			t.Fatalf("snapshot: %v count=%d", errSynthesize, len(items))
+		if errSynthesize != nil || !handled || len(items) != 2 {
+			t.Fatalf("snapshot: %v handled=%v count=%d", errSynthesize, handled, len(items))
 		}
 		return items
 	}

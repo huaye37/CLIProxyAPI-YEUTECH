@@ -1146,3 +1146,16 @@ local v6, native compaction, explicit is-compat boundaries and image contracts.
 The existing Claude scanner20ms race gate fails repeatedly, including old v62
 baseline. Unsuccessful optimization experiments are reverted, assertions unchanged.
 No new exact-image stage or install; production v63 and previous artifacts remain.
+
+## 2026-11-16 — v8.0.73 on the installed three-instance pool lineage
+
+Continue from 177c2af705 and preserve the installed v8.0.72 pool contracts.
+All ten upstream commits are tracked in `../api/docs/proxy-v8073-adaptation-20261116.md`.
+Retain local source-file snapshots while adopting detailed plugin-parser identity;
+the existing stale-plugin snapshot regression now covers the new detailed entry.
+Gemini retry hints, zero-output classification, image events and provider-isolated
+thinking, Claude native schema and executor wrapper lifecycle require no invented
+frontend controls or new account grants. Preserve shared cooldown, unique refresh
+leadership, graceful refresh shutdown and all native history/catalog safeguards.
+Source, exact-image, paired-manager and rendered validation are recorded separately.
+Production stays v8.0.72 until the user installs a fully prepared candidate.
