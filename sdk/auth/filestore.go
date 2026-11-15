@@ -13,6 +13,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/router-for-me/CLIProxyAPI/v8/internal/auth/codex"
+	"github.com/router-for-me/CLIProxyAPI/v8/internal/poollease"
 	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/auth"
 	"github.com/router-for-me/CLIProxyAPI/v8/sdk/pluginapi"
 )
@@ -76,6 +78,19 @@ func (s *FileTokenStore) Save(ctx context.Context, auth *cliproxyauth.Auth) (str
 	if auth == nil {
 		return "", fmt.Errorf("auth filestore: auth is nil")
 	}
+	if poollease.Enabled() {
+		if poollease.IsManagedRefresh(ctx) {
+			if !poollease.MayRefresh() {
+				return "", poollease.ErrNotLeader
+			}
+		} else {
+			finish, ok := poollease.EnterRefresh()
+			if !ok {
+				return "", poollease.ErrNotLeader
+			}
+			defer finish()
+		}
+	}
 	cliproxyauth.NormalizeCredentialMetadata(auth.Metadata)
 	if errWeight := cliproxyauth.ValidateAuthWeight(auth); errWeight != nil {
 		return "", fmt.Errorf("auth filestore: %w", errWeight)
@@ -124,11 +139,22 @@ func (s *FileTokenStore) Save(ctx context.Context, auth *cliproxyauth.Auth) (str
 			if setter, ok := auth.Storage.(metadataSetter); ok {
 				setter.SetMetadata(auth.Metadata)
 			}
-			if err = auth.Storage.SaveTokenToFile(path); err != nil {
+			if poollease.Enabled() {
+				err = savePoolStorageAtomic(path, auth.Storage.SaveTokenToFile)
+			} else {
+				err = auth.Storage.SaveTokenToFile(path)
+			}
+			if err != nil {
 				return "", err
 			}
 		case auth.Metadata != nil:
 			auth.Metadata["disabled"] = auth.Disabled
+			if poollease.Enabled() {
+				if err = codex.WriteJSONFileAtomic(path, auth.Metadata); err != nil {
+					return "", err
+				}
+				break
+			}
 			raw, errMarshal := json.Marshal(auth.Metadata)
 			if errMarshal != nil {
 				return "", fmt.Errorf("auth filestore: marshal metadata failed: %w", errMarshal)
@@ -174,6 +200,29 @@ func (s *FileTokenStore) Save(ctx context.Context, auth *cliproxyauth.Auth) (str
 	return path, nil
 }
 
+func savePoolStorageAtomic(path string, save func(string) error) error {
+	tmp, err := os.CreateTemp(filepath.Dir(path), ".pool-auth-*.tmp")
+	if err != nil {
+		return err
+	}
+	name := tmp.Name()
+	defer os.Remove(name)
+	if err := tmp.Chmod(0o600); err != nil {
+		_ = tmp.Close()
+		return err
+	}
+	if err := tmp.Close(); err != nil {
+		return err
+	}
+	if err := save(name); err != nil {
+		return err
+	}
+	if err := os.Chmod(name, 0o600); err != nil {
+		return err
+	}
+	return os.Rename(name, path)
+}
+
 // List enumerates all auth JSON files under the configured directory.
 func (s *FileTokenStore) List(ctx context.Context) ([]*cliproxyauth.Auth, error) {
 	dir := s.baseDirSnapshot()
@@ -208,6 +257,13 @@ func (s *FileTokenStore) List(ctx context.Context) ([]*cliproxyauth.Auth, error)
 
 // Delete removes the auth file.
 func (s *FileTokenStore) Delete(ctx context.Context, id string) error {
+	if poollease.Enabled() {
+		finish, ok := poollease.EnterRefresh()
+		if !ok {
+			return poollease.ErrNotLeader
+		}
+		defer finish()
+	}
 	id = strings.TrimSpace(id)
 	if id == "" {
 		return fmt.Errorf("auth filestore: id is empty")

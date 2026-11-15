@@ -13,6 +13,7 @@ import (
 
 	codexauth "github.com/router-for-me/CLIProxyAPI/v8/internal/auth/codex"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/config"
+	"github.com/router-for-me/CLIProxyAPI/v8/internal/poollease"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/runtime/executor/helps"
 	sdkauth "github.com/router-for-me/CLIProxyAPI/v8/sdk/auth"
 	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/auth"
@@ -152,6 +153,12 @@ func resolveCodexAuthDiskPath(cfg *config.Config, auth *cliproxyauth.Auth) (stri
 }
 
 func (e *CodexExecutor) Refresh(ctx context.Context, auth *cliproxyauth.Auth) (*cliproxyauth.Auth, error) {
+	if !poollease.MayRefresh() {
+		return nil, statusErr{code: http.StatusServiceUnavailable, msg: "Credential refresh is owned by another proxy instance"}
+	}
+	finishPoolRefresh, allowedPoolRefresh := poollease.EnterRefresh()
+	if !allowedPoolRefresh { return nil, statusErr{code: http.StatusServiceUnavailable, msg: "Credential refresh is temporarily unavailable"} }
+	defer finishPoolRefresh()
 	log.Debugf("codex executor: refresh called")
 	var cfg *config.Config
 	if e != nil {

@@ -13,6 +13,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/router-for-me/CLIProxyAPI/v8/internal/poollease"
 )
 
 // CooldownStateRecord is a persisted runtime cooldown snapshot for one auth/model pair.
@@ -78,9 +80,10 @@ type cooldownStateFile struct {
 
 // FileCooldownStateStore stores cooldown state as one .cds file per auth.
 type FileCooldownStateStore struct {
-	mu      sync.Mutex
-	dir     string
-	authDir string
+	mu          sync.Mutex
+	dir         string
+	authDir     string
+	poolPrivate bool
 }
 
 // NewFileCooldownStateStore creates a file-backed cooldown state store rooted at dir.
@@ -164,6 +167,9 @@ func readCooldownStateFile(ctx context.Context, path string) ([]CooldownStateRec
 func (s *FileCooldownStateStore) Save(ctx context.Context, records []CooldownStateRecord) error {
 	if s == nil || s.dir == "" {
 		return nil
+	}
+	if poollease.Enabled() && !s.poolPrivate && !poollease.MayRefresh() {
+		return poollease.ErrNotLeader
 	}
 	if ctx == nil {
 		ctx = context.Background()

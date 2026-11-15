@@ -881,14 +881,15 @@ var antigravityTOSPauseUntil sync.Map
 const antigravityTOSPauseKVKey = "cpa:antigravity:tos-pause:until"
 
 // antigravityTOSPauseWindow resolves the configured protective pause window.
-// YEUTECH keeps the existing pool policy unless an operator explicitly opts in.
-// Terminal TOS credentials are still deactivated independently of this pause.
+// Defaults to disabled (0) so a TOS_VIOLATION only deactivates the offending
+// credential unless a positive Go duration (e.g. "6h") is explicitly configured.
 func antigravityTOSPauseWindow(cfg *config.Config) (time.Duration, bool) {
-	raw := "0"
-	if cfg != nil {
-		if trimmed := strings.TrimSpace(cfg.Antigravity.TOSPauseWindow); trimmed != "" {
-			raw = trimmed
-		}
+	if cfg == nil {
+		return 0, false
+	}
+	raw := strings.TrimSpace(cfg.Antigravity.TOSPauseWindow)
+	if raw == "" {
+		return 0, false
 	}
 	switch strings.ToLower(raw) {
 	case "0", "off", "false", "none", "disabled":

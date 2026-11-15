@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/router-for-me/CLIProxyAPI/v8/internal/poollease"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/runtime/executor"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/util"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/watcher"
@@ -691,6 +692,16 @@ func (s *Service) configureCooldownStateStoreContext(ctx context.Context, cfg *c
 }
 
 func (s *Service) resolveCooldownStateStore(cfg *config.Config) coreauth.CooldownStateStore {
+	if poollease.Enabled() {
+		if cfg == nil || cfg.Home.Enabled || cfg.SaveCooldownStatus {
+			return coreauth.NewUnavailablePoolCooldownStore("pool cooldown policy is incompatible")
+		}
+		authDir, err := resolveCooldownStateAuthDir(cfg)
+		if err != nil || authDir == "" {
+			return coreauth.NewUnavailablePoolCooldownStore("pool auth directory is unavailable")
+		}
+		return coreauth.NewLazyPoolCooldownStateStore(os.Getenv("YEUTECH_POOL_COOLDOWN_DIR"), authDir, os.Getenv("YEUTECH_POOL_SLOT"))
+	}
 	if cfg == nil || !cfg.SaveCooldownStatus || cfg.Home.Enabled {
 		return nil
 	}

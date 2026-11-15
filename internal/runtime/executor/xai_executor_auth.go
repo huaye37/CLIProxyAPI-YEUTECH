@@ -7,6 +7,7 @@ import (
 	"time"
 
 	xaiauth "github.com/router-for-me/CLIProxyAPI/v8/internal/auth/xai"
+	"github.com/router-for-me/CLIProxyAPI/v8/internal/poollease"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/runtime/executor/helps"
 	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/auth"
 	log "github.com/sirupsen/logrus"
@@ -14,6 +15,12 @@ import (
 
 // Refresh refreshes xAI OAuth credentials using the stored refresh token.
 func (e *XAIExecutor) Refresh(ctx context.Context, auth *cliproxyauth.Auth) (*cliproxyauth.Auth, error) {
+	if !poollease.MayRefresh() {
+		return nil, statusErr{code: http.StatusServiceUnavailable, msg: "Credential refresh is owned by another proxy instance"}
+	}
+	if poollease.Enabled() && !poollease.IsManagedRefresh(ctx) {
+		return nil, statusErr{code: http.StatusServiceUnavailable, msg: "Credential refresh is pending coordination"}
+	}
 	log.Debugf("xai executor: refresh called")
 	if refreshed, handled, err := helps.RefreshAuthViaHome(ctx, e.cfg, auth); handled {
 		return refreshed, err

@@ -13,6 +13,7 @@ import (
 
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/auth/codex"
 	internalconfig "github.com/router-for-me/CLIProxyAPI/v8/internal/config"
+	"github.com/router-for-me/CLIProxyAPI/v8/internal/poollease"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/registry"
 	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/executor"
 	log "github.com/sirupsen/logrus"
@@ -45,17 +46,23 @@ const (
 // every few seconds and triggers refresh operations when required.
 // Only one loop is kept alive; starting a new one cancels the previous run.
 func (m *Manager) StartAutoRefresh(parent context.Context, interval time.Duration) {
+	m.refreshLifecycleMu.Lock()
+	defer m.refreshLifecycleMu.Unlock()
 	if interval <= 0 {
 		interval = refreshCheckInterval
 	}
 
 	m.mu.Lock()
 	cancelPrev := m.refreshCancel
+	previousLoop := m.refreshLoop
 	m.refreshCancel = nil
 	m.refreshLoop = nil
 	m.mu.Unlock()
 	if cancelPrev != nil {
 		cancelPrev()
+		if previousLoop != nil {
+			<-previousLoop.done
+		}
 	}
 
 	ctx, cancelCtx := context.WithCancel(parent)
@@ -74,13 +81,19 @@ func (m *Manager) StartAutoRefresh(parent context.Context, interval time.Duratio
 // StopAutoRefresh cancels the background refresh loop, if running.
 // It also stops the selector if it implements StoppableSelector.
 func (m *Manager) StopAutoRefresh() {
+	m.refreshLifecycleMu.Lock()
+	defer m.refreshLifecycleMu.Unlock()
 	m.mu.Lock()
 	cancel := m.refreshCancel
+	loop := m.refreshLoop
 	m.refreshCancel = nil
 	m.refreshLoop = nil
 	m.mu.Unlock()
 	if cancel != nil {
 		cancel()
+		if loop != nil {
+			<-loop.done
+		}
 	}
 	// Stop selector if it implements StoppableSelector (e.g., SessionAffinitySelector)
 	sel := m.Selector()
@@ -1271,6 +1284,9 @@ func (m *Manager) refreshAuthForRequestAtEpoch(ctx context.Context, id, failedAc
 	if id == "" {
 		return nil, errors.New("auth id is empty")
 	}
+	if !poollease.MayRefresh() {
+		return nil, &Error{Code: "pool_refresh_not_leader", Message: "Credential refresh is owned by another proxy instance", HTTPStatus: http.StatusServiceUnavailable}
+	}
 	if failedAccessToken != "" {
 		m.markRejectedAccessToken(id, failedAccessToken)
 	}
@@ -1416,7 +1432,47 @@ func (m *Manager) refreshAuthForRequestAtEpoch(ctx context.Context, id, failedAc
 	}
 
 	base := auth.Clone()
+	finishPoolRefresh, allowedPoolRefresh := poollease.EnterRefresh()
+	if !allowedPoolRefresh {
+		return nil, &Error{Code: "pool_refresh_not_leader", Message: "Credential refresh is temporarily unavailable", HTTPStatus: http.StatusServiceUnavailable}
+	}
+	defer finishPoolRefresh()
+	var poolClaim *poollease.Claim
+	if poollease.Enabled() && !strings.EqualFold(strings.TrimSpace(auth.Provider), "codex") && authRefreshToken(auth) != "" {
+		if store == nil || auth.Attributes[AttributeSourceBackend] != AuthSourceFile {
+			return nil, &Error{Code: "pool_refresh_store_unsupported", Message: "Credential refresh cannot be safely coordinated", HTTPStatus: http.StatusServiceUnavailable}
+		}
+		var errClaim error
+		poolClaim, errClaim = poollease.BeginRefresh(auth.ID, authAccessToken(auth), authRefreshToken(auth))
+		if errClaim != nil {
+			if errors.Is(errClaim, poollease.ErrRefreshUncertain) {
+				persisted, errList := store.List(ctx)
+				if errList == nil {
+					for _, saved := range persisted {
+						if saved != nil && saved.ID == auth.ID && saved.Provider == auth.Provider &&
+							authAccessToken(saved) == authAccessToken(auth) && authRefreshToken(saved) == authRefreshToken(auth) {
+							if recovered, _ := poollease.RecoverChangedRefresh(auth.ID, authAccessToken(saved), authRefreshToken(saved)); recovered {
+								return auth.Clone(), nil
+							}
+							break
+						}
+					}
+				}
+			}
+			return nil, &Error{Code: "refresh_outcome_unknown", Message: "Credential refresh requires recovery before retry", HTTPStatus: http.StatusServiceUnavailable}
+		}
+	}
+	ctx = poollease.WithManagedRefresh(ctx)
 	updated, err := exec.Refresh(ctx, base.Clone())
+	if err != nil && poolClaim != nil {
+		status := statusCodeFromError(err)
+		if status == http.StatusBadRequest || status == http.StatusUnauthorized || status == http.StatusForbidden || status == http.StatusTooManyRequests {
+			if errClaim := poolClaim.Complete(); errClaim != nil {
+				return nil, &Error{Code: "refresh_outcome_unknown", Message: "Credential refresh recovery could not be finalized", HTTPStatus: http.StatusServiceUnavailable}
+			}
+			poolClaim = nil
+		}
+	}
 	now := time.Now()
 	refreshCanceled := (errors.Is(err, context.Canceled) || errors.Is(err, codex.ErrSIWCRefreshDeferred)) && !codex.IsRefreshOutcomeUnknown(err)
 	if refreshCanceled {
@@ -1737,6 +1793,9 @@ func (m *Manager) refreshAuthForRequestAtEpoch(ctx context.Context, id, failedAc
 	}
 	if saved == nil {
 		return nil, fmt.Errorf("auth %s not found", id)
+	}
+	if errClaim := poolClaim.Complete(); errClaim != nil {
+		return nil, &Error{Code: "refresh_outcome_unknown", Message: "Credential refresh recovery could not be finalized", HTTPStatus: http.StatusServiceUnavailable}
 	}
 	targetAuth := saved
 	supportedModels, regEpoch := registry.GetGlobalRegistry().GetModelsAndEpochForClient(id)

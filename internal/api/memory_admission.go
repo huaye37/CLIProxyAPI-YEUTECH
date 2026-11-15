@@ -46,7 +46,7 @@ func (m *memoryAdmission) snapshot() gin.H {
 	return gin.H{"version": memoryAdmissionVersion, "maxBodyBytes": memoryBodyLimit,
 		"bodyBudgetBytes": memoryBodyLimit, "maxConcurrentRequests": m.requestLimit(),
 		"largeBodyThresholdBytes": memoryLargeBody, "maxConcurrentLargeRequests": 1,
-		"activeRequests": m.active, "reservedBodyBytes": m.bytes}
+		"largeSlotAvailable": !m.large, "activeRequests": m.active, "reservedBodyBytes": m.bytes}
 }
 
 func (m *memoryAdmission) acquire(size int64) bool {

@@ -21,6 +21,9 @@ func (*unreadBody) Close() error               { return nil }
 
 func TestMemoryAdmissionLargeRequestsAndRecovery(t *testing.T) {
 	m := &memoryAdmission{enabled: true}
+	if m.snapshot()["largeSlotAvailable"] != true {
+		t.Fatal("idle large-request slot not visible")
+	}
 	entered, finish := make(chan struct{}), make(chan struct{})
 	r := gin.New()
 	r.Use(m.middleware())
@@ -37,6 +40,9 @@ func TestMemoryAdmissionLargeRequestsAndRecovery(t *testing.T) {
 	done := make(chan struct{})
 	go func() { defer close(done); r.ServeHTTP(httptest.NewRecorder(), first) }()
 	<-entered
+	if m.snapshot()["largeSlotAvailable"] != false {
+		t.Fatal("occupied large-request slot not visible")
+	}
 	body := &unreadBody{}
 	second := httptest.NewRequest("POST", "/v1/responses", body)
 	second.ContentLength = 80 << 20
@@ -52,6 +58,9 @@ func TestMemoryAdmissionLargeRequestsAndRecovery(t *testing.T) {
 	}
 	close(finish)
 	<-done
+	if m.snapshot()["largeSlotAvailable"] != true {
+		t.Fatal("released large-request slot not visible")
+	}
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, second)
 	if w.Code != 200 || m.active != 0 || m.bytes != 0 || m.large {

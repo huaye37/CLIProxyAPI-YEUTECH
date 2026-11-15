@@ -225,6 +225,98 @@ type issue6199UncancelableRefreshExecutor struct {
 	issue6199BlockedRefreshExecutor
 }
 
+type blockedRefreshSaveStore struct {
+	started chan struct{}
+	release chan struct{}
+	saved   chan struct{}
+}
+
+func (s *blockedRefreshSaveStore) List(context.Context) ([]*Auth, error) { return nil, nil }
+func (s *blockedRefreshSaveStore) Delete(context.Context, string) error  { return nil }
+func (s *blockedRefreshSaveStore) Save(_ context.Context, auth *Auth) (string, error) {
+	if auth.Metadata["access_token"] == "refreshed-token" {
+		close(s.started)
+		<-s.release
+		close(s.saved)
+	}
+	return "", nil
+}
+
+func TestStopAutoRefreshWaitsForCredentialPersistence(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		store := &blockedRefreshSaveStore{started: make(chan struct{}), release: make(chan struct{}), saved: make(chan struct{})}
+		manager := NewManager(store, &RoundRobinSelector{}, nil)
+		manager.RegisterExecutor(&countingRefreshExecutor{id: issue6199RefreshProvider})
+		registerIssue6199ExpiredAuth(t, manager, "persist-running", time.Now())
+		manager.StartAutoRefresh(context.Background(), time.Millisecond)
+		<-store.started
+		stopped := make(chan struct{})
+		go func() { manager.StopAutoRefresh(); close(stopped) }()
+		synctest.Wait()
+		select {
+		case <-stopped:
+			t.Fatal("shutdown returned before refreshed credentials were saved")
+		default:
+		}
+		close(store.release)
+		<-stopped
+		select {
+		case <-store.saved:
+		default:
+			t.Fatal("refreshed credentials not saved")
+		}
+	})
+}
+
+func TestStopAutoRefreshWaitsForInFlightRefresh(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		executor := &issue6199UncancelableRefreshExecutor{issue6199BlockedRefreshExecutor: issue6199BlockedRefreshExecutor{
+			countingRefreshExecutor: countingRefreshExecutor{id: issue6199RefreshProvider},
+			blockedStarted:          make(chan struct{}), release: make(chan struct{}),
+		}}
+		manager := NewManager(nil, &RoundRobinSelector{}, nil)
+		manager.RegisterExecutor(executor)
+		registerIssue6199ExpiredAuth(t, manager, "shutdown-running", time.Now())
+		manager.StartAutoRefresh(context.Background(), time.Millisecond)
+		<-executor.blockedStarted
+		stopped := make(chan struct{})
+		go func() { manager.StopAutoRefresh(); close(stopped) }()
+		synctest.Wait()
+		select {
+		case <-stopped:
+			t.Fatal("shutdown returned while credential refresh was running")
+		default:
+		}
+		close(executor.release)
+		<-stopped
+	})
+}
+
+func TestRestartAutoRefreshWaitsForPreviousRefresh(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		executor := &issue6199UncancelableRefreshExecutor{issue6199BlockedRefreshExecutor: issue6199BlockedRefreshExecutor{
+			countingRefreshExecutor: countingRefreshExecutor{id: issue6199RefreshProvider},
+			blockedStarted:          make(chan struct{}), release: make(chan struct{}),
+		}}
+		manager := NewManager(nil, &RoundRobinSelector{}, nil)
+		manager.RegisterExecutor(executor)
+		registerIssue6199ExpiredAuth(t, manager, "restart-running", time.Now())
+		manager.StartAutoRefresh(context.Background(), time.Millisecond)
+		<-executor.blockedStarted
+		restarted := make(chan struct{})
+		go func() { manager.StartAutoRefresh(context.Background(), time.Millisecond); close(restarted) }()
+		synctest.Wait()
+		select {
+		case <-restarted:
+			t.Fatal("replacement scheduler started before previous refresh finished")
+		default:
+		}
+		close(executor.release)
+		<-restarted
+		manager.StopAutoRefresh()
+	})
+}
+
 func (e *issue6199UncancelableRefreshExecutor) Refresh(ctx context.Context, auth *Auth) (*Auth, error) {
 	e.blockedOnce.Do(func() { close(e.blockedStarted) })
 	<-e.release

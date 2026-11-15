@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	internalconfig "github.com/router-for-me/CLIProxyAPI/v8/internal/config"
+	"github.com/router-for-me/CLIProxyAPI/v8/internal/poollease"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -245,8 +246,21 @@ func (m *Manager) Modify(ctx context.Context, id string, expectedEpoch uint64, e
 	if expectedEpoch != 0 && expectedEpoch < currentEpoch {
 		return nil, false, fmt.Errorf("update auth %s: stale registration epoch %d < %d", id, expectedEpoch, currentEpoch)
 	}
+	wasTOS := current.Disabled && current.StatusMessage == "tos_violation"
 	if errEdit := edit(current); errEdit != nil {
 		return nil, false, errEdit
+	}
+	if poollease.Enabled() && wasTOS && !current.Disabled && current.Status != StatusDisabled {
+		if !poollease.MayRefresh() {
+			return nil, false, poollease.ErrNotLeader
+		}
+		store, errStore := m.poolStore()
+		if errStore != nil || store == nil {
+			return nil, false, fmt.Errorf("pool terminal coordination unavailable")
+		}
+		if err := store.ClearTerminal(id, time.Now()); err != nil {
+			return nil, false, err
+		}
 	}
 	if expectedEpoch != 0 {
 		current.RegistrationEpoch = expectedEpoch

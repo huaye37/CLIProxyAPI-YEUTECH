@@ -24,6 +24,7 @@ import (
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/config"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/home"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/logging"
+	"github.com/router-for-me/CLIProxyAPI/v8/internal/poollease"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/registry"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/runtime/executor/helps"
 	responsesclaude "github.com/router-for-me/CLIProxyAPI/v8/internal/translator/claude/openai/responses"
@@ -53,6 +54,15 @@ func (s *Server) setupRoutes() {
 		body := gin.H{"status": "ok"}
 		if admission := s.memoryAdmission.snapshot(); admission != nil {
 			body["memoryGuard"] = admission
+		}
+		if poollease.Enabled() {
+			leader, inFlight := poollease.Snapshot()
+			body["poolRefreshCoordination"] = gin.H{"enabled": true, "leader": leader, "inFlight": inFlight}
+			id, ready := "", false
+			if s.handlers != nil && s.handlers.AuthManager != nil {
+				id, ready = s.handlers.AuthManager.PoolCooldownIdentity()
+			}
+			body["poolCooldownCoordination"] = gin.H{"ready": ready, "id": id}
 		}
 		if privacy := s.clientMetadataPrivacy.snapshot(); privacy != nil {
 			body["clientMetadataPrivacy"] = privacy

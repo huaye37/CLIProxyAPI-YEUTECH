@@ -11,6 +11,7 @@ import (
 	"github.com/MoeForge/moego/ojson"
 	metaauth "github.com/router-for-me/CLIProxyAPI/v8/internal/auth/meta"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/config"
+	"github.com/router-for-me/CLIProxyAPI/v8/internal/poollease"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/runtime/executor/helps"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/util"
 	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/auth"
@@ -107,6 +108,12 @@ func (e *MetaExecutor) HttpRequest(ctx context.Context, auth *cliproxyauth.Auth,
 
 // Refresh mints an API key from a DCA token if needed.
 func (e *MetaExecutor) Refresh(ctx context.Context, auth *cliproxyauth.Auth) (*cliproxyauth.Auth, error) {
+	if !poollease.MayRefresh() {
+		return nil, statusErr{code: http.StatusServiceUnavailable, msg: "Credential refresh is owned by another proxy instance"}
+	}
+	if poollease.Enabled() && !poollease.IsManagedRefresh(ctx) {
+		return nil, statusErr{code: http.StatusServiceUnavailable, msg: "Credential refresh is pending coordination"}
+	}
 	log.Debugf("meta executor: refresh called")
 	if refreshed, handled, err := helps.RefreshAuthViaHome(ctx, e.cfg, auth); handled {
 		return refreshed, err

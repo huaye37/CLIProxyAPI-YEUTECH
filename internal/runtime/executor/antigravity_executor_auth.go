@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/router-for-me/CLIProxyAPI/v8/internal/poollease"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/runtime/executor/helps"
 	sdkAuth "github.com/router-for-me/CLIProxyAPI/v8/sdk/auth"
 	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/auth"
@@ -21,6 +22,9 @@ const antigravityCredentialAcquisitionTimeout = 30 * time.Second
 
 // Refresh refreshes the authentication credentials using the refresh token.
 func (e *AntigravityExecutor) Refresh(ctx context.Context, auth *cliproxyauth.Auth) (*cliproxyauth.Auth, error) {
+	if !poollease.MayRefresh() {
+		return nil, statusErr{code: http.StatusServiceUnavailable, msg: "Credential refresh is owned by another proxy instance"}
+	}
 	if refreshed, handled, err := helps.RefreshAuthViaHome(ctx, e.cfg, auth); handled {
 		return refreshed, err
 	}
@@ -79,6 +83,9 @@ func (e *AntigravityExecutor) ensureAccessToken(ctx context.Context, auth *clipr
 		e.maybeRefreshAntigravityCreditsHint(ctx, auth, accessToken)
 		return accessToken, nil, nil
 	}
+	if !poollease.MayRefresh() {
+		return "", nil, statusErr{code: http.StatusServiceUnavailable, msg: "Credential refresh is owned by another proxy instance"}
+	}
 	refreshCtx := context.Background()
 	if ctx != nil {
 		if rt, ok := ctx.Value("cliproxy.roundtripper").(http.RoundTripper); ok && rt != nil {
@@ -105,6 +112,9 @@ func (e *AntigravityExecutor) ensureAccessToken(ctx context.Context, auth *clipr
 }
 
 func (e *AntigravityExecutor) refreshToken(ctx context.Context, auth *cliproxyauth.Auth) (*cliproxyauth.Auth, error) {
+	if poollease.Enabled() && !poollease.IsManagedRefresh(ctx) {
+		return nil, statusErr{code: http.StatusServiceUnavailable, msg: "Credential refresh is pending coordination"}
+	}
 	if auth == nil {
 		return nil, statusErr{code: http.StatusUnauthorized, msg: "missing auth"}
 	}

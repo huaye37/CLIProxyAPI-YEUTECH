@@ -21,6 +21,7 @@ import (
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/clienterror"
 	internalconfig "github.com/router-for-me/CLIProxyAPI/v8/internal/config"
 	internallogging "github.com/router-for-me/CLIProxyAPI/v8/internal/logging"
+	"github.com/router-for-me/CLIProxyAPI/v8/internal/poollease"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/registry"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/thinking"
 	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/executor"
@@ -1080,6 +1081,7 @@ func (m *Manager) ResetQuota(ctx context.Context, authID string) (*Auth, []strin
 		m.mu.Unlock()
 		return nil, nil, nil
 	}
+	now = time.Now()
 
 	var cooldownRecordsBefore []CooldownStateRecord
 	trackCooldownState := m.cooldownStore != nil
@@ -1149,6 +1151,29 @@ func (m *Manager) ResetQuota(ctx context.Context, authID string) (*Auth, []strin
 	}
 	if errPersist != nil {
 		return nil, nil, errPersist
+	}
+	if poollease.Enabled() {
+		poolStore, errStore := m.poolStore()
+		if errStore != nil || poolStore == nil {
+			return nil, nil, errors.New("pool cooldown coordination unavailable")
+		}
+		m.poolCooldownSyncMu.Lock()
+		errReset := poolStore.Reset(authID, now)
+		if errReset == nil {
+			resets, errRead := poolStore.Resets()
+			if errRead != nil {
+				errReset = errRead
+			} else {
+				if m.poolCooldownResets == nil {
+					m.poolCooldownResets = make(map[string]time.Time)
+				}
+				m.poolCooldownResets[authID] = resets[authID]
+			}
+		}
+		m.poolCooldownSyncMu.Unlock()
+		if errReset != nil {
+			return nil, nil, errReset
+		}
 	}
 	return snapshot, models, nil
 }
@@ -2174,6 +2199,17 @@ func (m *Manager) MarkResult(ctx context.Context, result Result) {
 	}
 	m.mu.Unlock()
 	releaseMutation()
+	if poollease.Enabled() && ctx.Value(poolTerminalReplayKey{}) != true && authSnapshot != nil &&
+		((authSnapshot.Disabled && authSnapshot.StatusMessage == "tos_violation" && isTOSViolationResultError(result.Error)) || rejectsToken) {
+		store, errStore := m.poolStore()
+		if errStore == nil && store != nil {
+			code := "unauthorized"
+			if isTOSViolationResultError(result.Error) {
+				code = "tos_violation"
+			}
+			_ = store.PublishTerminal(result.AuthID, modelKey, result.AccessToken, result.RefreshToken, code, now)
+		}
+	}
 	if m.scheduler != nil && authSnapshot != nil {
 		credentialScopedResult := result.CredentialScope || scheduleUnauthorizedRefresh
 		var targetModels []string
