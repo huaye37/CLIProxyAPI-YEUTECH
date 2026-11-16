@@ -2,18 +2,18 @@ package auth
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
-	"regexp"
 	"sort"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/MoeForge/moego/json"
+	"github.com/MoeForge/moego/regexp"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/poollease"
 )
 

@@ -1,5 +1,15 @@
 # Unified v8.0.29 adaptation gate
 
+## 2026-11-17 — v8.0.75 NAS pool continuation
+
+The thirteen-commit ledger is ../api/docs/proxy-v8075-adaptation-20261117.md.
+Integrate v74 Responses WebSocket pre-commit failover/replay guards and Gemini
+text/Claude advisor fixes; v75 adds explicit ordered user-text payload replacement.
+No replacement rule is enabled. Preserve native state and all pool lease,
+refresh shutdown, shared cooldown and catalog-continuity protections while
+adopting upstream JSON/regexp packages. Tokyo remains permanently retired.
+Source/candidate tests do not assert installation or account restoration.
+
 ## 2026-11-15 — v8.0.71 NAS-only source continuation
 
 The current21-commit ledger is ../api/docs/proxy-v8071-adaptation-20261115.md.
