@@ -299,7 +299,13 @@ func clearAntigravityCreditsFailureState(auth *cliproxyauth.Auth) {
 	_, hadFailure := antigravityCreditsFailureByAuth.LoadAndDelete(authID)
 	if hint, ok := cliproxyauth.GetAntigravityCreditsHint(authID); ok && hint.Known && !hint.Available {
 		if hadFailure || !cliproxyauth.IsAntigravityCreditsHintFresh(hint, time.Now()) {
-			cliproxyauth.SetAntigravityCreditsHint(authID, cliproxyauth.AntigravityCreditsHint{})
+			if _, homeMode, _ := currentAntigravityKVClient(); homeMode {
+				// Preserve the separate Home KV behavior. Standalone refreshes can
+				// publish after the read above, so only clear that exact snapshot.
+				cliproxyauth.SetAntigravityCreditsHint(authID, cliproxyauth.AntigravityCreditsHint{})
+			} else {
+				cliproxyauth.ClearLocalAntigravityCreditsHintIfUnchanged(authID, hint)
+			}
 		}
 	}
 }

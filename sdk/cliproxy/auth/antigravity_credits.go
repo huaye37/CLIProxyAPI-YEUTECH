@@ -48,6 +48,17 @@ func IsAntigravityCreditsHintFresh(hint AntigravityCreditsHint, now time.Time) b
 
 var antigravityCreditsHintByAuth sync.Map
 
+// ClearLocalAntigravityCreditsHintIfUnchanged invalidates a standalone hint only
+// while it still matches the observed value. Home KV callers keep their separate
+// lifecycle and must not use this local-cache operation.
+func ClearLocalAntigravityCreditsHintIfUnchanged(authID string, observed AntigravityCreditsHint) bool {
+	authID = strings.TrimSpace(authID)
+	if authID == "" {
+		return false
+	}
+	return antigravityCreditsHintByAuth.CompareAndSwap(authID, observed, AntigravityCreditsHint{UpdatedAt: time.Now()})
+}
+
 // SetAntigravityCreditsHint updates the latest known AI credits state for an auth.
 func SetAntigravityCreditsHint(authID string, hint AntigravityCreditsHint) {
 	authID = strings.TrimSpace(authID)
