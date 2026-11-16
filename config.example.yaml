@@ -1375,6 +1375,11 @@ oauth:
 
     # Antigravity provider behavior.
     antigravity:
+      # Explicit opt-in: shared AuthDir account lease (one active request), 2s
+      # start spacing, at most two identical-payload attempts per five minutes,
+      # Retry-After backoff, 1h region-refusal pause and 6h provider TOS pause.
+      # This limits request amplification; it does not prevent account bans.
+      # request-protection: false
       # sensitive-words:              # optional: words to obfuscate with combining grapheme joiners (U+034F) in system instructions
       #   - "API"
       #   - "proxy"

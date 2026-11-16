@@ -1,5 +1,14 @@
 # Unified v8.0.29 adaptation gate
 
+## 2026-11-17 — opt-in cross-replica Antigravity request protection
+
+See ../api/docs/provider-protection-20261117.md. Add account-scoped OS leases,
+shared identical-request attempt budgets, Retry-After/RetryInfo backoff and a
+durable provider TOS pause without changing model payloads or credentials.
+Only explicitly enabled Antigravity inference/count paths are affected.
+Existing terminal disable, refresh leadership, catalog continuity and v6 history
+remain unchanged. No claim of account restoration or measurable ban reduction.
+
 ## 2026-11-17 — v8.0.75 NAS pool continuation
 
 The thirteen-commit ledger is ../api/docs/proxy-v8075-adaptation-20261117.md.

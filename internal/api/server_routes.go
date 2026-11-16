@@ -52,6 +52,9 @@ func (s *Server) setupRoutes() {
 		}
 
 		body := gin.H{"status": "ok"}
+		if cfg := s.getConfig(); cfg != nil {
+			body["antigravityRequestProtection"] = gin.H{"version": "yeutech-request-protection-v1", "enabled": cfg.Antigravity.RequestProtection, "maxConcurrentPerAccount": 1, "maxIdenticalAttempts": 2, "attemptWindowSeconds": 300, "startIntervalSeconds": 2, "tosPauseSeconds": 21600}
+		}
 		if admission := s.memoryAdmission.snapshot(); admission != nil {
 			body["memoryGuard"] = admission
 		}

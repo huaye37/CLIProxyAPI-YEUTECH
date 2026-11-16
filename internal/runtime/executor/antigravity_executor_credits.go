@@ -437,6 +437,9 @@ func (e *AntigravityExecutor) applyAntigravityTOSState(cfg *config.Config, auth 
 		return
 	}
 	markAntigravityTOSPause(cfg, auth)
+	if errPause := helps.PauseAntigravityProtection(cfg); errPause != nil {
+		log.Error("antigravity: failed to persist shared provider restriction pause")
+	}
 	if violation.AppealURL != "" {
 		log.Warnf("antigravity executor: credential %s suspended for TOS_VIOLATION; submit appeal: %s (%s)", auth.ID, redactTOSAppealURL(violation.AppealURL), violation.AppealURLText)
 	} else {

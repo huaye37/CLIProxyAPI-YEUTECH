@@ -258,6 +258,9 @@ type ProxyConnectionPoolConfig struct {
 
 // AntigravityConfig configures provider-wide Antigravity request behavior.
 type AntigravityConfig struct {
+	// RequestProtection enables shared account admission and bounded replay attempts.
+	// Requires a shared AuthDir across replicas. It does not change credentials or payloads.
+	RequestProtection bool `yaml:"request-protection,omitempty" json:"request-protection,omitempty"`
 	// SensitiveWords is a list of words to obfuscate with invisible combining grapheme joiners in system instructions.
 	SensitiveWords []string `yaml:"sensitive-words,omitempty" json:"sensitive-words,omitempty"`
 
