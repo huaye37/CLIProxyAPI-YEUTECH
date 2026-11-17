@@ -1,5 +1,17 @@
 # Unified v8.0.29 adaptation gate
 
+## 2026-11-18 — v8.0.76 with preserved pool and Images entry
+
+Continue debfa/e38d; all fifteen upstream dispositions and consumer boundaries
+are in `../api/docs/proxy-v8076-adaptation-20261118.md`. Preserve Antigravity
+protection, enabled Codex flags, local v6, shared cooldown/refresh coordination,
+native history and current routing. New scheduler continuity is opt-in via its
+plugin contract, not automatically enabled. Preserve the final payload barrier
+and request-scoped policy errors. A short-token scan optimization addresses the
+reproduced 20ms race gate without loosening time/allocation assertions; escaped
+and fragmented token regressions cover its semantics. Source, exact candidate
+and production remain separate; no daily installation or Tokyo access.
+
 ## 2026-11-17 — opt-in cross-replica Antigravity request protection
 
 See ../api/docs/provider-protection-20261117.md. Add account-scoped OS leases,

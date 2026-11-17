@@ -3354,6 +3354,26 @@ func (s *claudeStreamDocScanner) appendShortByte(c byte) {
 	s.strLen = len(s.strExtra)
 }
 
+// Copy ordinary token runs once; escape boundaries still use appendShortByte.
+func (s *claudeStreamDocScanner) appendShortBytes(p []byte) {
+	if len(p) == 0 {
+		return
+	}
+	if len(s.strExtra) > 0 {
+		s.strExtra = append(s.strExtra, p...)
+		s.strLen = len(s.strExtra)
+		return
+	}
+	if len(p) <= len(s.strBuf)-s.strLen {
+		copy(s.strBuf[s.strLen:], p)
+		s.strLen += len(p)
+		return
+	}
+	s.strExtra = append(s.strExtra[:0], s.strBuf[:s.strLen]...)
+	s.strExtra = append(s.strExtra, p...)
+	s.strLen = len(s.strExtra)
+}
+
 func (s *claudeStreamDocScanner) decodeShortToken() string {
 	var rawStr []byte
 	if len(s.strExtra) > 0 {
@@ -3656,6 +3676,16 @@ func (s *claudeStreamDocScanner) Write(p []byte) (int, error) {
 	for i < len(p) {
 		switch s.tok {
 		case claudeScanTokString:
+			if s.strEsc == 0 && s.strTarget == claudeStrCapShort {
+				next := claudeStringBoundary(p[i:])
+				if next < 0 {
+					s.appendShortBytes(p[i:])
+					i = len(p)
+					break
+				}
+				s.appendShortBytes(p[i : i+next])
+				i += next
+			}
 			if s.strEsc == 0 && (s.strTarget == claudeStrIgnore || (s.strTarget == claudeStrCheckNonSpace && s.strHasNonSpace)) {
 				// Skip uninterpreted string bytes without a per-byte scanner-state read.
 				// Quote and escape boundaries still pass through the state machine.
