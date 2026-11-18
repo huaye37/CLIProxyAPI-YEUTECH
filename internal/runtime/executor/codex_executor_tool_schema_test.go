@@ -790,22 +790,36 @@ func TestCodexWebsocketsExecutor_DoesNotNormalizeToolIntegerTypesForCodexUserAge
 }
 
 func TestCodexWebsocketsExecutor_UpgradeFallbackToHTTP_PreservesNumber(t *testing.T) {
-	var httpCapturedBody []byte
+	captured := make(chan []byte, 2)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("Upgrade") == "websocket" {
 			w.WriteHeader(http.StatusUpgradeRequired)
 			_, _ = w.Write([]byte(`{"error":{"message":"websocket unavailable"}}`))
 			return
 		}
+		if r.Method != http.MethodPost || r.URL.Path != "/responses" {
+			http.NotFound(w, r)
+			return
+		}
 		body, errRead := io.ReadAll(r.Body)
 		if errRead != nil {
 			t.Fatalf("read HTTP fallback body: %v", errRead)
 		}
-		httpCapturedBody = body
+		captured <- body
 		w.Header().Set("Content-Type", "text/event-stream")
 		_, _ = w.Write([]byte("data: {\"type\":\"response.completed\",\"response\":{\"id\":\"resp_fallback\",\"object\":\"response\",\"status\":\"completed\",\"output\":[],\"usage\":{\"input_tokens\":0,\"output_tokens\":0,\"total_tokens\":0}}}\n\n"))
 	}))
 	defer server.Close()
+	readCaptured := func() []byte {
+		t.Helper()
+		select {
+		case body := <-captured:
+			return body
+		case <-time.After(5 * time.Second):
+			t.Fatal("timed out waiting for HTTP fallback payload")
+			return nil
+		}
+	}
 
 	exec := NewCodexWebsocketsExecutor(&config.Config{})
 	auth := &cliproxyauth.Auth{
@@ -877,13 +891,13 @@ func TestCodexWebsocketsExecutor_UpgradeFallbackToHTTP_PreservesNumber(t *testin
 	}
 
 	// 1. Stream fallback
-	httpCapturedBody = nil
 	streamRes, errStream := exec.ExecuteStream(context.Background(), auth, req, opts)
 	if errStream != nil {
 		t.Fatalf("ExecuteStream fallback error = %v", errStream)
 	}
 	for range streamRes.Chunks {
 	}
+	httpCapturedBody := readCaptured()
 	if got := ojson.GetBytes(httpCapturedBody, "tools.#(name==\"exec_command\").parameters.properties.yield_time_ms.type").String(); got != "number" {
 		t.Fatalf("stream fallback tools exec_command yield_time_ms type = %q, want number", got)
 	}
@@ -895,11 +909,11 @@ func TestCodexWebsocketsExecutor_UpgradeFallbackToHTTP_PreservesNumber(t *testin
 	}
 
 	// 2. Non-stream fallback
-	httpCapturedBody = nil
 	_, errNonStream := exec.Execute(context.Background(), auth, req, opts)
 	if errNonStream != nil {
 		t.Fatalf("Execute fallback error = %v", errNonStream)
 	}
+	httpCapturedBody = readCaptured()
 	if got := ojson.GetBytes(httpCapturedBody, "tools.#(name==\"exec_command\").parameters.properties.yield_time_ms.type").String(); got != "number" {
 		t.Fatalf("non-stream fallback tools exec_command yield_time_ms type = %q, want number", got)
 	}

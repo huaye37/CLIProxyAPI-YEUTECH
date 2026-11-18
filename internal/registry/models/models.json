@@ -2641,15 +2641,15 @@
   ],
   "codex-team": [
     {
-      "id": "gpt-6.1-terra",
+      "id": "gpt-6.2-astra",
       "object": "model",
-      "created": 1792972800,
+      "created": 1794942000,
       "owned_by": "openai",
       "type": "openai",
-      "display_name": "GPT 6.1 Terra",
-      "version": "gpt-6.0",
-      "description": "A fast, efficient model for visual reasoning, precise computer use, and clear, natural writing.",
-      "context_length": 500000,
+      "display_name": "GPT 6.2 Astra",
+      "version": "gpt-6.2",
+      "description": "GPT-6.2 Astra is our most capable model for your hardest projects, from start to finish.",
+      "context_length": 272000,
       "max_completion_tokens": 128000,
       "supported_parameters": [
         "tools"
@@ -2676,15 +2676,15 @@
       "support_configuration_update": true
     },
     {
-      "id": "gpt-5.5",
+      "id": "gpt-6.2-sol",
       "object": "model",
-      "created": 1776902400,
+      "created": 1794942000,
       "owned_by": "openai",
       "type": "openai",
-      "display_name": "GPT 5.5",
-      "version": "gpt-5.5",
-      "description": "Frontier model for complex coding, research, and real-world work.",
-      "context_length": 272000,
+      "display_name": "GPT 6.2 Sol",
+      "version": "gpt-6.2",
+      "description": "GPT-6.2 Astra is our go-to model for everyday work, from coding to powering agents at scale.",
+      "context_length": 500000,
       "max_completion_tokens": 128000,
       "supported_parameters": [
         "tools"
@@ -2694,7 +2694,8 @@
           "low",
           "medium",
           "high",
-          "xhigh"
+          "xhigh",
+          "max"
         ]
       },
       "supportedInputModalities": [
@@ -2706,7 +2707,8 @@
       ],
       "native_capabilities": {
         "web_search": true
-      }
+      },
+      "support_configuration_update": true
     },
     {
       "id": "gpt-6-astra",
@@ -2788,6 +2790,41 @@
       "version": "gpt-6.0",
       "description": "Latest workhorse model for coding and everyday work.",
       "context_length": 272000,
+      "max_completion_tokens": 128000,
+      "supported_parameters": [
+        "tools"
+      ],
+      "thinking": {
+        "levels": [
+          "low",
+          "medium",
+          "high",
+          "xhigh",
+          "max"
+        ]
+      },
+      "supportedInputModalities": [
+        "text",
+        "image"
+      ],
+      "supportedOutputModalities": [
+        "text"
+      ],
+      "native_capabilities": {
+        "web_search": true
+      },
+      "support_configuration_update": true
+    },
+    {
+      "id": "gpt-6.1-terra",
+      "object": "model",
+      "created": 1792972800,
+      "owned_by": "openai",
+      "type": "openai",
+      "display_name": "GPT 6.1 Terra",
+      "version": "gpt-6.0",
+      "description": "A fast, efficient model for visual reasoning, precise computer use, and clear, natural writing.",
+      "context_length": 500000,
       "max_completion_tokens": 128000,
       "supported_parameters": [
         "tools"
@@ -2987,6 +3024,39 @@
       ],
       "supported_workloads": [
         "review"
+      ],
+      "native_capabilities": {
+        "web_search": true
+      }
+    },
+    {
+      "id": "gpt-5.5",
+      "object": "model",
+      "created": 1776902400,
+      "owned_by": "openai",
+      "type": "openai",
+      "display_name": "GPT 5.5",
+      "version": "gpt-5.5",
+      "description": "Frontier model for complex coding, research, and real-world work.",
+      "context_length": 272000,
+      "max_completion_tokens": 128000,
+      "supported_parameters": [
+        "tools"
+      ],
+      "thinking": {
+        "levels": [
+          "low",
+          "medium",
+          "high",
+          "xhigh"
+        ]
+      },
+      "supportedInputModalities": [
+        "text",
+        "image"
+      ],
+      "supportedOutputModalities": [
+        "text"
       ],
       "native_capabilities": {
         "web_search": true
@@ -3170,33 +3240,106 @@
     },
     {
       "id": "gemini-3.8-flash-tiered",
-      "object": "model", "owned_by": "antigravity", "type": "antigravity",
-      "supports_web_search": true, "display_name": "Gemini 3.8 Flash (Tiered)",
-      "name": "gemini-3.8-flash-tiered", "description": "Gemini 3.8 Flash (Tiered)",
-      "context_length": 1048576, "max_completion_tokens": 65536,
-      "thinking": {"min": 1, "max": 65535, "dynamic_allowed": true, "levels": ["low", "medium", "high"]},
-      "supportedInputModalities": ["text", "image", "audio", "video"],
-      "supportedOutputModalities": ["text"], "native_capabilities": {"web_search": true}
+      "object": "model",
+      "owned_by": "antigravity",
+      "type": "antigravity",
+      "supports_web_search": true,
+      "display_name": "Gemini 3.8 Flash (Tiered)",
+      "name": "gemini-3.8-flash-tiered",
+      "description": "Gemini 3.8 Flash (Tiered)",
+      "context_length": 1048576,
+      "max_completion_tokens": 65536,
+      "thinking": {
+        "min": 1,
+        "max": 65535,
+        "dynamic_allowed": true,
+        "levels": [
+          "low",
+          "medium",
+          "high"
+        ]
+      },
+      "supportedInputModalities": [
+        "text",
+        "image",
+        "audio",
+        "video"
+      ],
+      "supportedOutputModalities": [
+        "text"
+      ],
+      "native_capabilities": {
+        "web_search": true
+      }
     },
     {
       "id": "gemini-4-carbon-high",
-      "object": "model", "owned_by": "antigravity", "type": "antigravity",
-      "supports_web_search": true, "display_name": "Gemini 4 Carbon",
-      "name": "gemini-4-carbon-high", "description": "Gemini 4 Carbon (High)",
-      "context_length": 1048576, "max_completion_tokens": 10000,
-      "thinking": {"min": 1, "max": 65535, "dynamic_allowed": true, "levels": ["low", "medium", "high"]},
-      "supportedInputModalities": ["text", "image", "audio", "video"],
-      "supportedOutputModalities": ["text"], "native_capabilities": {"web_search": true}
+      "object": "model",
+      "owned_by": "antigravity",
+      "type": "antigravity",
+      "supports_web_search": true,
+      "display_name": "Gemini 4 Carbon",
+      "name": "gemini-4-carbon-high",
+      "description": "Gemini 4 Carbon (High)",
+      "context_length": 1048576,
+      "max_completion_tokens": 10000,
+      "thinking": {
+        "min": 1,
+        "max": 65535,
+        "dynamic_allowed": true,
+        "levels": [
+          "low",
+          "medium",
+          "high"
+        ]
+      },
+      "supportedInputModalities": [
+        "text",
+        "image",
+        "audio",
+        "video"
+      ],
+      "supportedOutputModalities": [
+        "text"
+      ],
+      "native_capabilities": {
+        "web_search": true
+      }
     },
     {
       "id": "gemini-4-hydrogen-xhigh",
-      "object": "model", "owned_by": "antigravity", "type": "antigravity",
-      "supports_web_search": true, "display_name": "Gemini 4 Hydrogen",
-      "name": "gemini-4-hydrogen-xhigh", "description": "Gemini 4 Hydrogen (XHigh)",
-      "context_length": 1048576, "max_completion_tokens": 10000,
-      "thinking": {"min": 1, "max": 65535, "dynamic_allowed": true, "levels": ["low", "medium", "high", "xhigh"]},
-      "supportedInputModalities": ["text", "image", "audio", "video"],
-      "supportedOutputModalities": ["text"], "native_capabilities": {"web_search": true}
+      "object": "model",
+      "owned_by": "antigravity",
+      "type": "antigravity",
+      "supports_web_search": true,
+      "display_name": "Gemini 4 Hydrogen",
+      "name": "gemini-4-hydrogen-xhigh",
+      "description": "Gemini 4 Hydrogen (XHigh)",
+      "context_length": 1048576,
+      "max_completion_tokens": 10000,
+      "thinking": {
+        "min": 1,
+        "max": 65535,
+        "dynamic_allowed": true,
+        "levels": [
+          "low",
+          "medium",
+          "high",
+          "xhigh"
+        ]
+      },
+      "supportedInputModalities": [
+        "text",
+        "image",
+        "audio",
+        "video"
+      ],
+      "supportedOutputModalities": [
+        "text"
+      ],
+      "native_capabilities": {
+        "web_search": true
+      }
     },
     {
       "id": "gemini-3-flash",
@@ -3354,44 +3497,14 @@
   ],
   "codex-plus": [
     {
-      "id": "gpt-5.3-codex-spark",
+      "id": "gpt-6.2-astra",
       "object": "model",
-      "created": 1770912000,
+      "created": 1794942000,
       "owned_by": "openai",
       "type": "openai",
-      "display_name": "GPT 5.3 Codex Spark",
-      "version": "gpt-5.3",
-      "description": "Ultra-fast coding model.",
-      "context_length": 128000,
-      "max_completion_tokens": 128000,
-      "capability_max_output_tokens": 10000,
-      "supported_parameters": [
-        "tools"
-      ],
-      "thinking": {
-        "levels": [
-          "low",
-          "medium",
-          "high",
-          "xhigh"
-        ]
-      },
-      "supportedInputModalities": [
-        "text"
-      ],
-      "supportedOutputModalities": [
-        "text"
-      ]
-    },
-    {
-      "id": "gpt-5.5",
-      "object": "model",
-      "created": 1776902400,
-      "owned_by": "openai",
-      "type": "openai",
-      "display_name": "GPT 5.5",
-      "version": "gpt-5.5",
-      "description": "Frontier model for complex coding, research, and real-world work.",
+      "display_name": "GPT 6.2 Astra",
+      "version": "gpt-6.2",
+      "description": "GPT-6.2 Astra is our most capable model for your hardest projects, from start to finish.",
       "context_length": 272000,
       "max_completion_tokens": 128000,
       "supported_parameters": [
@@ -3402,7 +3515,8 @@
           "low",
           "medium",
           "high",
-          "xhigh"
+          "xhigh",
+          "max"
         ]
       },
       "supportedInputModalities": [
@@ -3414,7 +3528,43 @@
       ],
       "native_capabilities": {
         "web_search": true
-      }
+      },
+      "support_configuration_update": true
+    },
+    {
+      "id": "gpt-6.2-sol",
+      "object": "model",
+      "created": 1794942000,
+      "owned_by": "openai",
+      "type": "openai",
+      "display_name": "GPT 6.2 Sol",
+      "version": "gpt-6.2",
+      "description": "GPT-6.2 Astra is our go-to model for everyday work, from coding to powering agents at scale.",
+      "context_length": 500000,
+      "max_completion_tokens": 128000,
+      "supported_parameters": [
+        "tools"
+      ],
+      "thinking": {
+        "levels": [
+          "low",
+          "medium",
+          "high",
+          "xhigh",
+          "max"
+        ]
+      },
+      "supportedInputModalities": [
+        "text",
+        "image"
+      ],
+      "supportedOutputModalities": [
+        "text"
+      ],
+      "native_capabilities": {
+        "web_search": true
+      },
+      "support_configuration_update": true
     },
     {
       "id": "gpt-6-astra",
@@ -3695,6 +3845,69 @@
       ],
       "supported_workloads": [
         "review"
+      ],
+      "native_capabilities": {
+        "web_search": true
+      }
+    },
+    {
+      "id": "gpt-5.3-codex-spark",
+      "object": "model",
+      "created": 1770912000,
+      "owned_by": "openai",
+      "type": "openai",
+      "display_name": "GPT 5.3 Codex Spark",
+      "version": "gpt-5.3",
+      "description": "Ultra-fast coding model.",
+      "context_length": 128000,
+      "max_completion_tokens": 128000,
+      "capability_max_output_tokens": 10000,
+      "supported_parameters": [
+        "tools"
+      ],
+      "thinking": {
+        "levels": [
+          "low",
+          "medium",
+          "high",
+          "xhigh"
+        ]
+      },
+      "supportedInputModalities": [
+        "text"
+      ],
+      "supportedOutputModalities": [
+        "text"
+      ]
+    },
+    {
+      "id": "gpt-5.5",
+      "object": "model",
+      "created": 1776902400,
+      "owned_by": "openai",
+      "type": "openai",
+      "display_name": "GPT 5.5",
+      "version": "gpt-5.5",
+      "description": "Frontier model for complex coding, research, and real-world work.",
+      "context_length": 272000,
+      "max_completion_tokens": 128000,
+      "supported_parameters": [
+        "tools"
+      ],
+      "thinking": {
+        "levels": [
+          "low",
+          "medium",
+          "high",
+          "xhigh"
+        ]
+      },
+      "supportedInputModalities": [
+        "text",
+        "image"
+      ],
+      "supportedOutputModalities": [
+        "text"
       ],
       "native_capabilities": {
         "web_search": true
@@ -4936,15 +5149,15 @@
   ],
   "codex-pro": [
     {
-      "id": "gpt-6.1-terra",
+      "id": "gpt-6.2-astra",
       "object": "model",
-      "created": 1792972800,
+      "created": 1794942000,
       "owned_by": "openai",
       "type": "openai",
-      "display_name": "GPT 6.1 Terra",
-      "version": "gpt-6.0",
-      "description": "A fast, efficient model for visual reasoning, precise computer use, and clear, natural writing.",
-      "context_length": 500000,
+      "display_name": "GPT 6.2 Astra",
+      "version": "gpt-6.2",
+      "description": "GPT-6.2 Astra is our most capable model for your hardest projects, from start to finish.",
+      "context_length": 272000,
       "max_completion_tokens": 128000,
       "supported_parameters": [
         "tools"
@@ -4971,45 +5184,15 @@
       "support_configuration_update": true
     },
     {
-      "id": "gpt-5.3-codex-spark",
+      "id": "gpt-6.2-sol",
       "object": "model",
-      "created": 1770912000,
+      "created": 1794942000,
       "owned_by": "openai",
       "type": "openai",
-      "display_name": "GPT 5.3 Codex Spark",
-      "version": "gpt-5.3",
-      "description": "Ultra-fast coding model.",
-      "context_length": 128000,
-      "max_completion_tokens": 128000,
-      "capability_max_output_tokens": 10000,
-      "supported_parameters": [
-        "tools"
-      ],
-      "thinking": {
-        "levels": [
-          "low",
-          "medium",
-          "high",
-          "xhigh"
-        ]
-      },
-      "supportedInputModalities": [
-        "text"
-      ],
-      "supportedOutputModalities": [
-        "text"
-      ]
-    },
-    {
-      "id": "gpt-5.5",
-      "object": "model",
-      "created": 1776902400,
-      "owned_by": "openai",
-      "type": "openai",
-      "display_name": "GPT 5.5",
-      "version": "gpt-5.5",
-      "description": "Frontier model for complex coding, research, and real-world work.",
-      "context_length": 272000,
+      "display_name": "GPT 6.2 Sol",
+      "version": "gpt-6.2",
+      "description": "GPT-6.2 Astra is our go-to model for everyday work, from coding to powering agents at scale.",
+      "context_length": 500000,
       "max_completion_tokens": 128000,
       "supported_parameters": [
         "tools"
@@ -5019,7 +5202,8 @@
           "low",
           "medium",
           "high",
-          "xhigh"
+          "xhigh",
+          "max"
         ]
       },
       "supportedInputModalities": [
@@ -5031,7 +5215,8 @@
       ],
       "native_capabilities": {
         "web_search": true
-      }
+      },
+      "support_configuration_update": true
     },
     {
       "id": "gpt-6-astra",
@@ -5113,6 +5298,41 @@
       "version": "gpt-6.0",
       "description": "Latest workhorse model for coding and everyday work.",
       "context_length": 272000,
+      "max_completion_tokens": 128000,
+      "supported_parameters": [
+        "tools"
+      ],
+      "thinking": {
+        "levels": [
+          "low",
+          "medium",
+          "high",
+          "xhigh",
+          "max"
+        ]
+      },
+      "supportedInputModalities": [
+        "text",
+        "image"
+      ],
+      "supportedOutputModalities": [
+        "text"
+      ],
+      "native_capabilities": {
+        "web_search": true
+      },
+      "support_configuration_update": true
+    },
+    {
+      "id": "gpt-6.1-terra",
+      "object": "model",
+      "created": 1792972800,
+      "owned_by": "openai",
+      "type": "openai",
+      "display_name": "GPT 6.1 Terra",
+      "version": "gpt-6.0",
+      "description": "A fast, efficient model for visual reasoning, precise computer use, and clear, natural writing.",
+      "context_length": 500000,
       "max_completion_tokens": 128000,
       "supported_parameters": [
         "tools"
@@ -5347,6 +5567,69 @@
       ],
       "supported_workloads": [
         "review"
+      ],
+      "native_capabilities": {
+        "web_search": true
+      }
+    },
+    {
+      "id": "gpt-5.3-codex-spark",
+      "object": "model",
+      "created": 1770912000,
+      "owned_by": "openai",
+      "type": "openai",
+      "display_name": "GPT 5.3 Codex Spark",
+      "version": "gpt-5.3",
+      "description": "Ultra-fast coding model.",
+      "context_length": 128000,
+      "max_completion_tokens": 128000,
+      "capability_max_output_tokens": 10000,
+      "supported_parameters": [
+        "tools"
+      ],
+      "thinking": {
+        "levels": [
+          "low",
+          "medium",
+          "high",
+          "xhigh"
+        ]
+      },
+      "supportedInputModalities": [
+        "text"
+      ],
+      "supportedOutputModalities": [
+        "text"
+      ]
+    },
+    {
+      "id": "gpt-5.5",
+      "object": "model",
+      "created": 1776902400,
+      "owned_by": "openai",
+      "type": "openai",
+      "display_name": "GPT 5.5",
+      "version": "gpt-5.5",
+      "description": "Frontier model for complex coding, research, and real-world work.",
+      "context_length": 272000,
+      "max_completion_tokens": 128000,
+      "supported_parameters": [
+        "tools"
+      ],
+      "thinking": {
+        "levels": [
+          "low",
+          "medium",
+          "high",
+          "xhigh"
+        ]
+      },
+      "supportedInputModalities": [
+        "text",
+        "image"
+      ],
+      "supportedOutputModalities": [
+        "text"
       ],
       "native_capabilities": {
         "web_search": true

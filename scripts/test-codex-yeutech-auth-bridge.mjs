@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
+import { once } from "node:events";
 import http from "node:http";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
@@ -24,6 +25,20 @@ async function waitForHealth(port) {
   throw new Error("bridge health endpoint did not become ready");
 }
 
+async function bridgePort() {
+  const reservation = http.createServer();
+  const port = await listen(reservation);
+  await new Promise(resolve => reservation.close(resolve));
+  return port;
+}
+
+async function stopBridge(child) {
+  if (child.exitCode !== null || child.signalCode !== null) return;
+  const exited = once(child, "exit");
+  child.kill("SIGTERM");
+  await exited;
+}
+
 test("strips ChatGPT auth and preserves the Fast request payload", async (t) => {
   let observed;
   const upstream = http.createServer((request, response) => {
@@ -43,20 +58,20 @@ test("strips ChatGPT auth and preserves the Fast request payload", async (t) => 
   const upstreamPort = await listen(upstream);
   t.after(() => upstream.close());
 
-  const bridgePort = upstreamPort + 1;
+  const port = await bridgePort();
   const child = spawn(process.execPath, [fileURLToPath(new URL("./codex-yeutech-auth-bridge.mjs", import.meta.url))], {
     env: {
       ...process.env,
-      YEUTECH_CODEX_BRIDGE_PORT: String(bridgePort),
+      YEUTECH_CODEX_BRIDGE_PORT: String(port),
       YEUTECH_UPSTREAM_BASE_URL: `http://127.0.0.1:${upstreamPort}`,
       YEUTECH_UPSTREAM_BEARER_TOKEN: "gateway-token",
     },
     stdio: ["ignore", "ignore", "inherit"],
   });
-  t.after(() => child.kill("SIGTERM"));
-  await waitForHealth(bridgePort);
+  t.after(() => stopBridge(child));
+  await waitForHealth(port);
 
-  const response = await fetch(`http://127.0.0.1:${bridgePort}/v1/responses?trace=1`, {
+  const response = await fetch(`http://127.0.0.1:${port}/v1/responses?trace=1`, {
     method: "POST",
     headers: {
       authorization: "Bearer chatgpt-oauth-token",
@@ -108,21 +123,21 @@ test("routes Codex Live directly with ChatGPT auth and preserves Location", asyn
   const livePort = await listen(live);
   t.after(() => live.close());
 
-  const bridgePort = livePort + 1;
+  const port = await bridgePort();
   const child = spawn(process.execPath, [fileURLToPath(new URL("./codex-yeutech-auth-bridge.mjs", import.meta.url))], {
     env: {
       ...process.env,
-      YEUTECH_CODEX_BRIDGE_PORT: String(bridgePort),
+      YEUTECH_CODEX_BRIDGE_PORT: String(port),
       YEUTECH_UPSTREAM_BASE_URL: `http://127.0.0.1:${gatewayPort}`,
       OPENAI_LIVE_BASE_URL: `http://127.0.0.1:${livePort}`,
       YEUTECH_UPSTREAM_BEARER_TOKEN: "gateway-token",
     },
     stdio: ["ignore", "ignore", "inherit"],
   });
-  t.after(() => child.kill("SIGTERM"));
-  await waitForHealth(bridgePort);
+  t.after(() => stopBridge(child));
+  await waitForHealth(port);
 
-  const response = await fetch(`http://127.0.0.1:${bridgePort}/v1/live`, {
+  const response = await fetch(`http://127.0.0.1:${port}/v1/live`, {
     method: "POST",
     headers: {
       authorization: "Bearer chatgpt-oauth-token",

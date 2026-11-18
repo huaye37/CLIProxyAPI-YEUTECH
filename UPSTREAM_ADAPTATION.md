@@ -1,5 +1,18 @@
 # Unified v8.0.29 adaptation gate
 
+## 2026-11-19 — v8.0.77 preserved-source integration
+
+Seventeen commits are mapped in `../api/docs/proxy-v8077-adaptation-20261119.md`.
+Preserve all local registry entries and the GPT-5.5 client identity while adding
+GPT-6.2 fallbacks. Live v75 already discovers the new models remotely; this is
+not a maintenance-triggered model grant. Document/media conversion and logging
+changes remain within existing protocols. Optional replacement/attribution
+features do not enable new providers or rewrite existing prompts.
+Fix two observed test isolation defects without changing production behavior:
+the HTTP fallback fixture captures only POST /responses through a channel, and
+the bridge fixture reserves a free port and joins its terminated child.
+No limit/assertion is relaxed; retain the v76 scanner and native history fixes.
+
 ## 2026-11-18 — v8.0.76 with preserved pool and Images entry
 
 Continue debfa/e38d; all fifteen upstream dispositions and consumer boundaries
