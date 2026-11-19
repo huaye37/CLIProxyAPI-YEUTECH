@@ -235,6 +235,11 @@ func (s *FileTokenStore) List(ctx context.Context) ([]*cliproxyauth.Auth, error)
 			return walkErr
 		}
 		if d.IsDir() {
+			// The request guard shares the auth volume across replicas. Its
+			// state is not a credential and must never reach an auth parser.
+			if path == filepath.Join(dir, ".yeutech-antigravity-protection") {
+				return filepath.SkipDir
+			}
 			return nil
 		}
 		if !strings.HasSuffix(strings.ToLower(d.Name()), ".json") {

@@ -39,6 +39,41 @@ async function stopBridge(child) {
   await exited;
 }
 
+test("truncated upstream SSE promptly closes downstream and releases the request without replay", async (t) => {
+  let calls = 0;
+  let cut;
+  const upstream = http.createServer((req, res) => {
+    ++calls;
+    req.resume();
+    res.writeHead(200, { "content-type": "text/event-stream" });
+    res.write(": first frame\n\n");
+    cut = () => res.destroy();
+  });
+  const upstreamPort = await listen(upstream);
+  t.after(() => upstream.close());
+  const port = await bridgePort();
+  const child = spawn(process.execPath, [fileURLToPath(new URL("./codex-yeutech-auth-bridge.mjs", import.meta.url))], {
+    env: { ...process.env, YEUTECH_CODEX_BRIDGE_PORT: String(port), YEUTECH_UPSTREAM_BASE_URL: `http://127.0.0.1:${upstreamPort}`, YEUTECH_UPSTREAM_BEARER_TOKEN: "fixture" },
+    stdio: "ignore",
+  });
+  t.after(() => stopBridge(child));
+  await waitForHealth(port);
+  const origin = `http://127.0.0.1:${port}`;
+  const controller = new AbortController();
+  const res = await fetch(origin + "/v1/responses", { method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ model: "gpt-test", input: "test", stream: true }), signal: controller.signal });
+  const reader = res.body.getReader();
+  assert.equal(new TextDecoder().decode((await reader.read()).value), ": first frame\n\n");
+  cut();
+  const watchdog = setTimeout(() => controller.abort(), 1500);
+  try {
+    await assert.rejects(reader.read());
+    assert.equal(controller.signal.aborted, false, "upstream truncation was invisible until client timeout");
+    assert.equal((await (await fetch(origin + "/_yeutech/health")).json()).activeRequests, 0);
+    assert.equal(calls, 1);
+  } finally { clearTimeout(watchdog); controller.abort(); }
+});
+
 test("strips ChatGPT auth and preserves the Fast request payload", async (t) => {
   let observed;
   const upstream = http.createServer((request, response) => {

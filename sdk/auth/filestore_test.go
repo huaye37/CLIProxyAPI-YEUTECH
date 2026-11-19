@@ -229,6 +229,29 @@ func TestFileTokenStoreSaveRejectsInvalidWeight(t *testing.T) {
 	}
 }
 
+func TestFileTokenStoreListSkipsProtectionStateButKeepsNestedCredentials(t *testing.T) {
+	base := t.TempDir()
+	for _, dir := range []string{".yeutech-antigravity-protection", "accounts"} {
+		if err := os.Mkdir(filepath.Join(base, dir), 0o700); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for path, body := range map[string]string{
+		".yeutech-antigravity-protection/state.json": `{"version":1}`,
+		"accounts/example.json":                      `{"type":"codex"}`,
+	} {
+		if err := os.WriteFile(filepath.Join(base, path), []byte(body), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	store := NewFileTokenStore()
+	store.SetBaseDir(base)
+	auths, err := store.List(context.Background())
+	if err != nil || len(auths) != 1 || auths[0].ID != "accounts/example.json" {
+		t.Fatalf("unexpected auth inventory, count=%d, err=%v", len(auths), err)
+	}
+}
+
 func TestFileTokenStoreListSkipsInvalidPluginSourceWeight(t *testing.T) {
 	baseDir := t.TempDir()
 	path := filepath.Join(baseDir, "plugin.json")

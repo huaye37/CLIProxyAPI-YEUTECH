@@ -76,6 +76,11 @@ function responseHeaders(headers) {
 }
 
 function forwardResponse(request, response, upstreamResponse) {
+  // pipe() does not propagate source failures. A truncated upstream body must
+  // close the downstream socket, not strand Codex until its SSE idle timeout.
+  const disconnect = () => { if (!response.destroyed) response.destroy(); };
+  upstreamResponse.once("error", disconnect);
+  upstreamResponse.once("close", () => { if (!upstreamResponse.complete) disconnect(); });
   const status = upstreamResponse.statusCode || 502;
   const encoding = upstreamResponse.headers["content-encoding"];
   if (status !== 429 || !isCodexStreamingResponse(request) || (encoding && encoding !== "identity")) {
@@ -125,13 +130,12 @@ function forwardResponse(request, response, upstreamResponse) {
     response.writeHead(200, headers);
     response.end(`event: response.failed\ndata: ${JSON.stringify(failure)}\n\n`);
   });
-  upstreamResponse.on("error", (error) => response.destroy(error));
 }
 
 const server = http.createServer(async (request, response) => {
   if (request.method === "GET" && request.url === "/_yeutech/health") {
     response.writeHead(200, { "content-type": "application/json" });
-    response.end(JSON.stringify({ ok: true, version: "20261106-bounded-summary-v6", activeRequests, preparingImages, preparingResponses, upstream: upstreamBase.origin, liveUpstream: liveBase.origin }));
+    response.end(JSON.stringify({ ok: true, version: "20261120-stream-close-v7", activeRequests, preparingImages, preparingResponses, upstream: upstreamBase.origin, liveUpstream: liveBase.origin }));
     return;
   }
 
