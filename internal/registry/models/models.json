@@ -3317,7 +3317,7 @@
       "name": "gemini-4-carbon-high",
       "description": "Gemini 4 Carbon (High)",
       "context_length": 1048576,
-      "max_completion_tokens": 10000,
+      "max_completion_tokens": 65536,
       "thinking": {
         "min": 1,
         "max": 65535,
@@ -3351,7 +3351,7 @@
       "name": "gemini-4-hydrogen-xhigh",
       "description": "Gemini 4 Hydrogen (XHigh)",
       "context_length": 1048576,
-      "max_completion_tokens": 10000,
+      "max_completion_tokens": 65536,
       "thinking": {
         "min": 1,
         "max": 65535,
