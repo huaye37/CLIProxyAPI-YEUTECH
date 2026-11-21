@@ -258,14 +258,18 @@ type Manager struct {
 	// refreshJobs retains queued and running jobs across loop restarts under m.mu.
 	refreshJobs map[string]*authRefreshJob
 
-	requestPrepareLocks sync.Map
-	// refreshLocks serializes credential refresh per auth ID so concurrent
-	// 401 recoveries and auto-refresh workers do not race the same refresh_token.
-	refreshLocks       sync.Map
 	poolCooldownSyncMu sync.Mutex
 	poolCooldownResets map[string]time.Time
 	poolSyncStarted    atomic.Bool
 	poolSyncOK         atomic.Bool
+	// refreshLocks serializes credential refresh and request-auth preparation
+	// per auth ID so concurrent refreshes, 401 recoveries, and preparations do
+	// not race the same credential.
+	refreshLocks sync.Map
+	// homePrepareMu guards homePrepareFlights for coalescing concurrent Home
+	// snapshot preparations without reading or mutating local auth state.
+	homePrepareMu      sync.Mutex
+	homePrepareFlights map[string]*homeAuthPrepareFlight
 	// persistLocks serializes disk persistence per auth ID and guards against out-of-order writes.
 	persistLocks sync.Map
 	// authMutationLocks coordinate credential mutations without blocking unrelated readers.
@@ -298,6 +302,7 @@ func NewManager(store Store, selector Selector, hook Hook) *Manager {
 		homeRuntimeAuths:      make(map[string]map[string]*Auth),
 		homeRuntimeAuthOwners: make(map[string]map[string]*HomeDispatchSelection),
 		homeSessionSelections: make(map[string]map[homeSessionSelectionKey]*HomeDispatchSelection),
+		homePrepareFlights:    make(map[string]*homeAuthPrepareFlight),
 		providerOffsets:       make(map[string]int),
 		modelPoolOffsets:      make(map[string]int),
 	}
