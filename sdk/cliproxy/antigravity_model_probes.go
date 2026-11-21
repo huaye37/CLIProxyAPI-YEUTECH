@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	"github.com/router-for-me/CLIProxyAPI/v8/internal/poollease"
 	coreauth "github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/auth"
 )
 
@@ -228,6 +229,10 @@ func (s *Service) queueAntigravityHintPersistence(ctx context.Context, auth *cor
 	if s == nil || s.coreManager == nil || auth == nil || auth.ID == "" || isAntigravityAuthDisabled(auth) || expectedKey == "" || hints.ModelIDs == nil || hints.revision == 0 || s.antigravityHomeEnabled() {
 		return
 	}
+	// Followers can publish local model hints, but cannot persist shared credentials.
+	if !poollease.MayRefresh() {
+		return
+	}
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -308,6 +313,12 @@ func (s *Service) runAntigravityHintPersistence(authID string) {
 
 func (s *Service) executeAntigravityHintPersistence(persistCtx context.Context, cancel context.CancelFunc, request *antigravityHintPersistRequest) {
 	defer cancel()
+	release, owner := poollease.EnterRefresh()
+	if !owner {
+		return
+	}
+	defer release()
+	persistCtx = poollease.WithManagedRefresh(persistCtx)
 	if persistCtx.Err() != nil || pluginHostHasAuthModelProvider(s.pluginHost, request.auth.Provider) {
 		return
 	}

@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/misc"
+	"github.com/router-for-me/CLIProxyAPI/v8/internal/poollease"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/registry"
 	sdkauth "github.com/router-for-me/CLIProxyAPI/v8/sdk/auth"
 	coreauth "github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/auth"
@@ -668,6 +669,7 @@ func (s *Service) refreshAntigravityModels(ctx context.Context) {
 	// A version change also invalidates connected probes. Cancel them before
 	// queuing successors so a stalled old request cannot hold its account worker.
 	s.cancelStaleAntigravityProbes("")
+	canPersist := poollease.MayRefresh()
 	for _, auth := range s.coreManager.List() {
 		if ctx.Err() != nil {
 			return
@@ -683,7 +685,7 @@ func (s *Service) refreshAntigravityModels(ctx context.Context) {
 		antigravityCapabilityMu.RLock()
 		entry := antigravityCapabilityCache[key]
 		registered := entry.appliedRevision == entry.hints.revision && entry.appliedEpoch == epoch
-		persisted := s.coreManager == nil || entry.hints.ModelIDs == nil || entry.persistedRevision == entry.hints.revision
+		persisted := !canPersist || entry.hints.ModelIDs == nil || entry.persistedRevision == entry.hints.revision
 		fresh := (antigravityNowFunc().Before(entry.expiresAt) && registered && persisted) || antigravityNowFunc().Before(antigravityFailureNextRetryLocked(key, failureKey))
 		antigravityCapabilityMu.RUnlock()
 		if fresh {

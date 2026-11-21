@@ -3,6 +3,7 @@
 import { execFileSync } from "node:child_process";
 import http from "node:http";
 import https from "node:https";
+import { Transform } from "node:stream";
 import { randomUUID } from "node:crypto";
 import { isCodexStreamingResponse, rateLimitDisplay } from "./codex-yeutech-errors.mjs";
 import { isCodexStandaloneSearch, readSearchBody, routeStandaloneSearch } from "./codex-yeutech-search.mjs";
@@ -78,11 +79,40 @@ function responseHeaders(headers) {
 function forwardResponse(request, response, upstreamResponse) {
   // pipe() does not propagate source failures. A truncated upstream body must
   // close the downstream socket, not strand Codex until its SSE idle timeout.
-  const disconnect = () => { if (!response.destroyed) response.destroy(); };
+  const started = Date.now();
+  const disconnect = () => {
+    if (!response.destroyed) {
+      process.stderr.write(JSON.stringify({ at: new Date().toISOString(), event: "bridge_upstream_body_interrupted", status: upstreamResponse.statusCode, elapsedMs: Date.now()-started }) + "\n");
+      response.destroy();
+    }
+  };
   upstreamResponse.once("error", disconnect);
   upstreamResponse.once("close", () => { if (!upstreamResponse.complete) disconnect(); });
   const status = upstreamResponse.statusCode || 502;
   const encoding = upstreamResponse.headers["content-encoding"];
+  if (status === 200 && isResponsesBody(request) &&
+      /^text\/event-stream(?:\s*;|$)/i.test(upstreamResponse.headers["content-type"] || "") &&
+      (!encoding || encoding === "identity")) {
+    const headers = responseHeaders(upstreamResponse.headers);
+    for (const key of ["content-length", "content-md5", "etag", "digest"]) delete headers[key];
+    response.writeHead(status, headers);
+    // Codex times out on parsed events, not bytes. Recognize only a complete
+    // upstream heartbeat at a frame boundary, never invent model progress.
+    const marker = Buffer.from("\n\n: keep-alive\n\n");
+    let tail = Buffer.from("\n\n"), lastData = Date.now();
+    const relay = new Transform({ transform(chunk, _, next) {
+      const prefix = chunk.subarray(0, marker.length);
+      if (chunk.includes("\ndata:") || Buffer.concat([tail, prefix]).includes("\ndata:")) lastData = Date.now();
+      const suffix = chunk.length >= marker.length ? chunk.subarray(-marker.length) : Buffer.concat([tail, chunk]).subarray(-marker.length);
+      tail = Buffer.from(suffix);
+      this.push(chunk);
+      if (tail.equals(marker) && Date.now() - lastData <= 600000) this.push('event: yeutech.keepalive\ndata: {"type":"yeutech.keepalive"}\n\n');
+      next();
+    } });
+    response.once("close", () => relay.destroy());
+    upstreamResponse.pipe(relay).pipe(response);
+    return;
+  }
   if (status !== 429 || !isCodexStreamingResponse(request) || (encoding && encoding !== "identity")) {
     response.writeHead(status, responseHeaders(upstreamResponse.headers));
     upstreamResponse.pipe(response);
@@ -135,7 +165,7 @@ function forwardResponse(request, response, upstreamResponse) {
 const server = http.createServer(async (request, response) => {
   if (request.method === "GET" && request.url === "/_yeutech/health") {
     response.writeHead(200, { "content-type": "application/json" });
-    response.end(JSON.stringify({ ok: true, version: "20261120-stream-close-v7", activeRequests, preparingImages, preparingResponses, upstream: upstreamBase.origin, liveUpstream: liveBase.origin }));
+    response.end(JSON.stringify({ ok: true, version: "20261122-stream-heartbeat-v8", activeRequests, preparingImages, preparingResponses, upstream: upstreamBase.origin, liveUpstream: liveBase.origin }));
     return;
   }
 
@@ -230,6 +260,7 @@ const server = http.createServer(async (request, response) => {
   let headers;
   try {
     headers = requestHeaders(request.headers, target, live);
+    if (!live && isResponsesBody(request)) headers["accept-encoding"] = "identity";
     if (searchBody) headers["content-length"] = String(searchBody.length);
     if (responseBody) headers["content-length"] = String(responseBody.length);
     if (bodyChanged) for (const name of ["content-encoding", "content-md5", "digest", "content-digest"]) delete headers[name];

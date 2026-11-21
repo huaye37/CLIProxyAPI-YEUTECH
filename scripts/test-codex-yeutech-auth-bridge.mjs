@@ -74,6 +74,34 @@ test("truncated upstream SSE promptly closes downstream and releases the request
   } finally { clearTimeout(watchdog); controller.abort(); }
 });
 
+test("fragmented upstream heartbeats become dispatchable events, without changing model frames or retrying", async (t) => {
+  let calls = 0;
+  const terminal = 'event: response.completed\ndata: {"type":"response.completed"}\n\n';
+  const upstream = http.createServer((req, res) => {
+    calls++;
+    assert.equal(req.headers["accept-encoding"], "identity");
+    req.resume();
+    res.writeHead(200, { "content-type": "text/event-stream; charset=utf-8" });
+    res.write(": keep-");
+    setImmediate(() => {
+      res.write("alive\n\n");
+      setTimeout(() => res.end(terminal), 40);
+    });
+  });
+  const upstreamPort = await listen(upstream);
+  t.after(() => upstream.close());
+  const port = await bridgePort();
+  const child = spawn(process.execPath, [fileURLToPath(new URL("./codex-yeutech-auth-bridge.mjs", import.meta.url))], {
+    env: { ...process.env, YEUTECH_CODEX_BRIDGE_PORT: String(port), YEUTECH_UPSTREAM_BASE_URL: `http://127.0.0.1:${upstreamPort}`, YEUTECH_UPSTREAM_BEARER_TOKEN: "fixture" },
+    stdio: "ignore",
+  });
+  t.after(() => stopBridge(child));
+  await waitForHealth(port);
+  const res = await fetch(`http://127.0.0.1:${port}/v1/responses`, { method: "POST", headers: { "content-type": "application/json" }, body: '{"model":"gpt-test","stream":true,"input":"test"}' });
+  assert.equal(await res.text(), ': keep-alive\n\nevent: yeutech.keepalive\ndata: {"type":"yeutech.keepalive"}\n\n' + terminal);
+  assert.equal(calls, 1);
+});
+
 test("strips ChatGPT auth and preserves the Fast request payload", async (t) => {
   let observed;
   const upstream = http.createServer((request, response) => {
