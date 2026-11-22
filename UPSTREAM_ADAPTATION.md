@@ -1203,3 +1203,13 @@ frontend controls or new account grants. Preserve shared cooldown, unique refres
 leadership, graceful refresh shutdown and all native history/catalog safeguards.
 Source, exact-image, paired-manager and rendered validation are recorded separately.
 Production stays v8.0.72 until the user installs a fully prepared candidate.
+## NAS v8.1.1 integration (2026-11-23)
+
+Based on router-for-me/CLIProxyAPI v8.1.1 (6eb8554f0ede). Preserve the
+v8.0.80 static-key 401 isolation and NAS pool identity/refresh gates.
+Copilot device credentials exchange the GitHub grant only through managed
+leader refresh; catalog projection stays per-process. Copilot Responses
+translations remain per attempt, separate from the YEUTECH generic bridge.
+Upstream startup file locking and server identity coexist with opt-in shared
+KV persistence. Gemini/Vertex and Copilot upstream catalogs are integrated
+without replacing customized provider sections or advertising account access.

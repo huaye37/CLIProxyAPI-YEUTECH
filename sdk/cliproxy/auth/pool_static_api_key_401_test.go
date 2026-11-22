@@ -63,6 +63,10 @@ func TestPoolStaticAPIKey401DoesNotMarkUnsafe(t *testing.T) {
 	}
 	registry.GetGlobalRegistry().RegisterClient(other.ID, other.Provider, []*registry.ModelInfo{{ID: "healthy-model"}})
 	defer registry.GetGlobalRegistry().UnregisterClient(other.ID)
+	// Adding the new device-authorized provider must not disable the NAS pool.
+	if _, err := manager.Register(ctx, &Auth{ID: "copilot-fixture", Provider: "copilot", Status: StatusActive}); err != nil {
+		t.Fatal(err)
+	}
 	if err := manager.syncPoolCooldown(ctx); err != nil {
 		t.Fatal(err)
 	}

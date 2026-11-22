@@ -13,11 +13,17 @@ import (
 type poolTerminalReplayKey struct{}
 
 func (m *Manager) poolStore() (*PoolCooldownStateStore, error) {
-	if m == nil { return nil, errors.New("pool cooldown manager unavailable") }
+	if m == nil {
+		return nil, errors.New("pool cooldown manager unavailable")
+	}
 	m.mu.RLock()
-	provider, ok := m.cooldownStore.(interface { PoolStore() (*PoolCooldownStateStore, error) })
+	provider, ok := m.cooldownStore.(interface {
+		PoolStore() (*PoolCooldownStateStore, error)
+	})
 	m.mu.RUnlock()
-	if !ok || provider == nil { return nil, errors.New("pool cooldown coordination unavailable") }
+	if !ok || provider == nil {
+		return nil, errors.New("pool cooldown coordination unavailable")
+	}
 	return provider.PoolStore()
 }
 
@@ -88,7 +94,7 @@ func (m *Manager) poolCredentialSetSafe() bool {
 			continue
 		}
 		switch strings.ToLower(strings.TrimSpace(value.Provider)) {
-		case "codex", "xai", "antigravity":
+		case "codex", "xai", "antigravity", "copilot":
 		default:
 			return false
 		}
