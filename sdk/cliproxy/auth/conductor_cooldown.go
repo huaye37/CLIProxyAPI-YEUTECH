@@ -2279,8 +2279,11 @@ func (m *Manager) MarkResult(ctx context.Context, result Result) {
 	}
 	m.mu.Unlock()
 	releaseMutation()
+	// Static config keys have no OAuth token identity. Their normal credential
+	// failure and cooldown handling must not publish an OAuth terminal record.
 	if poollease.Enabled() && ctx.Value(poolTerminalReplayKey{}) != true && authSnapshot != nil &&
-		((authSnapshot.Disabled && authSnapshot.StatusMessage == "tos_violation" && isTOSViolationResultError(result.Error)) || rejectsToken) {
+		((authSnapshot.Disabled && authSnapshot.StatusMessage == "tos_violation" && isTOSViolationResultError(result.Error)) ||
+			(rejectsToken && !IsConfigAPIKeyAuth(authSnapshot))) {
 		store, errStore := m.poolStore()
 		if errStore == nil && store != nil {
 			code := "unauthorized"
