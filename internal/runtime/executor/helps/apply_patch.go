@@ -45,6 +45,17 @@ func TranslatedClaudeStreamErrorPayload(responseFormat sdktranslator.Format, lin
 	return "", false
 }
 
+// ObservedClaudeChunk attaches the retained failure only to its wire error frame.
+func ObservedClaudeChunk(format sdktranslator.Format, payload []byte, retained error) cliproxyexecutor.StreamChunk {
+	chunk := cliproxyexecutor.StreamChunk{Payload: payload}
+	if retained != nil {
+		if _, ok := TranslatedClaudeStreamErrorPayload(format, [][]byte{payload}); ok {
+			chunk.ObservedFailure = retained
+		}
+	}
+	return chunk
+}
+
 // CaptureTranslatedClaudeStreamError retains the first SSE error event payload
 // so failure usage and terminal StreamChunk.Err can be emitted after any trailing usage chunk.
 func CaptureTranslatedClaudeStreamError(responseFormat sdktranslator.Format, lines [][]byte, retainedErr *error, buildErr func(string) error) {

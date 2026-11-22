@@ -281,6 +281,9 @@ type Response struct {
 
 // StreamChunk represents a single streaming payload unit emitted by provider executors.
 type StreamChunk struct {
+	// ObservedFailure accompanies an already translated wire error. It is for
+	// accounting before delivery; Err remains the signal to stop the stream.
+	ObservedFailure error `json:"-"`
 	// Payload is the raw provider chunk payload.
 	Payload []byte
 	// Incomplete reports that the upstream stream ended in an incomplete terminal state

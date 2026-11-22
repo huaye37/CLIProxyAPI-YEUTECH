@@ -242,6 +242,10 @@ func (m *Manager) wrapStreamResultWithCancel(ctx context.Context, auth *Auth, pr
 			rewriter = NewStreamRewriter(StreamRewriteOptions{RewriteModel: aliasResult.OriginalAlias})
 		}
 		emit := func(chunk cliproxyexecutor.StreamChunk) bool {
+			wireErr := chunk.Err
+			if wireErr == nil && chunk.ObservedFailure != nil {
+				chunk.Err = chunk.ObservedFailure
+			}
 			if chunk.Err != nil && !failed {
 				if ctxErr := ctx.Err(); ctxErr != nil {
 					if retryAfterFromError(chunk.Err) != nil {
@@ -275,6 +279,9 @@ func (m *Manager) wrapStreamResultWithCancel(ctx context.Context, auth *Auth, pr
 						chunk.Err = wrapRequestScopedContinueError(chunk.Err)
 					}
 				}
+			}
+			if wireErr == nil {
+				chunk.Err = nil
 			}
 			if !forward {
 				return false
