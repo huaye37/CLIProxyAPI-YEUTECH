@@ -26,6 +26,7 @@ import (
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/logging"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/poollease"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/registry"
+	"github.com/router-for-me/CLIProxyAPI/v8/internal/requestguard"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/runtime/executor/helps"
 	responsesclaude "github.com/router-for-me/CLIProxyAPI/v8/internal/translator/claude/openai/responses"
 	"github.com/router-for-me/CLIProxyAPI/v8/sdk/api/handlers"
@@ -53,7 +54,7 @@ func (s *Server) setupRoutes() {
 
 		body := gin.H{"status": "ok"}
 		if cfg := s.getConfig(); cfg != nil {
-			body["antigravityRequestProtection"] = gin.H{"version": "yeutech-request-protection-v1", "enabled": cfg.Antigravity.RequestProtection, "maxConcurrentPerAccount": 1, "maxIdenticalAttempts": 2, "attemptWindowSeconds": 300, "startIntervalSeconds": 2, "tosPauseSeconds": 21600}
+			body["antigravityRequestProtection"] = gin.H{"version": "yeutech-request-protection-v1", "enabled": cfg.Antigravity.RequestProtection, "maxConcurrentPerAccount": requestguard.MaxConcurrentPerAccount, "maxConcurrentTotal": requestguard.MaxConcurrentTotal, "maxIdenticalAttempts": 2, "attemptWindowSeconds": 300, "startIntervalSeconds": 2, "tosPauseSeconds": 21600}
 		}
 		if admission := s.memoryAdmission.snapshot(); admission != nil {
 			body["memoryGuard"] = admission

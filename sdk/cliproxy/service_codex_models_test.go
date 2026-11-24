@@ -103,7 +103,7 @@ func TestRegisterModelsForAuthCodexConfigurationUpdate(t *testing.T) {
 	}
 }
 
-func TestCodexNewDefinitionsDoNotAutomaticallyExpandOAuthInventory(t *testing.T) {
+func TestCodexOAuthPublishesCurrentImageInventory(t *testing.T) {
 	const id = "codex-unverified-inventory-test"
 	r := internalregistry.GetGlobalRegistry()
 	r.UnregisterClient(id)
@@ -114,10 +114,9 @@ func TestCodexNewDefinitionsDoNotAutomaticallyExpandOAuthInventory(t *testing.T)
 	kept := false
 	keptThinking := false
 	keptTerra := false
+	images := make(map[string]bool)
 	for _, model := range models {
-		if model.ID == "gpt-image-2.6" || model.ID == "gpt-image-2.6-flare" || model.ID == "gpt-image-2.6-sunburst" {
-			t.Fatalf("unverified route was auto-registered: %s", model.ID)
-		}
+		images[model.ID] = true
 		if model.ID == "gpt-image-2.5" {
 			kept = true
 		}
@@ -130,6 +129,11 @@ func TestCodexNewDefinitionsDoNotAutomaticallyExpandOAuthInventory(t *testing.T)
 	}
 	if !kept {
 		t.Fatal("existing image route disappeared")
+	}
+	for _, id := range []string{"gpt-image-2.6", "gpt-image-2.6-flare", "gpt-image-2.6-sunburst"} {
+		if !images[id] {
+			t.Fatalf("missing image definition %s", id)
+		}
 	}
 	if !keptThinking {
 		t.Fatal("existing live gpt-6-chat-thinking route disappeared")

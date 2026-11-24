@@ -24,6 +24,8 @@ import (
 const Window = 5 * time.Minute
 const Interval = 2 * time.Second
 const MaxAttempts = 2
+const MaxConcurrentPerAccount = 2
+const MaxConcurrentTotal = 3
 
 type fingerprintKey struct{}
 
@@ -204,12 +206,62 @@ type Ticket struct {
 	guard            Guard
 	account, request string
 	lease            *poollease.Lease
+	poolSlot         *poollease.Lease
 	once             sync.Once
 }
 
 func (t *Ticket) Close() {
 	if t != nil {
-		t.once.Do(func() { _ = t.lease.Close() })
+		t.once.Do(func() { _ = t.lease.Close(); _ = t.poolSlot.Close() })
+	}
+}
+
+// The first account slot keeps the old filename for rolling compatibility.
+// Never hold a partial reservation while waiting for another slot.
+func trySlot(base string, count int) (*poollease.Lease, error) {
+	for i := 0; i < count; i++ {
+		path := base + ".lock"
+		if i != 0 {
+			path = base + "-" + strconv.Itoa(i) + ".lock"
+		}
+		l := poollease.New(path)
+		ok, err := l.TryAcquire()
+		if err != nil {
+			return nil, errors.New("protection lock unavailable")
+		}
+		if ok {
+			return l, nil
+		}
+	}
+	return nil, nil
+}
+
+func (g Guard) reserve(ctx context.Context, account string) (*poollease.Lease, *poollease.Lease, error) {
+	tick := time.NewTicker(50 * time.Millisecond)
+	defer tick.Stop()
+	for {
+		if err := ctx.Err(); err != nil {
+			return nil, nil, err
+		}
+		local, err := trySlot(filepath.Join(g.Root, "account-"+account), MaxConcurrentPerAccount)
+		if err != nil {
+			return nil, nil, err
+		}
+		if local != nil {
+			total, err := trySlot(filepath.Join(g.Root, "active"), MaxConcurrentTotal)
+			if total != nil {
+				return local, total, nil
+			}
+			_ = local.Close()
+			if err != nil {
+				return nil, nil, err
+			}
+		}
+		select {
+		case <-ctx.Done():
+			return nil, nil, ctx.Err()
+		case <-tick.C:
+		}
 	}
 }
 
@@ -225,14 +277,17 @@ func (g Guard) Begin(ctx context.Context, account, fingerprint, operation string
 	// A waiting request can cancel; an admitted stream has no duration cutoff.
 	waitCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
-	l, err := acquire(waitCtx, filepath.Join(g.Root, "account-"+account+".lock"))
+	l, total, err := g.reserve(waitCtx, account)
 	if err != nil {
 		if ctx.Err() != nil {
 			return nil, ctx.Err()
 		}
-		return nil, &Denied{"account queue busy", time.Second * 5}
+		if errors.Is(err, context.DeadlineExceeded) {
+			return nil, &Denied{"account queue busy", time.Second * 5}
+		}
+		return nil, err
 	}
-	t := &Ticket{guard: g, account: account, request: request, lease: l}
+	t := &Ticket{guard: g, account: account, request: request, lease: l, poolSlot: total}
 	err = g.change(ctx, func(s *State) error {
 		now := g.now()
 		if s.PauseUntil.After(now) {

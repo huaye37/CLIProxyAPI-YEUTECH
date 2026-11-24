@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/poollease"
 	"io"
 	"net/http"
@@ -175,6 +176,102 @@ func TestFingerprintSurvivesInternalConversion(t *testing.T) {
 	if ctx.Value(fingerprintKey{}) != a {
 		t.Fatal("conversion reset attempt identity")
 	}
+}
+
+// Use separate guard instances pointing at one directory, like the three NAS
+// containers. Keep the returned tickets open so the requests really overlap.
+func TestSharedAccountAndProviderConcurrency(t *testing.T) {
+	g, now := fixture(t)
+	replica := func() Guard { return Guard{Root: g.Root, Now: g.Now} }
+	a := begin(t, g, "shared", "first")
+	defer a.Close()
+	*now = now.Add(Interval)
+	b := begin(t, replica(), "shared", "second")
+	defer b.Close()
+	*now = now.Add(Interval)
+	blocked := func(account string) {
+		t.Helper()
+		ctx, cancel := context.WithTimeout(context.Background(), 75*time.Millisecond)
+		defer cancel()
+		if tk, err := replica().Begin(ctx, account, "extra", "generate"); tk != nil || !errors.Is(err, context.DeadlineExceeded) {
+			if tk != nil {
+				tk.Close()
+			}
+			t.Fatalf("expected bounded wait for %s: %v", account, err)
+		}
+	}
+	blocked("shared") // still one free provider slot, but no free account slot
+	c := begin(t, replica(), "second-account", "third")
+	defer c.Close()
+	blocked("new-account") // no provider slots, even with a free account
+	a.Close()
+	d := begin(t, replica(), "shared", "replacement")
+	defer d.Close()
+	blocked("new-account")
+	c.Close()
+	begin(t, replica(), "new-account", "after-release").Close()
+}
+
+func TestAdmissionProcessHelper(t *testing.T) {
+	root := os.Getenv("BOUNDED_GUARD_TEST_ROOT")
+	if root == "" {
+		return
+	}
+	g := Guard{Root: root, Now: func() time.Time { return time.Unix(1900000000, 0) }}
+	tk, err := g.Begin(context.Background(), os.Getenv("BOUNDED_GUARD_TEST_ACCOUNT"), "child", "generate")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tk.Close()
+	fmt.Fprintln(os.Stdout, "holding")
+	bufio.NewReader(os.Stdin).ReadString('\n')
+}
+
+func TestAdmissionAcrossThreeProcesses(t *testing.T) {
+	g, now := fixture(t)
+	a := begin(t, g, "shared", "parent")
+	defer a.Close()
+	start := func(account string) *exec.Cmd {
+		t.Helper()
+		child := exec.Command(os.Args[0], "-test.run=^TestAdmissionProcessHelper$")
+		child.Env = append(os.Environ(), "BOUNDED_GUARD_TEST_ROOT="+g.Root, "BOUNDED_GUARD_TEST_ACCOUNT="+account)
+		reader, err := child.StdoutPipe()
+		if err != nil {
+			t.Fatal(err)
+		}
+		writer, err := child.StdinPipe()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err = child.Start(); err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() {
+			writer.Close()
+			if child.ProcessState == nil {
+				child.Process.Kill()
+				child.Wait()
+			}
+		})
+		line, err := bufio.NewReader(reader).ReadString('\n')
+		if err != nil || line != "holding\n" {
+			t.Fatalf("child admission: %q %v", line, err)
+		}
+		return child
+	}
+	second := start("shared")
+	start("other")
+	*now = time.Unix(1900000005, 0)
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer cancel()
+	if tk, err := g.Begin(ctx, "third", "fourth", "generate"); tk != nil || !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatalf("fourth crossed shared cap: %v", err)
+	}
+	if err := second.Process.Kill(); err != nil {
+		t.Fatal(err)
+	}
+	_ = second.Wait()
+	begin(t, g, "shared", "after-crash").Close()
 }
 
 func TestAccountLeaseAcrossProcessesAndCrash(t *testing.T) {
