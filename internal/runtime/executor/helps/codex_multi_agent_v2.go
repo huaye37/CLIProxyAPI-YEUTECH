@@ -137,8 +137,19 @@ func translateRequestPairWithAPIKeyModelCompatibility(ctx context.Context, heade
 // and the working payload's error for a content part the target cannot
 // represent. A baseline failure alone is ignored.
 func TranslateRequestPairWithAPIKeyModelCompatibilityAndUpdateIntent(ctx context.Context, headers http.Header, cfg *config.Config, from, to sdktranslator.Format, model string, originalPayload, requestPayload []byte, stream, isCompat bool) (original, working []byte, updatesChanged bool, err error) {
+	return TranslateRequestPairWithAPIKeyModelCompatibilityAndUpdateIntentForExecutor(ctx, headers, cfg, "", from, to, model, originalPayload, requestPayload, stream, isCompat)
+}
+
+func NativeResponsesSchemaTarget(from, to sdktranslator.Format) string {
+	if from == sdktranslator.FormatOpenAIResponse && to == from {
+		return "native-responses"
+	}
+	return ""
+}
+
+func TranslateRequestPairWithAPIKeyModelCompatibilityAndUpdateIntentForExecutor(ctx context.Context, headers http.Header, cfg *config.Config, targetExecutor string, from, to sdktranslator.Format, model string, originalPayload, requestPayload []byte, stream, isCompat bool) (original, working []byte, updatesChanged bool, err error) {
 	return translateRequestPair(originalPayload, requestPayload, func(payload []byte) ([]byte, bool, error) {
-		return TranslateRequestWithAPIKeyModelCompatibilityAndUpdateIntent(ctx, headers, cfg, from, to, model, payload, stream, isCompat)
+		return TranslateRequestWithAPIKeyModelCompatibilityAndUpdateIntentForExecutor(ctx, headers, cfg, targetExecutor, from, to, model, payload, stream, isCompat)
 	})
 }
 
@@ -165,7 +176,7 @@ func TranslateRequestWithAPIKeyModelCompatibilityAndUpdateIntent(ctx context.Con
 func TranslateRequestWithAPIKeyModelCompatibilityAndUpdateIntentForExecutor(ctx context.Context, headers http.Header, cfg *config.Config, targetExecutor string, from, to sdktranslator.Format, model string, payload []byte, stream, isCompat bool) ([]byte, bool, error) {
 	if !isCompat || (to == sdktranslator.FormatCodex && from != sdktranslator.FormatClaude) {
 		translated := sdktranslator.RequestEnvelope{Format: from, Model: model, Stream: stream, Body: payload}
-		if IsCodexUserAgent(headers) && !isCodexTargetExecutor(targetExecutor) {
+		if IsCodexUserAgent(headers) && !preservesCodexSchema(targetExecutor) {
 			translated.Body = NormalizeCodexToolIntegerTypes(translated.Body, headers)
 		}
 		translated = multiagentv2.TranslateRequestEnvelopeWithCodexMultiAgentV2(ctx, headers, cfg, from, to, translated)
@@ -194,7 +205,7 @@ func TranslateRequestReturningError(ctx context.Context, headers http.Header, cf
 }
 
 func translateRequestWithAPIKeyModelCompatibilityForExecutor(ctx context.Context, headers http.Header, cfg *config.Config, targetExecutor string, from, to sdktranslator.Format, model string, payload []byte, stream, isCompat bool) ([]byte, error) {
-	needsIntNorm := IsCodexUserAgent(headers) && !isCodexTargetExecutor(targetExecutor)
+	needsIntNorm := IsCodexUserAgent(headers) && !preservesCodexSchema(targetExecutor)
 	if !isCompat {
 		if needsIntNorm {
 			payload = NormalizeCodexToolIntegerTypes(payload, headers)

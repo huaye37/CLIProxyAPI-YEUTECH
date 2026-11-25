@@ -122,6 +122,9 @@ func TestOpenAICompatResponsesWireProtocol(t *testing.T) {
 				if r.URL.Path != "/responses" {
 					t.Errorf("path=%s", r.URL.Path)
 				}
+				if got := ojson.GetBytesNoCopy(body, "tools.0.tools.0.parameters.properties.timeout_ms.type").String(); got != "number" {
+					t.Errorf("reserved wait_agent schema changed: %q", got)
+				}
 				if ojson.GetBytesNoCopy(body, "stream_options").Exists() {
 					t.Error("Responses request must not contain Chat Completions stream_options")
 				}
@@ -139,8 +142,9 @@ func TestOpenAICompatResponsesWireProtocol(t *testing.T) {
 			cfg := &config.Config{OpenAICompatibility: []config.OpenAICompatibility{{Name: "web", WireAPI: "responses", BaseURL: srv.URL}}}
 			e := NewOpenAICompatExecutor("web", cfg)
 			a := &auth.Auth{Provider: "web", Attributes: map[string]string{"base_url": srv.URL, "compat_name": "web"}}
-			req := execution.Request{Model: "chatgpt-web", Payload: []byte(`{"model":"chatgpt-web","input":[{"type":"function_call","call_id":"call_echo","name":"echo","arguments":"{}"},{"type":"function_call_output","call_id":"call_echo","output":"ok"}]}`)}
+			req := execution.Request{Model: "chatgpt-web", Payload: []byte(`{"model":"chatgpt-web","tools":[{"type":"namespace","name":"collaboration","tools":[{"type":"function","name":"wait_agent","parameters":{"type":"object","properties":{"timeout_ms":{"type":"number"}}}}]}],"input":[{"type":"function_call","call_id":"call_echo","name":"echo","arguments":"{}"},{"type":"function_call_output","call_id":"call_echo","output":"ok"}]}`)}
 			opts := execution.Options{SourceFormat: translator.FormatOpenAIResponse, Stream: stream}
+			opts.Headers = http.Header{"User-Agent": {"codex_cli_rs/0.171.0"}}
 			if stream {
 				result, err := e.ExecuteStream(context.Background(), a, req, opts)
 				if err != nil {

@@ -63,6 +63,10 @@ func ApplyPayloadConfigWithRequestForExecutorDoc(cfg *config.Config, targetExecu
 	_ = ApplyPayloadConfigWithTrackedPathsForExecutorDoc(cfg, targetExecutor, model, protocol, fromProtocol, root, doc, original, requestedModel, requestPath, headers)
 }
 
+func preservesCodexSchema(targetExecutor string) bool {
+	return targetExecutor == "native-responses" || isCodexTargetExecutor(targetExecutor)
+}
+
 func isCodexTargetExecutor(targetExecutor string) bool {
 	te := strings.ToLower(strings.TrimSpace(targetExecutor))
 	return te == "codex" || te == "codex-websockets" || te == "codex_websockets"
@@ -113,7 +117,7 @@ func applyPayloadConfigWithTrackedPathsForExecutorAndAuthDoc(cfg *config.Config,
 		return touched, false
 	}
 	mutated := false
-	if IsCodexUserAgent(headers) && !isCodexTargetExecutor(targetExecutor) {
+	if IsCodexUserAgent(headers) && !preservesCodexSchema(targetExecutor) {
 		if NormalizeCodexToolIntegerTypesDoc(doc, headers) {
 			mutated = true
 		}
