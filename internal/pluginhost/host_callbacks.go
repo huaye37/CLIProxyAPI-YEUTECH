@@ -421,6 +421,10 @@ func (h *Host) callHostModelExecute(ctx context.Context, request []byte) ([]byte
 	}
 	skipPluginID := h.callbackCallerPluginID(ctx, req.HostCallbackID)
 	ctx = h.resolveCallbackContext(req.HostCallbackID, ctx)
+	ctx, errDepth := withNestedHostModelCallback(ctx, skipPluginID)
+	if errDepth != nil {
+		return nil, &modelExecutionStatusError{err: errDepth, statusCode: http.StatusLoopDetected}
+	}
 	resp, errMsg := executor.ExecuteModel(ctx, modelExecutionRequestFromPlugin(req.HostModelExecutionRequest, skipPluginID))
 	if errMsg != nil {
 		return nil, modelExecutionError(errMsg)

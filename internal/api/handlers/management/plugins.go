@@ -19,9 +19,10 @@ import (
 )
 
 type pluginListResponse struct {
-	PluginsEnabled bool              `json:"plugins_enabled"`
-	PluginsDir     string            `json:"plugins_dir"`
-	Plugins        []pluginListEntry `json:"plugins"`
+	PluginsEnabled       bool              `json:"plugins_enabled"`
+	PluginsDir           string            `json:"plugins_dir"`
+	RouterRecursionGuard bool              `json:"router_recursion_guard,omitempty"`
+	Plugins              []pluginListEntry `json:"plugins"`
 }
 
 type pluginListEntry struct {
@@ -171,9 +172,10 @@ func (h *Handler) ListPlugins(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, pluginListResponse{
-		PluginsEnabled: pluginsEnabled,
-		PluginsDir:     htmlsanitize.String(pluginsDir),
-		Plugins:        out,
+		PluginsEnabled:       pluginsEnabled,
+		PluginsDir:           htmlsanitize.String(pluginsDir),
+		RouterRecursionGuard: true,
+		Plugins:              out,
 	})
 }
 

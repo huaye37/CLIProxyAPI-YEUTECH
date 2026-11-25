@@ -3,11 +3,57 @@ package pluginhost
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/router-for-me/CLIProxyAPI/v8/sdk/pluginapi"
 	log "github.com/sirupsen/logrus"
 )
+
+const maxHostModelCallbackDepth = 8
+
+type nestedHostModelState struct {
+	depth   int
+	visited map[string]struct{}
+}
+
+type nestedHostModelStateKey struct{}
+
+// withNestedHostModelCallback records callerPluginID in the context's visited set
+// and enforces a hard nesting depth cap so mutually-routing plugins cannot ping-pong OOM.
+func withNestedHostModelCallback(ctx context.Context, callerPluginID string) (context.Context, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	prev, _ := ctx.Value(nestedHostModelStateKey{}).(nestedHostModelState)
+	nextDepth := prev.depth + 1
+	if nextDepth > maxHostModelCallbackDepth {
+		return nil, fmt.Errorf("host model callback nesting depth exceeded (%d)", maxHostModelCallbackDepth)
+	}
+	nextVisited := make(map[string]struct{}, len(prev.visited)+1)
+	for id := range prev.visited {
+		nextVisited[id] = struct{}{}
+	}
+	if trimmed := strings.TrimSpace(callerPluginID); trimmed != "" {
+		nextVisited[trimmed] = struct{}{}
+	}
+	return context.WithValue(ctx, nestedHostModelStateKey{}, nestedHostModelState{
+		depth:   nextDepth,
+		visited: nextVisited,
+	}), nil
+}
+
+func isVisitedRouterPlugin(ctx context.Context, pluginID string) bool {
+	if ctx == nil {
+		return false
+	}
+	state, ok := ctx.Value(nestedHostModelStateKey{}).(nestedHostModelState)
+	if !ok || len(state.visited) == 0 {
+		return false
+	}
+	_, seen := state.visited[strings.TrimSpace(pluginID)]
+	return seen
+}
 
 func (h *Host) RouteModel(ctx context.Context, req pluginapi.ModelRouteRequest) (pluginapi.ModelRouteResponse, bool) {
 	return h.RouteModelExcept(ctx, req, "")
@@ -38,7 +84,7 @@ func (h *Host) RouteModelExcept(ctx context.Context, req pluginapi.ModelRouteReq
 	req.AvailableProviders = h.availableProvidersSnapshot()
 	for _, record := range h.activeRecords() {
 		router := record.plugin.Capabilities.ModelRouter
-		if router == nil || h.isPluginFused(record.id) || record.id == skipPluginID {
+		if router == nil || h.isPluginFused(record.id) || record.id == skipPluginID || isVisitedRouterPlugin(ctx, record.id) {
 			continue
 		}
 		nextReq := cloneModelRouteRequest(req)
