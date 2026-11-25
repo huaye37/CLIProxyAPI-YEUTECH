@@ -395,9 +395,6 @@ func (e *AntigravityExecutor) ExecuteStream(ctx context.Context, auth *cliproxya
 			return
 		}
 		if scanner.Err() == nil && ctx.Err() == nil && !sawUpstreamJSON {
-			if helps.EndApplyPatchStream(ctx, param, reporter, out, statusErr{code: http.StatusBadGateway, msg: helps.ApplyPatchUpstreamErrorMessage}) {
-				return
-			}
 			failZeroOutput("")
 			return
 		}
