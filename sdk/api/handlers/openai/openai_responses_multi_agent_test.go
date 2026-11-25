@@ -52,6 +52,21 @@ func TestPrepareCodexMultiAgentV2ToolsAtResponsesBoundary(t *testing.T) {
 	}
 }
 
+func TestPrepareCodexPublicAPIAliasPreservesReservedTools(t *testing.T) {
+	base := handlers.NewBaseAPIHandlers(&sdkconfig.SDKConfig{Client: sdkconfig.ClientConfig{Codex: sdkconfig.CodexClientConfig{OptimizeMultiAgentV2: true}}}, nil)
+	handler := NewOpenAIResponsesAPIHandler(base)
+	for _, model := range []string{"gpt-6.2-astra-openai-api", "gpt-6.2-astra-openai-api(high)"} {
+		c, _ := gin.CreateTestContext(httptest.NewRecorder())
+		c.Request = httptest.NewRequest(http.MethodPost, "/v1/responses", nil)
+		c.Request.Header.Set("User-Agent", "codex_cli_rs/0.171.0")
+		ns := `[{"type":"namespace","name":"collaboration","tools":[{"type":"function","name":"followup_task","parameters":{"properties":{"message":{"type":"string","encrypted":true}}}}]}]`
+		payload := []byte(fmt.Sprintf(`{"model":%q,"tools":%s,"input":[{"type":"additional_tools","tools":%s}]}`, model, ns, ns))
+		if got := handler.prepareCodexRequestPayload(c, payload); !bytes.Equal(got, payload) {
+			t.Errorf("%s: public API tool definitions changed: %s", model, got)
+		}
+	}
+}
+
 func TestPrepareCodexRequestPayloadUnchangedReturnsSameSlice(t *testing.T) {
 	t.Parallel()
 

@@ -25,6 +25,7 @@ import (
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/httpwire"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/interfaces"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/registry"
+	"github.com/router-for-me/CLIProxyAPI/v8/internal/thinking"
 	translatorcommon "github.com/router-for-me/CLIProxyAPI/v8/internal/translator/common"
 	sdkaccess "github.com/router-for-me/CLIProxyAPI/v8/sdk/access"
 	"github.com/router-for-me/CLIProxyAPI/v8/sdk/api/handlers"
@@ -904,6 +905,12 @@ func (h *OpenAIResponsesAPIHandler) OpenAIResponsesModels(c *gin.Context) {
 
 func (h *OpenAIResponsesAPIHandler) prepareCodexMultiAgentV2ToolsDoc(c *gin.Context, doc *ojson.Doc) bool {
 	if h == nil || doc == nil {
+		return false
+	}
+	// YEUTECH's explicit public API aliases require the original reserved tool
+	// schemas, including message.encrypted. Subscription rewrites are not valid here.
+	model := thinking.ParseSuffix(strings.TrimSpace(doc.Get("model").String())).ModelName
+	if strings.HasSuffix(strings.ToLower(model), "-openai-api") {
 		return false
 	}
 	cfg := h.CurrentConfig()
