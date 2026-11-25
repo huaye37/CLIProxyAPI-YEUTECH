@@ -2103,7 +2103,7 @@ func TestCodexClientModelsResponse_FallbackSetsSupportedInAPIAndVisibility(t *te
 	}
 
 	resp := BuildResponseForClient([]map[string]any{
-		{"id": "deepseek-v4.1-flash"},
+		{"id": "deepseek-v4.1-flash", "context_length": 65536},
 		{"id": "gpt-image-2"},
 	}, nil, false, "0.171.0")
 	models, ok := resp["models"].([]map[string]any)

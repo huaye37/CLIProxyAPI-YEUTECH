@@ -217,7 +217,7 @@ func (e *MetaExecutor) ExecuteStream(ctx context.Context, auth *cliproxyauth.Aut
 			case "response.output_item.done":
 				xaiCollectOutputItemDone(eventData, outputItemsByIndex, &outputItemsFallback)
 				outputTracker.Observe(eventType, eventData)
-			case "response.completed", "response.incomplete":
+			case "response.completed", "response.incomplete", "response.done":
 				if detail, ok := helps.ParseCodexUsageWithOutputItems(eventData, outputItemsByIndex, outputItemsFallback); ok {
 					streamUsage.Observe(detail, true)
 				}
@@ -250,7 +250,7 @@ func (e *MetaExecutor) ExecuteStream(ctx context.Context, auth *cliproxyauth.Aut
 			if !emitTranslatedLine(append([]byte("data: "), eventData...)) {
 				return
 			}
-			if eventType == "response.completed" || eventType == "response.incomplete" {
+			if eventType == "response.completed" || eventType == "response.incomplete" || eventType == "response.done" {
 				terminalDelivered = true
 			}
 		}

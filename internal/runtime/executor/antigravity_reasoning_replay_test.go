@@ -2299,7 +2299,8 @@ func TestPrepareAntigravityGeminiReasoningReplayDegradesAndCommitsNextTurn(t *te
 
 			const model = "gemini-3.6-flash-high"
 			const args = `{"file_path":"/tmp/a"}`
-			payload := []byte(`{"sessionId":"sess-pairing-break-commit-` + mode.name + `","request":{"contents":[{"role":"model","parts":[{"thoughtSignature":"skip_thought_signature_validator","functionCall":{"name":"Read","args":` + args + `}}]},{"role":"user","parts":[{"functionResponse":{"name":"Read","response":{"result":"ok"}}}]}]}}`)
+			// The user boundary is valid history, but prevents adjacent-turn ID repair.
+			payload := []byte(`{"sessionId":"sess-pairing-break-commit-` + mode.name + `","request":{"contents":[{"role":"model","parts":[{"thoughtSignature":"skip_thought_signature_validator","functionCall":{"name":"Read","args":` + args + `}}]},{"role":"user","parts":[{"text":"checkpoint"}]},{"role":"user","parts":[{"functionResponse":{"name":"Read","response":{"result":"ok"}}}]}]}}`)
 			payload = normalizeAntigravityGeminiFunctionResponseRoles(payload)
 			if err := internalsignature.ValidateGeminiFunctionCallPairing(payload); err != nil {
 				t.Fatalf("original payload pairing invalid: %v", err)
@@ -2356,7 +2357,7 @@ func TestPrepareAntigravityGeminiReasoningReplayDegradesAndCommitsNextTurn(t *te
 				t.Fatalf("committed items missing %q: %q", newSig, committedItems)
 			}
 
-			nextTurnPayload := []byte(`{"sessionId":"sess-pairing-break-commit-` + mode.name + `","request":{"contents":[{"role":"model","parts":[{"thoughtSignature":"skip_thought_signature_validator","functionCall":{"name":"Read","args":` + args + `}}]},{"role":"user","parts":[{"functionResponse":{"name":"Read","response":{"result":"ok"}}}]},{"role":"model","parts":[{"thoughtSignature":"skip_thought_signature_validator","functionCall":{"name":"Grep","args":{"pattern":"foo"}}}]},{"role":"user","parts":[{"functionResponse":{"name":"Grep","response":{"result":"match"}}}]}]}}`)
+			nextTurnPayload := []byte(`{"sessionId":"sess-pairing-break-commit-` + mode.name + `","request":{"contents":[{"role":"model","parts":[{"thoughtSignature":"skip_thought_signature_validator","functionCall":{"name":"Read","args":` + args + `}}]},{"role":"user","parts":[{"text":"checkpoint"}]},{"role":"user","parts":[{"functionResponse":{"name":"Read","response":{"result":"ok"}}}]},{"role":"model","parts":[{"thoughtSignature":"skip_thought_signature_validator","functionCall":{"name":"Grep","args":{"pattern":"foo"}}}]},{"role":"user","parts":[{"functionResponse":{"name":"Grep","response":{"result":"match"}}}]}]}}`)
 			nextTurnPayload = normalizeAntigravityGeminiFunctionResponseRoles(nextTurnPayload)
 			replayedNext, _, errNext := prepareAntigravityGeminiReasoningReplayPayload(
 				context.Background(),
@@ -2368,7 +2369,7 @@ func TestPrepareAntigravityGeminiReasoningReplayDegradesAndCommitsNextTurn(t *te
 			if errNext != nil {
 				t.Fatalf("next turn prepare error: %v", errNext)
 			}
-			if gotSig := ojson.GetBytesNoCopy(replayedNext, "request.contents.2.parts.0.thoughtSignature").String(); gotSig != newSig {
+			if gotSig := ojson.GetBytesNoCopy(replayedNext, "request.contents.3.parts.0.thoughtSignature").String(); gotSig != newSig {
 				t.Fatalf("next turn replayed signature = %q, want %q", gotSig, newSig)
 			}
 		})
