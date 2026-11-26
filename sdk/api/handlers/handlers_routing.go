@@ -36,6 +36,10 @@ type modelRouterSkipDetector interface {
 	HasModelRoutersExcept(string) bool
 }
 
+type pluginModelRouterBodyLimitHost interface {
+	MaxPluginBodyBytes() int
+}
+
 func preferExecutionProvider(providers []string, preferred string) []string {
 	preferred = strings.ToLower(strings.TrimSpace(preferred))
 	if preferred == "" || len(providers) < 2 {
@@ -370,6 +374,11 @@ func (h *BaseAPIHandler) applyModelRouter(ctx context.Context, handlerType, mode
 	host := h.modelRouterHost()
 	if host == nil || !modelRoutersEnabled(host, execOptions.SkipRouterPluginID) {
 		return decision
+	}
+	if limitHost, ok := host.(pluginModelRouterBodyLimitHost); ok {
+		if limit := limitHost.MaxPluginBodyBytes(); limit > 0 && len(rawJSON) > limit {
+			return decision
+		}
 	}
 	meta := requestExecutionMetadata(ctx)
 	addCallerScopeMetadata(meta, execOptions.CallerScope)

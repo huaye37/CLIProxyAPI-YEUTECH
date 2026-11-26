@@ -80,6 +80,14 @@ func (h *Host) RouteModelExcept(ctx context.Context, req pluginapi.ModelRouteReq
 	if h == nil {
 		return pluginapi.ModelRouteResponse{}, false
 	}
+	if exceedsPluginBodyLimit(req.Body) {
+		log.WithFields(log.Fields{
+			"body_bytes":  len(req.Body),
+			"limit_bytes": MaxPluginBodyBytes(),
+			"model":       req.RequestedModel,
+		}).Info("pluginhost: bypassing model router plugins for oversized request body")
+		return pluginapi.ModelRouteResponse{}, false
+	}
 	skipPluginID = strings.TrimSpace(skipPluginID)
 	req.AvailableProviders = h.availableProvidersSnapshot()
 	for _, record := range h.activeRecords() {

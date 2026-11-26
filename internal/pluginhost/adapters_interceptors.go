@@ -136,6 +136,15 @@ func (h *Host) interceptRequest(ctx context.Context, req pluginapi.RequestInterc
 	skipPluginID = strings.TrimSpace(skipPluginID)
 	currentBase := req.Body
 	bodyModified := false
+	oversizedBody := exceedsPluginBodyLimit(currentBase)
+	if oversizedBody {
+		log.WithFields(log.Fields{
+			"body_bytes":  len(currentBase),
+			"limit_bytes": MaxPluginBodyBytes(),
+			"phase":       method,
+			"model":       req.Model,
+		}).Info("pluginhost: bypassing full-body request interceptors for oversized request body")
+	}
 	patchMethod := "RequestBodyPatcher.PatchRequestBodyAfterAuth"
 	if beforeAuth {
 		patchMethod = "RequestBodyPatcher.PatchRequestBodyBeforeAuth"
@@ -151,7 +160,7 @@ func (h *Host) interceptRequest(ctx context.Context, req pluginapi.RequestInterc
 			continue
 		}
 		if patcher != nil {
-			if len(currentBase) > 0 {
+			if len(currentBase) > 0 && !oversizedBody {
 				patchInput := requestPatcherInputBody(patcher, currentBase)
 				if patchResp, ok := h.callRequestBodyPatcher(ctx, record, patchMethod, patcher, patchInput); ok && len(patchResp.Edits) > 0 {
 					patched, modified, errPatch := applyRequestBodyEdits(currentBase, patchResp.Edits)
@@ -168,6 +177,12 @@ func (h *Host) interceptRequest(ctx context.Context, req pluginapi.RequestInterc
 			if interceptor == nil || !requestInterceptorOmitsBody(record, beforeAuth) {
 				continue
 			}
+		}
+		if interceptor == nil {
+			continue
+		}
+		if oversizedBody && !requestInterceptorOmitsBody(record, beforeAuth) {
+			continue
 		}
 		nextReq := req
 		nextReq.Headers = cloneHeader(current.Headers)
@@ -343,8 +358,16 @@ func (h *Host) InterceptResponseExcept(ctx context.Context, req pluginapi.Respon
 		nextReq := req
 		nextReq.RequestHeaders = cloneHeader(req.RequestHeaders)
 		nextReq.ResponseHeaders = cloneHeader(current.Headers)
-		nextReq.OriginalRequest = bytes.Clone(req.OriginalRequest)
-		nextReq.RequestBody = bytes.Clone(req.RequestBody)
+		if !exceedsPluginBodyLimit(req.OriginalRequest) {
+			nextReq.OriginalRequest = bytes.Clone(req.OriginalRequest)
+		} else {
+			nextReq.OriginalRequest = nil
+		}
+		if !exceedsPluginBodyLimit(req.RequestBody) {
+			nextReq.RequestBody = bytes.Clone(req.RequestBody)
+		} else {
+			nextReq.RequestBody = nil
+		}
 		nextReq.Body = bytes.Clone(current.Body)
 		nextReq.Metadata = cloneInterceptorMetadata(req.Metadata)
 		if resp, ok := h.callResponseInterceptor(ctx, record, interceptor, nextReq); ok {
@@ -381,8 +404,16 @@ func (h *Host) InterceptStreamChunkExcept(ctx context.Context, req pluginapi.Str
 			nextReq.OriginalRequest = nil
 			nextReq.RequestBody = nil
 		} else {
-			nextReq.OriginalRequest = bytes.Clone(req.OriginalRequest)
-			nextReq.RequestBody = bytes.Clone(req.RequestBody)
+			if !exceedsPluginBodyLimit(req.OriginalRequest) {
+				nextReq.OriginalRequest = bytes.Clone(req.OriginalRequest)
+			} else {
+				nextReq.OriginalRequest = nil
+			}
+			if !exceedsPluginBodyLimit(req.RequestBody) {
+				nextReq.RequestBody = bytes.Clone(req.RequestBody)
+			} else {
+				nextReq.RequestBody = nil
+			}
 		}
 		nextReq.Body = bytes.Clone(current.Body)
 		// Schema v5+ omits HistoryChunks on payload chunks to avoid cloning and re-encoding

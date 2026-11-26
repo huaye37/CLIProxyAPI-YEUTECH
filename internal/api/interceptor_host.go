@@ -126,6 +126,14 @@ func (h *delegatedInterceptorHost) HasModelRoutersExcept(skipPluginID string) bo
 	return h.pluginHost != nil && h.pluginHost.HasModelRoutersExcept(skipPluginID)
 }
 
+// MaxPluginBodyBytes delegates the full-body plugin C ABI ceiling to the internal plugin host.
+func (h *delegatedInterceptorHost) MaxPluginBodyBytes() int {
+	if h.pluginHost == nil {
+		return 0
+	}
+	return h.pluginHost.MaxPluginBodyBytes()
+}
+
 // HasRequestInterceptors reports whether the embedder's host actually has
 // request interceptors. The primary host is queried first through the optional
 // detector interface; when it does not implement detection, the handler's

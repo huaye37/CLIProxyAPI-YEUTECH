@@ -22,6 +22,7 @@ type pluginListResponse struct {
 	PluginsEnabled       bool              `json:"plugins_enabled"`
 	PluginsDir           string            `json:"plugins_dir"`
 	RouterRecursionGuard bool              `json:"router_recursion_guard,omitempty"`
+	PluginBodyLimitBytes int               `json:"plugin_body_limit_bytes,omitempty"`
 	Plugins              []pluginListEntry `json:"plugins"`
 }
 
@@ -175,6 +176,7 @@ func (h *Handler) ListPlugins(c *gin.Context) {
 		PluginsEnabled:       pluginsEnabled,
 		PluginsDir:           htmlsanitize.String(pluginsDir),
 		RouterRecursionGuard: true,
+		PluginBodyLimitBytes: pluginhost.MaxPluginBodyBytes(),
 		Plugins:              out,
 	})
 }

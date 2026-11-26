@@ -686,6 +686,14 @@ func (a *thinkingAdapter) Apply(body []byte, config thinking.ThinkingConfig, mod
 }
 
 func (h *Host) NormalizeRequest(ctx context.Context, from, to sdktranslator.Format, model string, body []byte, stream bool) []byte {
+	if exceedsPluginBodyLimit(body) {
+		log.WithFields(log.Fields{
+			"body_bytes":  len(body),
+			"limit_bytes": MaxPluginBodyBytes(),
+			"model":       model,
+		}).Info("pluginhost: bypassing request normalizer plugins for oversized request body")
+		return bytes.Clone(body)
+	}
 	current := bytes.Clone(body)
 	for _, record := range h.activeRecords() {
 		if h.isPluginFused(record.id) || record.plugin.Capabilities.RequestNormalizer == nil {
